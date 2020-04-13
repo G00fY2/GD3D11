@@ -7,6 +7,8 @@
 #include "Toolbox.h"
 #include "zCCamera.h"
 
+using namespace DirectX::SimpleMath;
+
 // Delay to recheck visible objects for occlusion
 const int VISIBLE_RECHECK_FRAME_DELAY = 1;
 
@@ -61,7 +63,7 @@ void D3D11OcclusionQuerry::DoOcclusionForBSP(BspInfo* root)
 		CreateOcclusionNodeMeshFor(root);
 	}
 
-	D3DXVECTOR4 c = D3DXVECTOR4(1, 1, 1, 1);
+	float4 c = float4(1, 1, 1, 1);
 
 	// Check last frustum-culling state
 	int clipFlags = 63;
@@ -116,7 +118,7 @@ void D3D11OcclusionQuerry::DoOcclusionForBSP(BspInfo* root)
 		if (root->OcclusionInfo.LastVisitedFrameID != 0 && // Always do the first query
 			S_OK != g->GetContext()->GetData(p, nullptr, 0, D3D11_ASYNC_GETDATA_DONOTFLUSH))
 		{
-			c = D3DXVECTOR4(0, 0, 1, 1);
+			c = float4(0, 0, 1, 1);
 
 			// Query is in progress and still not done, wait for it...
 			if (!root->OcclusionInfo.VisibleLastFrame)
@@ -146,9 +148,9 @@ void D3D11OcclusionQuerry::DoOcclusionForBSP(BspInfo* root)
 			}
 
 			if (data > 0)
-				c = D3DXVECTOR4(0, 1, 0, 1);
+				c = float4(0, 1, 0, 1);
 			else
-				c = D3DXVECTOR4(1, 0, 0, 1);
+				c = float4(1, 0, 0, 1);
 
 			// Issue the new query
 			MeshInfo * mi = root->OcclusionInfo.NodeMesh;
@@ -203,20 +205,20 @@ void D3D11OcclusionQuerry::AdvanceFrameCounter()
 void D3D11OcclusionQuerry::CreateOcclusionNodeMeshFor(BspInfo* node)
 {
 	MeshInfo * mi = new MeshInfo;
-	float3 bbmin = node->OriginalNode->BBox3D.Min;
-	float3 bbmax = node->OriginalNode->BBox3D.Max;
-	float3 n3 = float3(0, 0, 0);
-	float2 n2 = float2(0, 0);
+	auto bbmin = node->OriginalNode->BBox3D.Min;
+	auto bbmax = node->OriginalNode->BBox3D.Max;
+	Vector3 n3 = Vector3(0, 0, 0);
+	Vector2 n2 = Vector2(0, 0);
 
 	ExVertexStruct vx[8] = {
 	{bbmin, n3, n2, n2, 0},								// front bot left 0
-	{float3(bbmin.x, bbmin.y, bbmax.z), n3, n2, n2, 0}, // back bot left 1
-	{float3(bbmax.x, bbmin.y, bbmax.z), n3, n2, n2, 0}, // back bot right 2
-	{float3(bbmax.x, bbmin.y, bbmin.z), n3, n2, n2, 0}, // front bot right 3
-	{float3(bbmin.x, bbmax.y, bbmin.z), n3, n2, n2, 0},	// front top left 4
-	{float3(bbmin.x, bbmax.y, bbmax.z), n3, n2, n2, 0}, // back top left 5
-	{float3(bbmax.x, bbmax.y, bbmax.z), n3, n2, n2, 0},	// back top right 6
-	{float3(bbmax.x, bbmax.y, bbmin.z), n3, n2, n2, 0}};// front top right 7
+	{Vector3(bbmin.x, bbmin.y, bbmax.z), n3, n2, n2, 0}, // back bot left 1
+	{Vector3(bbmax.x, bbmin.y, bbmax.z), n3, n2, n2, 0}, // back bot right 2
+	{Vector3(bbmax.x, bbmin.y, bbmin.z), n3, n2, n2, 0}, // front bot right 3
+	{Vector3(bbmin.x, bbmax.y, bbmin.z), n3, n2, n2, 0},	// front top left 4
+	{Vector3(bbmin.x, bbmax.y, bbmax.z), n3, n2, n2, 0}, // back top left 5
+	{Vector3(bbmax.x, bbmax.y, bbmax.z), n3, n2, n2, 0},	// back top right 6
+	{Vector3(bbmax.x, bbmax.y, bbmin.z), n3, n2, n2, 0}};// front top right 7
 
 	VERTEX_INDEX idx[] = {
 		// bottom
@@ -250,16 +252,16 @@ void D3D11OcclusionQuerry::CreateOcclusionNodeMeshFor(BspInfo* node)
 	node->OcclusionInfo.NodeMesh = mi;
 }
 
-void D3D11OcclusionQuerry::DebugVisualizeNodeMesh(MeshInfo * m, const D3DXVECTOR4 & color)
+void D3D11OcclusionQuerry::DebugVisualizeNodeMesh(MeshInfo * m, const float4 & color)
 {
 	for(unsigned int i=0;i<m->Indices.size();i+=3)
 	{
-		D3DXVECTOR3 tri[3];
+		Vector3 tri[3];
 		float edge[3];
 
-		tri[0] = *m->Vertices[m->Indices[i]].Position.toD3DXVECTOR3();
-		tri[1] = *m->Vertices[m->Indices[i+1]].Position.toD3DXVECTOR3();
-		tri[2] = *m->Vertices[m->Indices[i+2]].Position.toD3DXVECTOR3();
+		tri[0] = m->Vertices[m->Indices[i]].Position;
+		tri[1] = m->Vertices[m->Indices[i+1]].Position;
+		tri[2] = m->Vertices[m->Indices[i+2]].Position;
 
 		edge[0] = m->Vertices[m->Indices[i]].TexCoord2.x;
 		edge[1] = m->Vertices[m->Indices[i+1]].TexCoord2.x;

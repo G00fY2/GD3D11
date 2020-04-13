@@ -38,6 +38,7 @@
 
 namespace wrl = Microsoft::WRL;
 using namespace DirectX;
+using namespace DirectX::SimpleMath;
 
 const int RES_UPSCALE = 1;
 const INT2 DEFAULT_RESOLUTION = INT2(1920 * RES_UPSCALE, 1080 * RES_UPSCALE);
@@ -319,25 +320,25 @@ XRESULT D3D11GraphicsEngine::Init() {
 	ZeroMemory(vx, sizeof(vx));
 
 	const float scale = 1.0f;
-	vx[0].Position = float3(-scale * 0.5f, -scale * 0.5f, 0.0f);
-	vx[1].Position = float3(scale * 0.5f, -scale * 0.5f, 0.0f);
-	vx[2].Position = float3(-scale * 0.5f, scale * 0.5f, 0.0f);
+	vx[0].Position = Vector3(-scale * 0.5f, -scale * 0.5f, 0.0f);
+	vx[1].Position = Vector3(scale * 0.5f, -scale * 0.5f, 0.0f);
+	vx[2].Position = Vector3(-scale * 0.5f, scale * 0.5f, 0.0f);
 
-	vx[0].TexCoord = float2(0, 0);
-	vx[1].TexCoord = float2(1, 0);
-	vx[2].TexCoord = float2(0, 1);
+	vx[0].TexCoord = Vector2(0, 0);
+	vx[1].TexCoord = Vector2(1, 0);
+	vx[2].TexCoord = Vector2(0, 1);
 
 	vx[0].Color = 0xFFFFFFFF;
 	vx[1].Color = 0xFFFFFFFF;
 	vx[2].Color = 0xFFFFFFFF;
 
-	vx[3].Position = float3(scale * 0.5f, -scale * 0.5f, 0.0f);
-	vx[4].Position = float3(scale * 0.5f, scale * 0.5f, 0.0f);
-	vx[5].Position = float3(-scale * 0.5f, scale * 0.5f, 0.0f);
+	vx[3].Position = Vector3(scale * 0.5f, -scale * 0.5f, 0.0f);
+	vx[4].Position = Vector3(scale * 0.5f, scale * 0.5f, 0.0f);
+	vx[5].Position = Vector3(-scale * 0.5f, scale * 0.5f, 0.0f);
 
-	vx[3].TexCoord = float2(1, 0);
-	vx[4].TexCoord = float2(1, 1);
-	vx[5].TexCoord = float2(0, 1);
+	vx[3].TexCoord = Vector2(1, 0);
+	vx[4].TexCoord = Vector2(1, 1);
+	vx[5].TexCoord = Vector2(0, 1);
 
 	vx[3].Color = 0xFFFFFFFF;
 	vx[4].Color = 0xFFFFFFFF;
@@ -4087,8 +4088,7 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights) {
 
 	// Get shadow direction, but don't update every frame, to get around
 	// flickering
-	XMVECTOR dir =
-		XMLoadFloat3(Engine::GAPI->GetSky()->GetAtmosphereCB().AC_LightPos.toXMFLOAT3());
+	XMVECTOR dir = Engine::GAPI->GetSky()->GetAtmosphereCB().AC_LightPos;
 	static XMVECTOR oldDir = dir;
 	static XMVECTOR smoothDir = dir;
 
@@ -4374,7 +4374,7 @@ XRESULT D3D11GraphicsEngine::DrawLighting(std::vector<VobLightInfo*>& lights) {
 	scb.SQ_View = Engine::GAPI->GetRendererState()->TransformState.TransformView;
 
 	XMStoreFloat3(scb.SQ_LightDirectionVS.toXMFLOAT3(), 
-		XMVector3TransformNormal(XMLoadFloat3(sky->GetAtmosphereCB().AC_LightPos.toXMFLOAT3()), view));
+		XMVector3TransformNormal(sky->GetAtmosphereCB().AC_LightPos, view));
 
 	float3 sunColor =
 		Engine::GAPI->GetRendererState()->RendererSettings.SunLightColor;
@@ -5174,7 +5174,8 @@ void D3D11GraphicsEngine::DrawDecalList(const std::vector<zCVob*>& decals,
 
 		XMMATRIX scale =
 			XMMatrixScaling(d->GetDecalSettings()->DecalSize.x * 2,
-				-d->GetDecalSettings()->DecalSize.y * 2, 1);
+				-d->GetDecalSettings()->DecalSize.y * 2,
+				1);
 
 		scale = XMMatrixTranspose(scale);
 

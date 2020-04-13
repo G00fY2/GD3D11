@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "D3D11PShader.h"
 #include "D3D11GraphicsEngineBase.h"
-#include <D3DX11.h>
 #include "Engine.h"
 #include "GothicAPI.h"
 #include "D3D11ConstantBuffer.h"

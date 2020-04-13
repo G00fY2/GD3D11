@@ -25,7 +25,7 @@ public:
 		// TODO: Coordinates are kinda wonky. Wrong space? ScreenSpace to Worldspace neccessery?
 		auto lineRenderer = Engine::GraphicsEngine->GetLineRenderer();
 		if (lineRenderer)
-			lineRenderer->AddLine(LineVertex(D3DXVECTOR3(x1, y1, z1), color.dword), LineVertex(D3DXVECTOR3(x2, y2, z2), color.dword));
+			lineRenderer->AddLine(LineVertex(DirectX::SimpleMath::Vector3(x1, y1, z1), color.dword), LineVertex(DirectX::SimpleMath::Vector3(x2, y2, z2), color.dword));
 	}
 
 	static void __fastcall hooked_zCRndD3DDrawPoly(void* thisptr, void* unknwn, zCPolygon* poly) {

@@ -3,6 +3,8 @@
 #include "D2DSubView.h"
 #include "SV_Button.h"
 #include "SV_TabControl.h"
+#include "d3d11.h"
+#include "SimpleMath.h"
 
 class SV_Panel;
 class SV_Checkbox;
@@ -76,7 +78,7 @@ public:
 
 protected:
 	/** Visualizes a mesh info */
-	void VisualizeMeshInfo(MeshInfo * m, const D3DXVECTOR4 & color = D3DXVECTOR4(1, 1, 1, 1), bool showBounds = false, const D3DXMATRIX* world = nullptr);
+	void VisualizeMeshInfo(MeshInfo * m, const float4 & color = float4(1, 1, 1, 1), bool showBounds = false, const DirectX::SimpleMath::Matrix* world = nullptr);
 
 	/** Sets the editor-mode */
 	void SetEditorMode(EditorMode mode);
@@ -116,7 +118,7 @@ protected:
 	GVegetationBox* PlaceDraggedVegetationBox();
 
 	/** Traces the set of placed vegatation boxes */
-	GVegetationBox* TraceVegetationBoxes(const D3DXVECTOR3 & wPos, const D3DXVECTOR3 & wDir);
+	GVegetationBox* TraceVegetationBoxes(const DirectX::SimpleMath::Vector3 & wPos, const DirectX::SimpleMath::Vector3& wDir);
 
 
 	/** Callbacks */
@@ -177,9 +179,9 @@ protected:
 	std::string TracedTexture;
 
 	/** Vegetation-box specific values, valid in EM_PLACE_VEGETATION*/
-	D3DXVECTOR3 DraggedBoxMinLocal;
-	D3DXVECTOR3 DraggedBoxMaxLocal;
-	D3DXVECTOR3 DraggedBoxCenter;
+	DirectX::SimpleMath::Vector3 DraggedBoxMinLocal;
+	DirectX::SimpleMath::Vector3 DraggedBoxMaxLocal;
+	DirectX::SimpleMath::Vector3 DraggedBoxCenter;
 	
 	SV_Checkbox* VegRestrictByTextureCheckBox;
 	SV_Checkbox* VegCircularShapeCheckBox;
@@ -187,8 +189,8 @@ protected:
 	/** Selection specific values */
 	SV_Checkbox* SelectTrianglesOnlyCheckBox;
 	bool SelectedSomething;
-	D3DXVECTOR3 SelectedTriangle[3];
-	D3DXVECTOR3 TracedPosition;
+	DirectX::SimpleMath::Vector3 SelectedTriangle[3];
+	DirectX::SimpleMath::Vector3 TracedPosition;
 	MeshInfo * TracedMesh;
 	GVegetationBox* TracedVegetationBox;
 	zCMaterial* TracedMaterial;
@@ -207,9 +209,9 @@ protected:
 	POINT CStartMousePosition;
 	float CPitch;
 	float CYaw;
-	D3DXMATRIX CStartWorld;
+	DirectX::SimpleMath::Matrix CStartWorld;
 	bool Keys[256];
-
+	
 	/** Vegetation settings */
 	float VegLastUniformScale;
 

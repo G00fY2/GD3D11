@@ -545,13 +545,13 @@ void MeshModifier::ComputePNAEN18Indices(std::vector<ExVertexStruct> & inVertice
 	{
 		std::vector<ExVertexStruct *> & vx = it->second.second;
 
-		D3DXVECTOR3 nrm = D3DXVECTOR3(0, 0, 0);
+		DirectX::SimpleMath::Vector3 nrm = DirectX::SimpleMath::Vector3(0, 0, 0);
 		if (softNormals)
 		{
 			// Average normal of all adj. vertices			
 			for(unsigned int i=0;i<vx.size();i++)
 			{
-				nrm += *vx[i]->Normal.toD3DXVECTOR3();
+				nrm += vx[i]->Normal;
 			}
 			nrm /= vx.size();
 		}
@@ -737,12 +737,13 @@ void MeshModifier::ComputePNAEN18Indices(std::vector<ExVertexStruct> & inVertice
 				std::pair<std::vector<unsigned int>, std::vector<ExVertexStruct*>> & adj = VertexMap[v];
 
 
-				float2 smallest = float2(FLT_MAX, FLT_MAX);
+				DirectX::SimpleMath::Vector2 smallest = DirectX::SimpleMath::Vector2(FLT_MAX, FLT_MAX);
 				int smallestIdx = outIndices[(i - 3) + k];
 				bool isBorder = false;
 				for(unsigned int j=0;j<adj.first.size();j++)
 				{
-					if (adj.second[j]->TexCoord < smallest)
+					// adj.second[j]->TexCoord < smallest as defined by renderer.
+					if ((adj.second[j]->TexCoord.y < smallest.y) || (adj.second[j]->TexCoord.y == smallest.y) && (adj.second[j]->TexCoord.x < smallest.x))
 					{
 						smallest = adj.second[j]->TexCoord;
 						smallestIdx = adj.first[j];
@@ -768,7 +769,7 @@ void MeshModifier::ComputePNAEN18Indices(std::vector<ExVertexStruct> & inVertice
 }
 
 
-bool TexcoordSame(float2 a, float2 b)
+bool TexcoordSame(DirectX::SimpleMath::Vector2 a, DirectX::SimpleMath::Vector2 b)
 {
 	if ((abs(a.x - 		b.x) > 0.001f &&
 		abs((a.x + 1) - b.x) > 0.001f &&
@@ -803,10 +804,10 @@ void MeshModifier::ComputeSmoothNormals(std::vector<ExVertexStruct> & inVertices
 	{
 		std::vector<ExVertexStruct *> & vx = it->second;
 		// Average all face normals
-		D3DXVECTOR3 avgNormal = D3DXVECTOR3(0, 0, 0);
+		DirectX::SimpleMath::Vector3 avgNormal = DirectX::SimpleMath::Vector3(0, 0, 0);
 		for(unsigned int i=0;i<vx.size();i++)
 		{
-			avgNormal += *vx[i]->Normal.toD3DXVECTOR3();
+			avgNormal += vx[i]->Normal;
 		}
 		avgNormal /= (float)vx.size();
 

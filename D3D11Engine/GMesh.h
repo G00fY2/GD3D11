@@ -4,7 +4,6 @@
 #include <vector>
 
 enum XRESULT;
-struct D3DXVECTOR2;
 struct MeshInfo;
 
 class GMesh {

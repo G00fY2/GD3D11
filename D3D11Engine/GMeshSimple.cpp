@@ -11,7 +11,7 @@
 #pragma comment(lib, "assimp-vc142-mt.lib")
 
 using namespace Assimp;
-
+using namespace DirectX::SimpleMath;
 
 GMeshSimple::GMeshSimple()
 {
@@ -62,10 +62,10 @@ XRESULT GMeshSimple::LoadMesh(const std::string & file)
 		{
 			if (s->mMeshes[i]->HasTextureCoords(0))
 			{
-				vertices[n].TexCoord = float2(s->mMeshes[i]->mTextureCoords[0][n].x, -s->mMeshes[i]->mTextureCoords[0][n].y);
+				vertices[n].TexCoord = Vector2(s->mMeshes[i]->mTextureCoords[0][n].x, -s->mMeshes[i]->mTextureCoords[0][n].y);
 			}
 
-			vertices[n].Position = float3(s->mMeshes[i]->mVertices[n].x, s->mMeshes[i]->mVertices[n].y, s->mMeshes[i]->mVertices[n].z);
+			vertices[n].Position = Vector3(s->mMeshes[i]->mVertices[n].x, s->mMeshes[i]->mVertices[n].y, s->mMeshes[i]->mVertices[n].z);
 		}
 
 		for(unsigned int n=0;n<s->mMeshes[i]->mNumFaces;n++)

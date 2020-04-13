@@ -13,8 +13,8 @@ struct zTPMTriangle {
 };		
 
 struct zTPMWedge {
-	float3 normal;
-	float2 texUV;
+	DirectX::SimpleMath::Vector3 normal;
+	DirectX::SimpleMath::Vector2 texUV;
 	VERTEX_INDEX position;
 };
 
@@ -58,14 +58,14 @@ class zCProgMeshProto : public zCVisual
 {
 public:
 
-	zCArrayAdapt<float3>* GetPositionList()
+	zCArrayAdapt<DirectX::SimpleMath::Vector3>* GetPositionList()
 	{
-		return (zCArrayAdapt<float3> *)THISPTR_OFFSET(GothicMemoryLocations::zCProgMeshProto::Offset_PositionList);
+		return (zCArrayAdapt<DirectX::SimpleMath::Vector3> *)THISPTR_OFFSET(GothicMemoryLocations::zCProgMeshProto::Offset_PositionList);
 	}
 
-	zCArrayAdapt<float3>* GetNormalsList()
+	zCArrayAdapt<DirectX::SimpleMath::Vector3>* GetNormalsList()
 	{
-		return (zCArrayAdapt<float3> *)THISPTR_OFFSET(GothicMemoryLocations::zCProgMeshProto::Offset_NormalsList);
+		return (zCArrayAdapt<DirectX::SimpleMath::Vector3> *)THISPTR_OFFSET(GothicMemoryLocations::zCProgMeshProto::Offset_NormalsList);
 	}
 
 	zCSubMesh* GetSubmesh(int n)
@@ -86,14 +86,14 @@ public:
 	/** Constructs a readable mesh from the data given in the progmesh */
 	void ConstructVertexBuffer(std::vector<ExVertexStruct>* vertices)
 	{
-		zCArrayAdapt<float3>* pl = GetPositionList();
+		zCArrayAdapt<DirectX::SimpleMath::Vector3>* pl = GetPositionList();
 
 		for(int i=0;i<pl->NumInArray;i++)
 		{
 			ExVertexStruct vx;
 			vx.Position = pl->Get(i);
-			vx.Normal = float3(0, 0, 0);
-			vx.TexCoord = float2(0, 0);
+			vx.Normal = DirectX::SimpleMath::Vector3(0, 0, 0);
+			vx.TexCoord = DirectX::SimpleMath::Vector2(0, 0);
 			vx.Color = 0xFFFFFFFF;
 			vertices->push_back(vx);
 		}

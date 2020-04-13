@@ -37,7 +37,7 @@ public:
 	int id;
 #endif*/
 
-	float3 Position;
+	DirectX::SimpleMath::Vector3 Position;
 
 	int TransformedIndex;
 	int MyIndex;
@@ -46,10 +46,10 @@ public:
 class zCVertFeature
 {
 public:
-	float3 normal;
+	DirectX::SimpleMath::Vector3 normal;
 	DWORD lightStatic;
 	DWORD lightDynamic;
-	float2 texCoord;
+	DirectX::SimpleMath::Vector2 texCoord;
 };
 
 

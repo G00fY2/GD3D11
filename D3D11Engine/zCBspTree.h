@@ -91,7 +91,7 @@ public:
 		REPLACE_CALL(GothicMemoryLocations::zCBspTree::CALL_RenderTrivIndoor, INST_NOP);*/
 	}
 
-	static int _fastcall hooked_zCBspBaseCheckRayAgainstPolysNearestHit(void * thisptr, const D3DXVECTOR3 & start, const D3DXVECTOR3 & end, D3DXVECTOR3 & intersection)
+	static int _fastcall hooked_zCBspBaseCheckRayAgainstPolysNearestHit(void * thisptr, const DirectX::SimpleMath::Vector3& start, const DirectX::SimpleMath::Vector3& end, DirectX::SimpleMath::Vector3& intersection)
 	{
 		// Get our version of this node
 		//Engine::GAPI->Get
@@ -130,7 +130,7 @@ public:
 		
 	}
 
-	static int _fastcall hooked_zCBspBaseCheckRayAgainstPolysCache(void * thisptr, const D3DXVECTOR3 & start, const D3DXVECTOR3 & end, D3DXVECTOR3 & intersection)
+	static int _fastcall hooked_zCBspBaseCheckRayAgainstPolysCache(void * thisptr, const DirectX::SimpleMath::Vector3& start, const DirectX::SimpleMath::Vector3& end, DirectX::SimpleMath::Vector3& intersection)
 	{
 		// Get our version of this node
 		//Engine::GAPI->Get
@@ -168,7 +168,7 @@ public:
 		}
 	}
 
-	static int _fastcall hooked_zCBspBaseCheckRayAgainstPolys(void * thisptr, const D3DXVECTOR3 & start, const D3DXVECTOR3 & end, D3DXVECTOR3 & intersection)
+	static int _fastcall hooked_zCBspBaseCheckRayAgainstPolys(void * thisptr, const DirectX::SimpleMath::Vector3& start, const DirectX::SimpleMath::Vector3& end, DirectX::SimpleMath::Vector3& intersection)
 	{
 #ifdef DEBUG_SHOW_COLLISION
 		Engine::GraphicsEngine->GetLineRenderer()->AddLine(LineVertex(start, 0xFF0000FF), LineVertex(end, 0xFFFFFFFF));

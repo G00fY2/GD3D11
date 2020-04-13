@@ -78,19 +78,19 @@ XRESULT GMesh::LoadMesh(const std::string & file, float scale) {
 
 		for (unsigned int n = 0; n < s->mMeshes[i]->mNumVertices; n++) {
 			if (s->mMeshes[i]->HasNormals()) {
-				vertices[n].Normal = float3(s->mMeshes[i]->mNormals[n].x, s->mMeshes[i]->mNormals[n].y, s->mMeshes[i]->mNormals[n].z);
+				vertices[n].Normal = DirectX::SimpleMath::Vector3(s->mMeshes[i]->mNormals[n].x, s->mMeshes[i]->mNormals[n].y, s->mMeshes[i]->mNormals[n].z);
 			}
 
 			if (s->mMeshes[i]->HasTextureCoords(0)) {
-				vertices[n].TexCoord = float2(s->mMeshes[i]->mTextureCoords[0][n].x, s->mMeshes[i]->mTextureCoords[0][n].y);
+				vertices[n].TexCoord = DirectX::SimpleMath::Vector2(s->mMeshes[i]->mTextureCoords[0][n].x, s->mMeshes[i]->mTextureCoords[0][n].y);
 			}
 
 			if (s->mMeshes[i]->HasTextureCoords(1)) {
-				vertices[n].TexCoord2 = float2(s->mMeshes[i]->mTextureCoords[1][n].x, s->mMeshes[i]->mTextureCoords[1][n].y);
+				vertices[n].TexCoord2 = DirectX::SimpleMath::Vector2(s->mMeshes[i]->mTextureCoords[1][n].x, s->mMeshes[i]->mTextureCoords[1][n].y);
 			}
 
 			vertices[n].Color = 0xFFFFFFFF;
-			vertices[n].Position = float3(s->mMeshes[i]->mVertices[n].x * scale, s->mMeshes[i]->mVertices[n].y * scale, s->mMeshes[i]->mVertices[n].z * scale);
+			vertices[n].Position = DirectX::SimpleMath::Vector3(s->mMeshes[i]->mVertices[n].x * scale, s->mMeshes[i]->mVertices[n].y * scale, s->mMeshes[i]->mVertices[n].z * scale);
 		}
 
 		for (unsigned int n = 0; n < s->mMeshes[i]->mNumFaces; n++) {

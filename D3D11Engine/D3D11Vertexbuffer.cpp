@@ -3,9 +3,6 @@
 #include "pch.h"
 #include "D3D11GraphicsEngineBase.h"
 #include "Engine.h"
-#include <d3dx9mesh.h>
-
-#pragma comment(lib, "d3dx9.lib")
 
 D3D11VertexBuffer::D3D11VertexBuffer() {
 	VertexBuffer = nullptr;
@@ -155,54 +152,10 @@ ID3D11Buffer * D3D11VertexBuffer::GetVertexBuffer() const {
 /** Optimizes the given set of vertices */
 XRESULT D3D11VertexBuffer::OptimizeVertices(VERTEX_INDEX * indices, byte * vertices, unsigned int numIndices, unsigned int numVertices, unsigned int stride) {
 	return XR_SUCCESS;
-
-	DWORD * remap = new DWORD[numVertices];
-	if (FAILED(D3DXOptimizeVertices(indices, numIndices / 3, numVertices, FALSE, (DWORD *)remap))) {
-		delete[] remap;
-		return XR_FAILED;
-	}
-
-	// Remap vertices
-	byte * vxCopy = new byte[numVertices * stride];
-	memcpy(vxCopy, vertices, numVertices * stride);
-
-	for (unsigned int i = 0; i < numVertices; i++) {
-		// Assign the vertex at remap[i] to its new vertex
-		memcpy(vertices + remap[i] * stride, vxCopy + i * stride, stride);
-	}
-
-	for (unsigned int i = 0; i < numIndices; i++) {
-		// Remap the indices.
-		indices[i] = (VERTEX_INDEX)remap[indices[i]];
-	}
-
-	delete[] vxCopy;
-	delete[] remap;
-
-	return XR_SUCCESS;
 }
 
 /** Optimizes the given set of vertices */
 XRESULT D3D11VertexBuffer::OptimizeFaces(VERTEX_INDEX * indices, byte * vertices, unsigned int numIndices, unsigned int numVertices, unsigned int stride) {
-	return XR_SUCCESS;
-	unsigned int numFaces = numIndices / 3;
-	DWORD * remap = new DWORD[numFaces];
-	if (FAILED(D3DXOptimizeFaces(indices, numFaces, numVertices, FALSE, (DWORD *)remap))) {
-		delete[] remap;
-		return XR_FAILED;
-	}
-	// Remap vertices
-	VERTEX_INDEX * ibCopy = new VERTEX_INDEX[numFaces * 3];
-	memcpy(ibCopy, indices, numFaces * 3 * sizeof(VERTEX_INDEX));
-
-	for (unsigned int i = 0; i < numFaces; i++) {
-		// Copy the remapped face
-		memcpy(&indices[i * 3], &ibCopy[ remap[i] * 3], 3 * sizeof(VERTEX_INDEX));
-	}
-
-	delete[] ibCopy;
-	delete[] remap;
-
 	return XR_SUCCESS;
 }
 

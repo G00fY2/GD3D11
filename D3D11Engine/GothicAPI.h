@@ -338,11 +338,10 @@ public:
 	std::list<SkeletalVobInfo *> & GetAnimatedSkeletalMeshVobs();
 
 	/** Returns the current cameraposition */
-	D3DXVECTOR3 GetCameraPosition();
+	DirectX::SimpleMath::Vector3 GetCameraPosition();
 	DirectX::XMVECTOR GetCameraPositionXM();
 
 	/** Returns the view matrix */
-	void GetViewMatrix(D3DXMATRIX * view);
 	DirectX::XMMATRIX GetViewMatrixXM();
 
 	/** Returns the view matrix */
@@ -358,14 +357,14 @@ public:
 	DirectX::XMVECTOR UnprojectCursorXM();
 
 	/** Traces the worldmesh and returns the hit-location */
-	bool TraceWorldMesh(const D3DXVECTOR3 & origin, const D3DXVECTOR3 & dir, D3DXVECTOR3 & hit, std::string * hitTextureName = nullptr, D3DXVECTOR3 * hitTriangle = nullptr, MeshInfo ** hitMesh = nullptr, zCMaterial ** hitMaterial = nullptr);
+	bool TraceWorldMesh(const DirectX::SimpleMath::Vector3 & origin, const DirectX::SimpleMath::Vector3 & dir, DirectX::SimpleMath::Vector3 & hit, std::string * hitTextureName = nullptr, DirectX::SimpleMath::Vector3 * hitTriangle = nullptr, MeshInfo ** hitMesh = nullptr, zCMaterial ** hitMaterial = nullptr);
 
 	/** Traces vobs with static mesh visual */
-	VobInfo * TraceStaticMeshVobsBB(const D3DXVECTOR3 & origin, const D3DXVECTOR3 & dir, D3DXVECTOR3 & hit, zCMaterial ** hitMaterial = nullptr);
-	SkeletalVobInfo * TraceSkeletalMeshVobsBB(const D3DXVECTOR3 & origin, const D3DXVECTOR3 & dir, D3DXVECTOR3 & hit);
+	VobInfo * TraceStaticMeshVobsBB(const DirectX::SimpleMath::Vector3 & origin, const DirectX::SimpleMath::Vector3 & dir, DirectX::SimpleMath::Vector3 & hit, zCMaterial ** hitMaterial = nullptr);
+	SkeletalVobInfo * TraceSkeletalMeshVobsBB(const DirectX::SimpleMath::Vector3 & origin, const DirectX::SimpleMath::Vector3 & dir, DirectX::SimpleMath::Vector3 & hit);
 
 	/** Traces a visual info. Returns -1 if not hit, distance otherwise */
-	float TraceVisualInfo(const D3DXVECTOR3 & origin, const D3DXVECTOR3 & dir, BaseVisualInfo * visual, zCMaterial ** hitMaterial = nullptr);
+	float TraceVisualInfo(const DirectX::SimpleMath::Vector3 & origin, const DirectX::SimpleMath::Vector3 & dir, BaseVisualInfo * visual, zCMaterial ** hitMaterial = nullptr);
 
 	/** Applies tesselation-settings for all mesh-parts using the given info */
 	void ApplyTesselationSettingsForAllMeshPartsUsing(MaterialInfo * info, int amount = 1);
@@ -374,7 +373,7 @@ public:
 	GSky * GetSky() const;
 
 	/** Returns the fog-color */
-	D3DXVECTOR3 GetFogColor();
+	DirectX::SimpleMath::Vector3 GetFogColor();
 
 	/** Returns true if the game is overwriting the fog color with a fog-zone */
 	float GetFogOverride();
@@ -517,7 +516,7 @@ public:
 	HWND GetOutputWindow() { return OutputWindow; }
 
 	/** Spawns a vegetationbox at the camera */
-	GVegetationBox * SpawnVegetationBoxAt(const D3DXVECTOR3 & position,  const D3DXVECTOR3 & min = D3DXVECTOR3(-1000, -500, -1000), const D3DXVECTOR3 & max = D3DXVECTOR3(1000, 500, 1000), float density = 1.0f, const std::string & restrictByTexture = "");
+	GVegetationBox * SpawnVegetationBoxAt(const DirectX::SimpleMath::Vector3 & position,  const DirectX::SimpleMath::Vector3 & min = DirectX::SimpleMath::Vector3(-1000, -500, -1000), const DirectX::SimpleMath::Vector3 & max = DirectX::SimpleMath::Vector3(1000, 500, 1000), float density = 1.0f, const std::string & restrictByTexture = "");
 
 	/** Adds a vegetationbox to the world */
 	void AddVegetationBox(GVegetationBox * box);
@@ -529,7 +528,7 @@ public:
 	void RemoveVegetationBox(GVegetationBox * box);
 
 	/** Teleports the player to the given location */
-	void SetPlayerPosition(const D3DXVECTOR3 & pos);
+	void SetPlayerPosition(const DirectX::SimpleMath::Vector3 & pos);
 
 	/** Returns the player-vob */
 	zCVob * GetPlayerVob();
@@ -611,7 +610,7 @@ public:
 	float GetBrightnessValue();
 
 	/** Returns the sections intersecting the given boundingboxes */
-	void GetIntersectingSections(const D3DXVECTOR3 & min, const D3DXVECTOR3 & max, std::vector<WorldMeshSectionInfo *> & sections);
+	void GetIntersectingSections(const DirectX::SimpleMath::Vector3 & min, const DirectX::SimpleMath::Vector3 & max, std::vector<WorldMeshSectionInfo *> & sections);
 
 	/** Generates zCPolygons for the loaded sections */
 	void CreatezCPolygonsForSections();

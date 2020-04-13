@@ -9,7 +9,7 @@ extern "C" {
 	/** Draws a red cross at the given location in the current frame
 		- Position: Pointer to the vector to draw the cross at
 		- Size: Size of the cross. (About 25 is the size of a human head) */
-	__declspec(dllexport) void __cdecl GDX_AddPointLocator(float3 * position, float size);
+	__declspec(dllexport) void __cdecl GDX_AddPointLocator(DirectX::SimpleMath::Vector3* position, float size);
 	
 	/** Sets the fog-color to use when not in fog-zone */
 	__declspec(dllexport) void __cdecl GDX_SetFogColor(DWORD color);

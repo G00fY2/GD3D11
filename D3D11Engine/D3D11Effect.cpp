@@ -15,6 +15,7 @@
 #include <d3dcompiler.h>
 
 using namespace DirectX;
+using namespace DirectX::SimpleMath;
 // TODO: Remove this!
 #include "D3D11GraphicsEngine.h"
 
@@ -69,13 +70,13 @@ void D3D11Effect::FillRandomRaindropData(std::vector<ParticleInstanceInfo> & dat
 		float SpeedX = 40.0f*(Toolbox::frand()/20.0f);
 		float SpeedZ = 40.0f*(Toolbox::frand()/20.0f);
 		float SpeedY = 40.0f*(Toolbox::frand()/10.0f); 
-		raindrop.velocity = D3DXVECTOR3(SpeedX,SpeedY,SpeedZ);
+		raindrop.velocity = Vector3(SpeedX,SpeedY,SpeedZ);
 
 		//move the rain particles to a random positions in a cylinder above the camera
 		float x = SeedX + Engine::GAPI->GetCameraPosition().x;
 		float z = SeedZ + Engine::GAPI->GetCameraPosition().z;
 		float y = SeedY + Engine::GAPI->GetCameraPosition().y;
-		raindrop.position = D3DXVECTOR3(x,y,z); 
+		raindrop.position = Vector3(x,y,z);
 
 		//get an integer between 1 and 8 inclusive to decide which of the 8 types of rain textures the particle will use
 		short* s = (short*)&raindrop.drawMode;

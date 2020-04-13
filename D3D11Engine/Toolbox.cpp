@@ -3,6 +3,8 @@
 #include "Toolbox.h"
 #include "zTypes.h"
 
+using namespace DirectX::SimpleMath;
+
 namespace Toolbox
 {
 	/** Checks if one of a series of strings is found within the input-string */
@@ -136,7 +138,7 @@ namespace Toolbox
 	}
 
 	/** Returns true if the given position is inside the box */
-	bool PositionInsideBox(const D3DXVECTOR3 & p, const D3DXVECTOR3 & min, const D3DXVECTOR3 & max)
+	bool PositionInsideBox(const Vector3& p, const Vector3& min, const Vector3& max)
 	{
 		if (p.x > min.x &&
 			p.y > min.y &&
@@ -150,7 +152,7 @@ namespace Toolbox
 	}
 
 	/** Computes the Distance of a point to an AABB */
-	float ComputePointAABBDistance(const D3DXVECTOR3 & p, const D3DXVECTOR3 & min, const D3DXVECTOR3 & max)
+	float ComputePointAABBDistance(const Vector3& p, const Vector3& min, const Vector3& max)
 	{
 		float dx = std::max(std::max(min.x - p.x, 0.0f), p.x - max.x);
 		float dy = std::max(std::max(min.y - p.y, 0.0f), p.y - max.y);
@@ -159,43 +161,41 @@ namespace Toolbox
 	}
 
 	/** Computes the Normal of a triangle */
-	D3DXVECTOR3 ComputeNormal(const D3DXVECTOR3 & v0, const D3DXVECTOR3 & v1, const D3DXVECTOR3 & v2)
+	Vector3 ComputeNormal(const Vector3& v0, const Vector3& v1, const Vector3& v2)
 	{
-		D3DXVECTOR3 Normal;
-		D3DXVec3Cross(&Normal, &(v1 - v0), &(v2 - v0));
-		D3DXVec3Normalize(&Normal, &Normal);
+		Vector3 Normal = (v1 - v0).Cross(v2 - v0);
+		Normal.Normalize();
 
 		return Normal;
 	}
 
 	/** Does a ray vs aabb test */
-	bool IntersectTri(const D3DXVECTOR3 & v0, const D3DXVECTOR3 & v1, const D3DXVECTOR3 & v2, const D3DXVECTOR3 & origin, const D3DXVECTOR3 & direction, float & u, float & v, float & t)
+	bool IntersectTri(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector3 & origin, const Vector3 & direction, float & u, float & v, float & t)
 	{
 		const float EPSILON = 0.00001f;
-		D3DXVECTOR3 edge1 = v1 - v0; 
-		D3DXVECTOR3 edge2 = v2 - v0; 
-		D3DXVECTOR3 pvec; D3DXVec3Cross(&pvec, &direction, &edge2); 
-		float det = D3DXVec3Dot(&edge1, &pvec); 
+		Vector3 edge1 = v1 - v0; 
+		Vector3 edge2 = v2 - v0; 
+		Vector3 pvec = direction.Cross(edge2); 
+		float det = edge1.Dot(pvec); 
 		if (det > -EPSILON && det < EPSILON) return false; 
 
 		float invDet = 1 / det; 
-		D3DXVECTOR3 tvec = origin - v0; 
-		u = D3DXVec3Dot(&tvec, &pvec) * invDet; 
+		Vector3 tvec = origin - v0; 
+		u = tvec.Dot(pvec) * invDet; 
 		if (u < 0 || u > 1) return false; 
-		D3DXVECTOR3 qvec;
-		D3DXVec3Cross(&qvec, &tvec, &edge1); 
+		Vector3 qvec = tvec.Cross(edge1); 
 
-		v = D3DXVec3Dot(&direction, &qvec) * invDet; 
+		v = direction.Dot(qvec) * invDet; 
 		if (v < 0 || u + v > 1) return false; 
-		t = D3DXVec3Dot(&edge2, &qvec) * invDet; 
+		t = edge2.Dot(qvec) * invDet; 
 
 		return true; 
 	}
 
 	/** Does a ray vs aabb test */
-	bool IntersectBox(const D3DXVECTOR3 & min, const D3DXVECTOR3 & max, const D3DXVECTOR3 & origin, const D3DXVECTOR3 & direction, float & t)
+	bool IntersectBox(const Vector3 & min, const Vector3 & max, const Vector3 & origin, const Vector3 & direction, float & t)
 	{
-		D3DXVECTOR3 dirfrac;
+		Vector3 dirfrac;
 
 		// r.dir is unit direction vector of ray
 		dirfrac.x = 1.0f / direction.x;
@@ -232,7 +232,7 @@ namespace Toolbox
 	}
 
 	/** Returns whether two AABBs are intersecting or not */
-	bool AABBsOverlapping(const D3DXVECTOR3 & minA, const D3DXVECTOR3 & maxA, const D3DXVECTOR3 & minB, const D3DXVECTOR3 & maxB)
+	bool AABBsOverlapping(const Vector3 & minA, const Vector3 & maxA, const Vector3 & minB, const Vector3 & maxB)
 	{
 		//Check if Box1's max is greater than Box2's min and Box1's min is less than Box2's max
 		return(maxA.x > minB.x &&

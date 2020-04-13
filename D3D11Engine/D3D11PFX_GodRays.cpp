@@ -30,7 +30,7 @@ XRESULT D3D11PFX_GodRays::Render(RenderToTextureBuffer * fxbuffer)
 
 	engine->SetDefaultStates();
 
-	XMVECTOR xmSunPosition = XMLoadFloat3(Engine::GAPI->GetSky()->GetAtmosphereCB().AC_LightPos.toXMFLOAT3());
+	XMVECTOR xmSunPosition = Engine::GAPI->GetSky()->GetAtmosphereCB().AC_LightPos;
 
 	float outerRadius = Engine::GAPI->GetSky()->GetAtmosphereCB().AC_OuterRadius;
 	xmSunPosition = XMVectorMultiply(xmSunPosition, XMVectorSet(outerRadius, outerRadius, outerRadius, outerRadius));

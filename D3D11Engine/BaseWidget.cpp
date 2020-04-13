@@ -75,7 +75,7 @@ void BaseWidget::CreateArrowCone(int Detail, int Axis, const float4& Color, Edit
 
 	LineVertex * vx = new LineVertex[NumVerts];
 
-	float Step = (D3DX_PI * 2) / ((float)Detail - 1);
+	float Step = (XM_PI * 2) / ((float)Detail - 1);
 	float s = 0;
 
 	float Length = BASEWIDGET_CONE_LENGTH;
@@ -202,112 +202,112 @@ void BaseWidget::CreateArrowCube(XMFLOAT3 * Offset, float Extends, const float4&
 	LineVertex vx[36];
 	int i = 0;
 
-	vx[i].Position = D3DXVECTOR3(-1, -1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, -1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, -1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, -1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, -1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, -1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, -1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, -1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, -1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, -1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, -1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, -1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, 1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, 1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, 1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, 1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, 1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, 1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, 1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, 1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, 1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, 1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, 1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, 1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, -1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, -1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, -1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, -1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, 1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, 1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, -1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, -1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, 1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, 1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, 1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, 1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, -1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, -1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, 1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, 1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, -1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, -1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, -1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, -1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, 1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, 1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, 1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, 1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, -1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, -1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, 1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, 1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, -1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, -1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, -1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, -1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, 1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, 1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, 1, -1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, 1, -1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, -1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, -1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, -1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, -1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, 1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, 1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, -1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, -1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(1, 1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(1, 1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
-	vx[i].Position = D3DXVECTOR3(-1, 1, 1);
+	vx[i].Position = DirectX::SimpleMath::Vector3(-1, 1, 1);
 	EditorLinePrimitive::EncodeColor(&vx[i++], Color);
 
 	// Loop through all vertices and apply the offset and the extends

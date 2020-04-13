@@ -503,9 +503,9 @@ HRESULT MyDirectDrawSurface7::Unlock(LPRECT lpRect)
 			if (vidRes.x == 0 || vidRes.y == 0)
 				vidRes = Engine::GraphicsEngine->GetResolution();
 
-			D3DXVECTOR2 mid = D3DXVECTOR2(Engine::GraphicsEngine->GetResolution().x / 2, Engine::GraphicsEngine->GetResolution().y / 2);
-			D3DXVECTOR2 tl = mid - D3DXVECTOR2(vidRes.x, vidRes.y) * 0.5f;
-			D3DXVECTOR2 br = mid + D3DXVECTOR2(vidRes.x, vidRes.y) * 0.5f;
+			DirectX::SimpleMath::Vector2 mid = DirectX::SimpleMath::Vector2(Engine::GraphicsEngine->GetResolution().x / 2, Engine::GraphicsEngine->GetResolution().y / 2);
+			DirectX::SimpleMath::Vector2 tl = mid - DirectX::SimpleMath::Vector2(vidRes.x, vidRes.y) * 0.5f;
+			DirectX::SimpleMath::Vector2 br = mid + DirectX::SimpleMath::Vector2(vidRes.x, vidRes.y) * 0.5f;
 
 			// Compute how much we would have to scale the video on both axis
 			float scaleX = Engine::GraphicsEngine->GetResolution().x / (float)vidRes.x;

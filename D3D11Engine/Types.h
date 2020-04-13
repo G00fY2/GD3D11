@@ -4,8 +4,10 @@
 
 #include <Windows.h>
 
-#include <D3DX10math.h>
+#include <d3d11.h>
 #include <DirectXMath.h>
+#include <SimpleMath.h>
+
 
 /** Defines types used for the project */
 
@@ -20,11 +22,6 @@ struct INT2 {
 	INT2(int x, int y) {
 		this->x = x;
 		this->y = y;
-	}
-
-	INT2(const D3DXVECTOR2 & v) {
-		this->x = (int)(v.x + 0.5f);
-		this->y = (int)(v.y + 0.5f);
 	}
 
 	INT2() { x = 0; y = 0; }
@@ -54,7 +51,6 @@ struct INT4 {
 };
 
 struct float4;
-struct D3DXVECTOR3;
 
 struct float3 {
 	float3(float x, float y, float z) {
@@ -73,12 +69,6 @@ struct float3 {
 		z = b / 255.0f;
 	}
 
-	float3(const D3DXVECTOR3 & v) {
-		x = ((float3 *)&v)->x;
-		y = ((float3 *)&v)->y;
-		z = ((float3 *)&v)->z;
-	}
-
 	float3(const float4 & v) {
 		x = ((float3 *)&v)->x;
 		y = ((float3 *)&v)->y;
@@ -91,9 +81,6 @@ struct float3 {
 		z = v.z;
 	}
 
-	D3DXVECTOR3 * toD3DXVECTOR3() const {
-		return (D3DXVECTOR3 *)this;
-	}
 	DirectX::XMFLOAT3 * toXMFLOAT3() const {
 		return (DirectX::XMFLOAT3 *)this;
 	}
@@ -157,22 +144,7 @@ struct float4 {
 		this->w = w;
 	}
 
-	float4(const D3DXVECTOR4 & v) {
-		this->x = v.x;
-		this->y = v.y;
-		this->z = v.z;
-		this->w = v.w;
-	}
-
-
 	float4(const float3 & f) {
-		this->x = f.x;
-		this->y = f.y;
-		this->z = f.z;
-		this->w = 1.0f;
-	}
-
-	float4(const D3DXVECTOR3 & f) {
 		this->x = f.x;
 		this->y = f.y;
 		this->z = f.z;
@@ -201,14 +173,6 @@ struct float4 {
 	}
 
 	float4() { x = 0; y = 0; z = 0; w = 0; }
-
-	D3DXVECTOR4 * toD3DXVECTOR4() const {
-		return (D3DXVECTOR4 *)this;
-	}
-
-	D3DXVECTOR3 * toD3DXVECTOR3() const {
-		return (D3DXVECTOR3 *)this;
-	}
 
 	DirectX::XMFLOAT4* toXMFLOAT4() const {
 		return (DirectX::XMFLOAT4*)this;
@@ -255,16 +219,7 @@ struct float2 {
 		this->y = (float)i.y;
 	}
 
-	float2(const D3DXVECTOR2 & v) {
-		this->x = v.x;
-		this->y = v.y;
-	}
-
 	float2() { x = 0; y = 0; }
-
-	D3DXVECTOR2 * toD3DXVECTOR2() const {
-		return (D3DXVECTOR2 *)this;
-	}
 
 	std::string toString() const {
 		return std::string("(") + std::to_string(x) + ", " + std::to_string(y) + ")";

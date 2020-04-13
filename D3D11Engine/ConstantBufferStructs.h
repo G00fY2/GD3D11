@@ -286,10 +286,10 @@ struct CubemapGSConstantBuffer
 
 struct ParticleGSInfoConstantBuffer
 {
-	float3 CameraPosition;
+	DirectX::SimpleMath::Vector3 CameraPosition;
     float PGS_RainFxWeight;
 	float PGS_RainHeight;
-	float3 PGS_Pad;
+	DirectX::SimpleMath::Vector3 PGS_Pad;
 };
 
 struct PNAENConstantBuffer
@@ -329,7 +329,7 @@ struct AtmosphereConstantBuffer
 	float AC_OuterRadius;
 	float AC_Scale;
 
-	float3 AC_Wavelength;
+	DirectX::SimpleMath::Vector3 AC_Wavelength;
 	float AC_RayleighScaleDepth;
 
 
@@ -338,12 +338,12 @@ struct AtmosphereConstantBuffer
 	float AC_fSamples;
 	float AC_CameraHeight;
 
-	float3 AC_CameraPos;
+	DirectX::SimpleMath::Vector3 AC_CameraPos;
 	float AC_Time;
-	float3 AC_LightPos;
+	DirectX::SimpleMath::Vector3 AC_LightPos;
 	float AC_SceneWettness;
 
-	float3 AC_SpherePosition;
+	DirectX::SimpleMath::Vector3 AC_SpherePosition;
 	float AC_RainFXWeight;
 };
 #pragma pack (pop)

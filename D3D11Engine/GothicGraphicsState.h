@@ -529,11 +529,11 @@ struct GothicRendererSettings {
 		RainHeightRange = 1000.0f;
 		RainNumParticles = 50000;
 		RainMoveParticles = true;
-		RainGlobalVelocity = D3DXVECTOR3(250, -1000, 0);
+		RainGlobalVelocity = DirectX::SimpleMath::Vector3(250, -1000, 0);
 		RainUseInitialSet = false;
 		RainSceneWettness = 0.0f;
 		RainSunLightStrength = 0.50f;
-		RainFogColor = D3DXVECTOR3(0.28f, 0.28f, 0.28f);
+		RainFogColor = float3(0.28f, 0.28f, 0.28f);
 		RainFogDensity = 0.00500f;
 
 		GodRayDecay = 0.97f;
@@ -677,11 +677,11 @@ struct GothicRendererSettings {
 	UINT RainNumParticles;
 	bool RainMoveParticles;
 	bool RainUseInitialSet;
-	D3DXVECTOR3 RainGlobalVelocity;
+	DirectX::SimpleMath::Vector3 RainGlobalVelocity;
 	float RainSceneWettness;
 
 	float RainSunLightStrength;
-	D3DXVECTOR3 RainFogColor;
+	float3 RainFogColor;
 	float RainFogDensity;
 
 	bool AllowNormalmaps;

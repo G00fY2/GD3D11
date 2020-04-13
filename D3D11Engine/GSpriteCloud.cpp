@@ -13,12 +13,12 @@ GSpriteCloud::~GSpriteCloud()
 
 struct CloudBB
 {
-	void MakeRandom(const D3DXVECTOR3 & center, const D3DXVECTOR3 & minSize, const D3DXVECTOR3 & maxSize)
+	void MakeRandom(const DirectX::SimpleMath::Vector3& center, const DirectX::SimpleMath::Vector3& minSize, const DirectX::SimpleMath::Vector3& maxSize)
 	{
-		D3DXVECTOR3 d = maxSize - minSize;
+		DirectX::SimpleMath::Vector3 d = maxSize - minSize;
 		
 		// Random Box size
-		D3DXVECTOR3 sr = D3DXVECTOR3(minSize.x + Toolbox::frand() * d.x,
+		DirectX::SimpleMath::Vector3 sr = DirectX::SimpleMath::Vector3(minSize.x + Toolbox::frand() * d.x,
 			minSize.y + Toolbox::frand() * d.y,
 			minSize.z + Toolbox::frand() * d.z);
 		sr /= 2.0f;
@@ -27,33 +27,32 @@ struct CloudBB
 		Center = center;
 	}
 
-	D3DXVECTOR3 GetRandomPointInBox()
+	DirectX::SimpleMath::Vector3 GetRandomPointInBox()
 	{
-		D3DXVECTOR3 r = D3DXVECTOR3((Toolbox::frand() * Size.x * 2) - Size.x,
+		DirectX::SimpleMath::Vector3 r = DirectX::SimpleMath::Vector3((Toolbox::frand() * Size.x * 2) - Size.x,
 			(Toolbox::frand() * Size.y * 2) - Size.y,
 			(Toolbox::frand() * Size.z * 2) - Size.z);
 
 		return r;
 	}
 
-	D3DXVECTOR3 Center;
-	D3DXVECTOR3 Size;
+	DirectX::SimpleMath::Vector3 Center;
+	DirectX::SimpleMath::Vector3 Size;
 };
 
 /** Initializes this cloud */
-void GSpriteCloud::CreateCloud(const D3DXVECTOR3 & size, int numSprites)
+void GSpriteCloud::CreateCloud(const DirectX::SimpleMath::Vector3& size, int numSprites)
 {
 	CloudBB c;
-	c.MakeRandom(D3DXVECTOR3(0, 0, 0), size / 2.0f, size);
+	c.MakeRandom(DirectX::SimpleMath::Vector3(0, 0, 0), size / 2.0f, size);
 
 	// Fill the bb with sprites
 	for(int i=0;i<numSprites;i++)
 	{
-		D3DXVECTOR3 rnd = c.GetRandomPointInBox();
+		DirectX::SimpleMath::Vector3 rnd = c.GetRandomPointInBox();
 		Sprites.push_back(rnd);
 
-		D3DXMATRIX m;
-		D3DXMatrixTranslation(&m, rnd.x, rnd.y, rnd.z);
+		DirectX::SimpleMath::Matrix m = DirectX::XMMatrixTranslation(rnd.x, rnd.y, rnd.z);
 
 		SpriteWorldMatrices.push_back(m);
 	}

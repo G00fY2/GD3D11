@@ -224,7 +224,7 @@ XRESULT D3D11Texture::CreateThumbnail()
 	if (!tempRTV)
 		return XR_FAILED;
 
-	engine->GetContext()->ClearRenderTargetView(tempRTV, (float *)&D3DXVECTOR4(1, 0, 0, 1));
+	engine->GetContext()->ClearRenderTargetView(tempRTV, (float *)&float4(1, 0, 0, 1));
 
 	// Copy main texture to it
 	engine->GetContext()->PSSetShaderResources(0, 1, &ShaderResourceView);
