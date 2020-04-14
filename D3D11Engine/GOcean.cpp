@@ -140,8 +140,7 @@ void GOcean::CreateFresnelMap(ID3D11Device* pd3dDevice)
 		float cos_a = i / (FLOAT)FRESNEL_TEX_SIZE;
 		// Using water's refraction index 1.33
 		
-		float fresnelFloat;
-		XMStoreFloat(&fresnelFloat, DirectX::XMFresnelTerm(XMLoadFloat(&cos_a), XMVectorSet(1.33f, 0, 0, 0)));
+		float fresnelFloat = XMVectorGetX(XMFresnelTerm(XMVectorSet(cos_a, 0, 0, 0), XMVectorSet(1.33f, 0, 0, 0)));
 		DWORD fresnel = (DWORD)(fresnelFloat * 255);
 
 		DWORD sky_blend = (DWORD)(powf(1 / (1 + cos_a), SkyBlending) * 255);
