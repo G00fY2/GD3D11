@@ -272,7 +272,7 @@ void D3D11PointLight::RenderCubemapFace(const DirectX::XMFLOAT4X4& view, const D
 	Engine::GAPI->SetCameraReplacementPtr(&cr);
 
 	if (engine->GetDummyCubeRT())
-		engine->GetContext()->ClearRenderTargetView(engine->GetDummyCubeRT()->GetRTVCubemapFace(faceIdx), (float *)&float4(0, 0, 0, 0));
+		engine->GetContext()->ClearRenderTargetView(engine->GetDummyCubeRT()->GetRTVCubemapFace(faceIdx), float4(0, 0, 0, 0).toPtr());
 
 	// Disable shadows for NPCs
 	// TODO: Only for the player himself, because his shadows look ugly when using a torch

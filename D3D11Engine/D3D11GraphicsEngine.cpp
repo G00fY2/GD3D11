@@ -286,7 +286,7 @@ XRESULT D3D11GraphicsEngine::Init() {
 		nullptr, sizeof(float4));
 
 	// Init inf-buffer now
-	InfiniteRangeConstantBuffer->UpdateBuffer(&float4(FLT_MAX, 0, 0, 0));
+	InfiniteRangeConstantBuffer->UpdateBuffer(float4(FLT_MAX, 0, 0, 0).toPtr());
 
 	// Load reflectioncube
 	
@@ -655,12 +655,12 @@ XRESULT D3D11GraphicsEngine::Clear(const float4& color) {
 		D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	GetContext()->ClearRenderTargetView(GBuffer0_Diffuse->GetRenderTargetView(),
-		(float*)& color);
+		color.toPtr());
 	GetContext()->ClearRenderTargetView(
 		GBuffer1_Normals_SpecIntens_SpecPower->GetRenderTargetView(),
-		(float*)&float4(0, 0, 0, 0));
+		float4(0, 0, 0, 0).toPtr());
 	GetContext()->ClearRenderTargetView(HDRBackBuffer->GetRenderTargetView(),
-		(float*)&float4(0, 0, 0, 0));
+		float4(0, 0, 0, 0).toPtr());
 
 	return XR_SUCCESS;
 }

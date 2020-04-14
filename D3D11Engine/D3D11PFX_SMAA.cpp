@@ -134,8 +134,8 @@ void D3D11PFX_SMAA::RenderPostFX(ID3D11ShaderResourceView * renderTargetSRV)
 		OnResize(INT2(engine->GetResolution().x, engine->GetResolution().y));
 	}
 
-	engine->GetContext()->ClearRenderTargetView(EdgesTex->GetRenderTargetView(), (float*)&float4(0, 0, 0, 0));
-	engine->GetContext()->ClearRenderTargetView(BlendTex->GetRenderTargetView(), (float*)&float4(0, 0, 0, 0));
+	engine->GetContext()->ClearRenderTargetView(EdgesTex->GetRenderTargetView(), float4(0, 0, 0, 0).toPtr());
+	engine->GetContext()->ClearRenderTargetView(BlendTex->GetRenderTargetView(), float4(0, 0, 0, 0).toPtr());
 
 	ID3D11RenderTargetView* RTV=nullptr;
 	ID3D11RenderTargetView* OldRTV=nullptr;
