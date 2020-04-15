@@ -148,7 +148,7 @@ namespace Toolbox {
 	bool IntersectBox(const DirectX::SimpleMath::Vector3 & min, const DirectX::SimpleMath::Vector3 & max, const DirectX::SimpleMath::Vector3 & origin, const DirectX::SimpleMath::Vector3 & direction, float & t);
 
 	/** Does a ray vs aabb test */
-	bool __vectorcall IntersectTri(DirectX::FXMVECTOR v0, DirectX::FXMVECTOR v1, DirectX::FXMVECTOR v2, DirectX::CXMVECTOR origin, DirectX::CXMVECTOR direction, float & u, float & v, float & t);
+	bool XM_CALLCONV IntersectTri(DirectX::FXMVECTOR v0, DirectX::FXMVECTOR v1, DirectX::FXMVECTOR v2, DirectX::CXMVECTOR origin, DirectX::CXMVECTOR direction, float & u, float & v, float & t);
 
 	/** Computes the normal of a triangle */
 	DirectX::SimpleMath::Vector3 ComputeNormal(const DirectX::SimpleMath::Vector3 & v0, const DirectX::SimpleMath::Vector3 & v1, const DirectX::SimpleMath::Vector3 & v2);

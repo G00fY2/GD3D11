@@ -283,13 +283,13 @@ public:
 	DirectX::XMFLOAT4X4 GetProjTransformDx();
 
 	/** Sets the world matrix */
-	void __vectorcall  SetWorldTransformXM(DirectX::XMMATRIX world, bool transpose = false);
+	void XM_CALLCONV SetWorldTransformXM(DirectX::XMMATRIX world, bool transpose = false);
 	
 	/** Sets the world matrix */
 	void SetWorldTransformDX(const DirectX::XMFLOAT4X4& world, bool transpose = false);
 
 	/** Sets the world matrix */
-	void __vectorcall SetViewTransformXM(DirectX::XMMATRIX view, bool transpose = false);
+	void XM_CALLCONV SetViewTransformXM(DirectX::XMMATRIX view, bool transpose = false);
 
 	/** Sets the world matrix */
 	void SetViewTransformDX(const DirectX::XMFLOAT4X4& view, bool transpose = false);
@@ -298,7 +298,7 @@ public:
 	void SetWorldViewTransform(const DirectX::XMFLOAT4X4& world, const DirectX::XMFLOAT4X4& view);
 	
 	/** Sets the world matrix */
-	void __vectorcall SetWorldViewTransform(DirectX::XMMATRIX world, const DirectX::XMMATRIX& view);
+	void XM_CALLCONV SetWorldViewTransform(DirectX::FXMMATRIX world, DirectX::CXMMATRIX view);
 
 	/** Sets the world matrix */
 	void ResetWorldTransform();
@@ -351,7 +351,7 @@ public:
 	DirectX::XMFLOAT4X4& GetProjectionMatrixDX();
 
 	/** Unprojects a pixel-position on the screen */
-	void __vectorcall UnprojectXM(DirectX::FXMVECTOR p, DirectX::XMVECTOR& worldPos, DirectX::XMVECTOR& worldDir);
+	void XM_CALLCONV UnprojectXM(DirectX::FXMVECTOR p, DirectX::XMVECTOR& worldPos, DirectX::XMVECTOR& worldDir);
 
 	/** Unprojects the current cursor, returns it's direction in world-space */
 	DirectX::XMVECTOR UnprojectCursorXM();
@@ -364,7 +364,7 @@ public:
 	SkeletalVobInfo * TraceSkeletalMeshVobsBB(const DirectX::SimpleMath::Vector3 & origin, const DirectX::SimpleMath::Vector3 & dir, DirectX::SimpleMath::Vector3 & hit);
 
 	/** Traces a visual info. Returns -1 if not hit, distance otherwise */
-	float __vectorcall TraceVisualInfo(DirectX::FXMVECTOR origin, DirectX::FXMVECTOR dir, BaseVisualInfo * visual, zCMaterial ** hitMaterial = nullptr);
+	float XM_CALLCONV TraceVisualInfo(DirectX::FXMVECTOR origin, DirectX::FXMVECTOR dir, BaseVisualInfo * visual, zCMaterial ** hitMaterial = nullptr);
 
 	/** Applies tesselation-settings for all mesh-parts using the given info */
 	void ApplyTesselationSettingsForAllMeshPartsUsing(MaterialInfo * info, int amount = 1);

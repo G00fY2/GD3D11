@@ -171,7 +171,7 @@ namespace Toolbox
 	}
 
 	/** Does a ray vs aabb test */
-	bool __vectorcall IntersectTri(FXMVECTOR v0, FXMVECTOR v1, FXMVECTOR v2, CXMVECTOR origin, CXMVECTOR direction, float & u, float & v, float & t)
+	bool XM_CALLCONV IntersectTri(FXMVECTOR v0, FXMVECTOR v1, FXMVECTOR v2, CXMVECTOR origin, CXMVECTOR direction, float & u, float & v, float & t)
 	{
 		const float EPSILON = 0.00001f;
 		XMVECTOR edge1 = v1 - v0; 

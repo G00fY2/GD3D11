@@ -1990,7 +1990,7 @@ DirectX::XMFLOAT4X4 GothicAPI::GetProjTransformDx()
 
 
 /** Sets the world matrix */
-void __vectorcall GothicAPI::SetWorldTransformXM(XMMATRIX world, bool transpose)
+void XM_CALLCONV GothicAPI::SetWorldTransformXM(XMMATRIX world, bool transpose)
 {
 	if (transpose)
 		XMStoreFloat4x4(&RendererState.TransformState.TransformWorld, XMMatrixTranspose(world));
@@ -2007,7 +2007,7 @@ void GothicAPI::SetWorldTransformDX(const XMFLOAT4X4& world, bool transpose)
 }
 
 /** Sets the world matrix */
-void __vectorcall GothicAPI::SetViewTransformXM(XMMATRIX view, bool transpose)
+void XM_CALLCONV GothicAPI::SetViewTransformXM(XMMATRIX view, bool transpose)
 {
 	if (transpose)
 		XMStoreFloat4x4(&RendererState.TransformState.TransformView, XMMatrixTranspose(view));
@@ -2029,7 +2029,7 @@ void GothicAPI::SetWorldViewTransform(const XMFLOAT4X4& world, const XMFLOAT4X4&
 	RendererState.TransformState.TransformView = view;
 }
 /** Sets the world matrix */
-void __vectorcall  GothicAPI::SetWorldViewTransform(XMMATRIX world, const XMMATRIX& view)
+void XM_CALLCONV GothicAPI::SetWorldViewTransform(FXMMATRIX world, CXMMATRIX view)
 {
 	XMStoreFloat4x4(&RendererState.TransformState.TransformWorld, world);
 	XMStoreFloat4x4(&RendererState.TransformState.TransformView, view);
@@ -2149,7 +2149,7 @@ SkeletalVobInfo* GothicAPI::TraceSkeletalMeshVobsBB(const Vector3 & origin, cons
 	return vob;
 }
 
-float __vectorcall GothicAPI::TraceVisualInfo(FXMVECTOR origin, FXMVECTOR dir, BaseVisualInfo * visual, zCMaterial * *hitMaterial)
+float XM_CALLCONV GothicAPI::TraceVisualInfo(FXMVECTOR origin, FXMVECTOR dir, BaseVisualInfo * visual, zCMaterial * *hitMaterial)
 {
 	float u, v, t;
 	float closest = FLT_MAX;
@@ -2266,7 +2266,7 @@ bool GothicAPI::TraceWorldMesh(const Vector3 & origin, const Vector3& dir, Vecto
 }
 
 /** Unprojects a pixel-position on the screen */
-void __vectorcall GothicAPI::UnprojectXM(FXMVECTOR p, XMVECTOR& worldPos, XMVECTOR& worldDir)
+void XM_CALLCONV GothicAPI::UnprojectXM(FXMVECTOR p, XMVECTOR& worldPos, XMVECTOR& worldDir)
 {
 	XMMATRIX proj = XMLoadFloat4x4(&GetProjectionMatrixDX());
 	XMFLOAT4X4 fInvView;
