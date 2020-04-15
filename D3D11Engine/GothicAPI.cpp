@@ -2099,7 +2099,7 @@ VobInfo* GothicAPI::TraceStaticMeshVobsBB(const Vector3 & origin, const Vector3 
 		invWorld = XMMatrixInverse(nullptr, invWorld);
 
 		Vector3 localOrigin = XMVector3TransformCoord(origin, invWorld);
-		Vector3 localDir = XMVector3TransformCoord(dir, invWorld);
+		Vector3 localDir = XMVector3TransformNormal(dir, invWorld);
 
 		zCMaterial* hitMat = nullptr;
 		float t = TraceVisualInfo(localOrigin, localDir, (*it)->VisualInfo, &hitMat);
