@@ -364,7 +364,7 @@ public:
 	SkeletalVobInfo * TraceSkeletalMeshVobsBB(const DirectX::SimpleMath::Vector3 & origin, const DirectX::SimpleMath::Vector3 & dir, DirectX::SimpleMath::Vector3 & hit);
 
 	/** Traces a visual info. Returns -1 if not hit, distance otherwise */
-	float TraceVisualInfo(const DirectX::SimpleMath::Vector3 & origin, const DirectX::SimpleMath::Vector3 & dir, BaseVisualInfo * visual, zCMaterial ** hitMaterial = nullptr);
+	float __vectorcall TraceVisualInfo(DirectX::FXMVECTOR origin, DirectX::FXMVECTOR dir, BaseVisualInfo * visual, zCMaterial ** hitMaterial = nullptr);
 
 	/** Applies tesselation-settings for all mesh-parts using the given info */
 	void ApplyTesselationSettingsForAllMeshPartsUsing(MaterialInfo * info, int amount = 1);

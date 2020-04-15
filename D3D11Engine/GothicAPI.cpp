@@ -2098,8 +2098,8 @@ VobInfo* GothicAPI::TraceStaticMeshVobsBB(const Vector3 & origin, const Vector3 
 		XMMATRIX invWorld = XMMatrixTranspose((*it)->Vob->GetWorldMatrixXM());
 		invWorld = XMMatrixInverse(nullptr, invWorld);
 
-		Vector3 localOrigin = XMVector3TransformCoord(origin, invWorld);
-		Vector3 localDir = XMVector3TransformNormal(dir, invWorld);
+		XMVECTOR localOrigin = XMVector3TransformCoord(origin, invWorld);
+		XMVECTOR localDir = XMVector3TransformNormal(dir, invWorld);
 
 		zCMaterial* hitMat = nullptr;
 		float t = TraceVisualInfo(localOrigin, localDir, (*it)->VisualInfo, &hitMat);
@@ -2149,7 +2149,7 @@ SkeletalVobInfo* GothicAPI::TraceSkeletalMeshVobsBB(const Vector3 & origin, cons
 	return vob;
 }
 
-float GothicAPI::TraceVisualInfo(const Vector3 & origin, const Vector3 & dir, BaseVisualInfo * visual, zCMaterial * *hitMaterial)
+float __vectorcall GothicAPI::TraceVisualInfo(FXMVECTOR origin, FXMVECTOR dir, BaseVisualInfo * visual, zCMaterial * *hitMaterial)
 {
 	float u, v, t;
 	float closest = FLT_MAX;

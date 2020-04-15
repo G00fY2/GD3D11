@@ -487,7 +487,7 @@ void D2DEditorView::DoVegetationRemove()
 
 	if (Selection.SelectedVegetationBox)
 	{
-		if (Engine::GAPI->TraceWorldMesh(Engine::GAPI->GetCameraPosition(), *(Vector3*)&wDir, hit, nullptr, hitTri))
+		if (Engine::GAPI->TraceWorldMesh(Engine::GAPI->GetCameraPosition(), wDir, hit, nullptr, hitTri))
 		{
 			Vector4 p = XMVector3Cross(hitTri[1] - hitTri[0], hitTri[2] - hitTri[0]);
 			p.w = 0.0f;
@@ -533,7 +533,7 @@ void D2DEditorView::DoVegetationPlacement()
 		rtp = &TracedTexture;
 
 	// Trace the worldmesh from the cursor
-	if (Engine::GAPI->TraceWorldMesh(Engine::GAPI->GetCameraPosition(), *(Vector3*)&wDir, hit, rtp, hitTri))
+	if (Engine::GAPI->TraceWorldMesh(Engine::GAPI->GetCameraPosition(), wDir, hit, rtp, hitTri))
 	{
 		// Update the position if successful
 		DraggedBoxCenter = hit;

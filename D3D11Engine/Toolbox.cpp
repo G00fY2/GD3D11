@@ -3,6 +3,7 @@
 #include "Toolbox.h"
 #include "zTypes.h"
 
+using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
 namespace Toolbox
@@ -170,24 +171,24 @@ namespace Toolbox
 	}
 
 	/** Does a ray vs aabb test */
-	bool IntersectTri(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector3 & origin, const Vector3 & direction, float & u, float & v, float & t)
+	bool __vectorcall IntersectTri(FXMVECTOR v0, FXMVECTOR v1, FXMVECTOR v2, CXMVECTOR origin, CXMVECTOR direction, float & u, float & v, float & t)
 	{
 		const float EPSILON = 0.00001f;
-		Vector3 edge1 = v1 - v0; 
-		Vector3 edge2 = v2 - v0; 
-		Vector3 pvec = direction.Cross(edge2); 
-		float det = edge1.Dot(pvec); 
+		XMVECTOR edge1 = v1 - v0; 
+		XMVECTOR edge2 = v2 - v0;
+		XMVECTOR pvec = XMVector3Cross(direction, edge2);
+		float det; XMStoreFloat(&det, XMVector3Dot(edge1, pvec));
 		if (det > -EPSILON && det < EPSILON) return false; 
 
 		float invDet = 1 / det; 
-		Vector3 tvec = origin - v0; 
-		u = tvec.Dot(pvec) * invDet; 
+		XMVECTOR tvec = origin - v0;
+		XMStoreFloat(&u, XMVector3Dot(tvec, pvec) * invDet);
 		if (u < 0 || u > 1) return false; 
-		Vector3 qvec = tvec.Cross(edge1); 
+		XMVECTOR qvec = XMVector3Cross(tvec, edge1);
 
-		v = direction.Dot(qvec) * invDet; 
+		XMStoreFloat(&v, XMVector3Dot(direction, qvec) * invDet);
 		if (v < 0 || u + v > 1) return false; 
-		t = edge2.Dot(qvec) * invDet; 
+		XMStoreFloat(&t, XMVector3Dot(edge2, qvec) * invDet);
 
 		return true; 
 	}
