@@ -14,6 +14,10 @@ const unsigned int DRAWVERTEXARRAY_BUFFER_SIZE = 4096 * sizeof( ExVertexStruct )
 const int NUM_MAX_BONES = 96;
 const unsigned int INSTANCING_BUFFER_SIZE = sizeof( VobInstanceInfo ) * 2048;
 
+#if defined(BUILD_GOTHIC_1_08k) && !defined(BUILD_1_12F)
+extern bool haveWindAnimations;
+#endif
+
 // If defined, creates a debug-version of the d3d11-device
 //#define DEBUG_D3D11
 
@@ -313,7 +317,23 @@ void D3D11GraphicsEngineBase::ConstructShaderMakroList( std::vector<D3D_SHADER_M
 #ifdef BUILD_GOTHIC_2_6_fix
     m.Definition = s.WindQuality == GothicRendererSettings::EWindQuality::WIND_QUALITY_ADVANCED ? "1" : "0";
 #else
+#ifdef BUILD_1_12F
     m.Definition = "0";
+#else
+    m.Definition = (haveWindAnimations && s.WindQuality == GothicRendererSettings::EWindQuality::WIND_QUALITY_ADVANCED) ? "1" : "0";
+#endif
+#endif
+    list.push_back( m );
+
+    m.Name = "SHD_INFLUENCE";
+#ifdef BUILD_GOTHIC_2_6_fix
+    m.Definition = Engine::GAPI->GetRendererState().RendererSettings.HeroAffectsObjects ? "1" : "0";
+#else
+#ifdef BUILD_1_12F
+    m.Definition = "0";
+#else
+    m.Definition = (haveWindAnimations && Engine::GAPI->GetRendererState().RendererSettings.HeroAffectsObjects) ? "1" : "0";
+#endif
 #endif
     list.push_back( m );
 

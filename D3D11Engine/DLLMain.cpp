@@ -26,6 +26,9 @@ ZUnquantizeHalfFloat_X4 UnquantizeHalfFloat_X8;
 
 static HINSTANCE hLThis = 0;
 static bool comInitialized = false;
+#if defined(BUILD_GOTHIC_1_08k) && !defined(BUILD_1_12F)
+bool haveWindAnimations = false;
+#endif
 
 typedef void (WINAPI* DirectDrawSimple)();
 typedef HRESULT( WINAPI* DirectDrawCreateEx_type )(GUID FAR*, LPVOID*, REFIID, IUnknown FAR*);
@@ -278,8 +281,10 @@ extern "C" void WINAPI HookedReleaseDDThreadLock() {
 }
 
 extern "C" float WINAPI UpdateCustomFontMultiplierFontRendering( float multiplier ) {
+    // Using this function is unrecommended if you respect your players
+    // there are a lot of players that don't play with GD3D11 mod
     D3D11GraphicsEngine* engine = reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine);
-    return engine ? engine->UpdateCustomFontMultiplierFontRendering( multiplier ) : 1.0;
+    return engine ? engine->UpdateCustomFontMultiplierFontRendering( multiplier ) : 1.0f;
 }
 
 extern "C" void WINAPI SetCustomCloudAndNightTexture( int idxTexture, bool isNightTexture ) {
@@ -303,6 +308,12 @@ extern "C" void WINAPI SetCustomSkyWavelengths( float X, float Y, float Z ) {
     if ( sky ) {
         sky->SetCustomSkyWavelengths( X, Y, Z );
     }
+}
+
+extern "C" void WINAPI EnableWindAnimations( void ) {
+#if defined(BUILD_GOTHIC_1_08k) && !defined(BUILD_1_12F)
+    haveWindAnimations = true;
+#endif
 }
 
 __declspec(naked) void FakeAcquireDDThreadLock() { _asm { jmp[ddraw.AcquireDDThreadLock] } }

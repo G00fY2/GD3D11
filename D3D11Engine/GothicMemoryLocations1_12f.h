@@ -154,6 +154,7 @@ struct GothicMemoryLocations {
         static const unsigned int Offset_VisTexture = 0x2DC;
         static const unsigned int Offset_VisAlignment = 0x2E4;
         static const unsigned int Offset_VisAlphaBlendFunc = 0x308;
+        static const unsigned int Offset_VisTexAniIsLooping = 0x198;
 
         static const unsigned int Offset_VisShpRender = 0xBC;
         static const unsigned int Offset_VisShpType = 0x258;
@@ -205,6 +206,7 @@ struct GothicMemoryLocations {
         static const unsigned int Offset_VobAlpha = 0xBC;
         static const unsigned int MASK_ShowVisual = 0x1;
         static const unsigned int MASK_VisualAlpha = 0x4;
+        static const unsigned int MASK_DynColl = 0x80; // (1 << 7) collDetectionDynamic CHECK_DX11_NEW not sure
         static const unsigned int Offset_CameraAlignment = 0xF0;
         static const unsigned int SHIFTLR_CameraAlignment = 0x1E;
 
@@ -291,6 +293,7 @@ struct GothicMemoryLocations {
 
     struct zSTRING {
         static const unsigned int ToChar = 0x08;
+        static const unsigned int ConstructorEmptyPtr = 0x00402F90;
         static const unsigned int ConstructorCharPtr = 0x004010C0;
         static const unsigned int DestructorCharPtr = 0x00401160;
     };

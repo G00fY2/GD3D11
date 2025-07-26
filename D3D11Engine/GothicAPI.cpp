@@ -2896,7 +2896,7 @@ void GothicAPI::DrawParticleFX( zCVob* source, zCParticleFX* fx, ParticleFrameDa
             if ( emitter->GetVisShpType() == 5 && ParticleEffectProgMeshes.find(source) == ParticleEffectProgMeshes.end() ) {
                 AddParticleEffect( source );
             }
-            if ( (texture = emitter->GetVisTexture()) != nullptr ) {
+            if ( (texture = emitter->GetVisTexture( pfx )) != nullptr ) {
                 // Check if it's loaded
                 if ( texture->CacheIn( 0.6f ) != zRES_CACHED_IN ) {
                     return;
@@ -3725,10 +3725,11 @@ void GothicAPI::CollectVisibleVobs( std::vector<VobInfo*>& vobs, std::vector<Vob
                 vii.world = it->WorldMatrix;
                 vii.color = it->GroundColor;
                 vii.windStrenth = 0.0f;
-                vii.windSpeed = 0.0f;
+                vii.canBeAffectedByPlayer = 0;
 
                 zTAnimationMode aniMode = it->Vob->GetVisualAniMode();
-                if ( aniMode != zVISUAL_ANIMODE_NONE && !Engine::GAPI->IsGamePaused() ) {
+                if ( aniMode != zVISUAL_ANIMODE_NONE ) {
+                    vii.canBeAffectedByPlayer = (!it->Vob->GetDynColl() ? 1.0f : 0.0f);
                     ProcessVobAnimation( it->Vob, aniMode, vii );
                 }
 
@@ -3899,20 +3900,8 @@ std::vector<VobInfo*>::iterator GothicAPI::MoveVobFromBspToDynamic( VobInfo* vob
 
 static void ProcessVobAnimation( zCVob* vob, zTAnimationMode aniMode, VobInstanceInfo& vobInstance ) {
     if ( Engine::GAPI->GetRendererState().RendererSettings.WindQuality == GothicRendererSettings::EWindQuality::WIND_QUALITY_ADVANCED ) {
-        // get rain weight
-        float rainWeight = Engine::GAPI->GetRainFXWeight();
-
-        // limit in 0..1 range
-        rainWeight = std::max<float>( 0.0f, std::min<float>( 1.0f, rainWeight ) );
-
-        // max multiplayers when rain is 1.0 (max)
-        constexpr float rainMaxStrengthMultiplier = 2.75f;
-        constexpr float rainMaxSpeedMultiplier = 2.15f;
-
-        vobInstance.windStrenth = std::max<float>( 0.1f, vob->GetVisualAniModeStrength() ) * (1.0f + rainWeight * (rainMaxStrengthMultiplier - 1.0f))
-            * Engine::GAPI->GetRendererState().RendererSettings.GlobalWindStrength;
-
-        vobInstance.windSpeed = 1.5f * (1.0f + rainWeight * (rainMaxSpeedMultiplier - 1.0f));
+        extern float vobAnimation_WindStrength;
+        vobInstance.windStrenth = std::max<float>( 0.1f, vob->GetVisualAniModeStrength() ) * vobAnimation_WindStrength;
     }
 }
 
@@ -3934,10 +3923,11 @@ static void CVVH_AddNotDrawnVobToList( std::vector<VobInfo*>& target, std::vecto
                 vii.world = it->WorldMatrix;
                 vii.color = it->GroundColor;
                 vii.windStrenth = 0.0f;
-                vii.windSpeed = 0.0f;
+                vii.canBeAffectedByPlayer = 0;
 
                 zTAnimationMode aniMode = it->Vob->GetVisualAniMode();
-                if ( aniMode != zVISUAL_ANIMODE_NONE && !Engine::GAPI->IsGamePaused() ) {
+                if ( aniMode != zVISUAL_ANIMODE_NONE ) {
+                    vii.canBeAffectedByPlayer = (!it->Vob->GetDynColl() ? 1.0f : 0.0f);
                     ProcessVobAnimation( it->Vob, aniMode, vii );
                 }
 
@@ -4742,6 +4732,8 @@ XRESULT GothicAPI::SaveMenuSettings( const std::string& file ) {
     WritePrivateProfileStringA( "Display", "WindQuality", std::to_string( s.WindQuality ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Display", "WindStrength", std::to_string( s.GlobalWindStrength ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Display", "WaterWaveAnimation", std::to_string( s.EnableWaterAnimation ? TRUE : FALSE ).c_str(), ini.c_str() );
+    WritePrivateProfileStringA( "Display", "HeroAffectsObjects", std::to_string( s.HeroAffectsObjects ? TRUE : FALSE ).c_str(), ini.c_str() );
+    
 
     WritePrivateProfileStringA( "Shadows", "EnableShadows", std::to_string( s.EnableShadows ? TRUE : FALSE ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "EnableSoftShadows", std::to_string( s.EnableSoftShadows ? TRUE : FALSE ).c_str(), ini.c_str() );
@@ -4857,7 +4849,8 @@ XRESULT GothicAPI::LoadMenuSettings( const std::string& file ) {
         s.WindQuality = GetPrivateProfileIntA( "Display", "WindQuality", 0, ini.c_str() );
         s.GlobalWindStrength = GetPrivateProfileFloatA( "Display", "WindStrength", 1.0f, ini );
         s.EnableWaterAnimation = GetPrivateProfileBoolA( "Display", "WaterWaveAnimation", true, ini );
-
+        s.HeroAffectsObjects = GetPrivateProfileBoolA( "Display", "HeroAffectsObjects", true, ini );
+        
         s.EnableSMAA = GetPrivateProfileBoolA( "SMAA", "Enabled", false, ini );
         s.SharpenFactor = GetPrivateProfileFloatA( "SMAA", "SharpenFactor", 0.30f, ini );
 

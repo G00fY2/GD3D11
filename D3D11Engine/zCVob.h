@@ -33,6 +33,10 @@ class zCVisual;
 class zCWorld;
 class oCGame;
 
+#if defined(BUILD_GOTHIC_1_08k) && !defined(BUILD_1_12F)
+extern bool haveWindAnimations;
+#endif
+
 class zCVob {
 public:
     /** Hooks the functions of this Class */
@@ -298,6 +302,12 @@ public:
         return (flags & GothicMemoryLocations::zCVob::MASK_VisualAlpha);
     }
 
+    /** Returns dynamic collision of the vob */
+    bool GetDynColl() {
+        unsigned int flags = *reinterpret_cast<unsigned int*>(THISPTR_OFFSET( GothicMemoryLocations::zCVob::Offset_Flags ));
+        return (flags & GothicMemoryLocations::zCVob::MASK_DynColl);
+    }
+
     /** Vob transparency */
     float GetVobTransparency() {
         return *reinterpret_cast<float*>(THISPTR_OFFSET( GothicMemoryLocations::zCVob::Offset_VobAlpha ));
@@ -333,7 +343,11 @@ public:
 
     zTAnimationMode GetVisualAniMode() {
 #ifdef BUILD_GOTHIC_1_08k
+#ifdef BUILD_1_12F
         return zVISUAL_ANIMODE_NONE;
+#else
+        return (haveWindAnimations ? *reinterpret_cast<zTAnimationMode*>(THISPTR_OFFSET( GothicMemoryLocations::zCVob::Offset_WindAniMode )) : zVISUAL_ANIMODE_NONE);
+#endif
 #else
         return *reinterpret_cast<zTAnimationMode*>(THISPTR_OFFSET( GothicMemoryLocations::zCVob::Offset_WindAniMode ));
 #endif
@@ -341,7 +355,11 @@ public:
 
     float GetVisualAniModeStrength() {
 #ifdef BUILD_GOTHIC_1_08k
+#ifdef BUILD_1_12F
         return 0.f;
+#else
+        return (haveWindAnimations ? *reinterpret_cast<float*>(THISPTR_OFFSET( GothicMemoryLocations::zCVob::Offset_WindAniModeStrength )) : 0.f);
+#endif
 #else
         return *reinterpret_cast<float*>(THISPTR_OFFSET( GothicMemoryLocations::zCVob::Offset_WindAniModeStrength ));
 #endif

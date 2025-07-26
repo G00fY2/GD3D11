@@ -7,8 +7,7 @@ struct VobInstanceInfo {
     XMFLOAT4X4 world;
     DWORD color;
     float windStrenth;
-    float windSpeed;
-
+    float canBeAffectedByPlayer;
     // General purpose slot
     DWORD GP_Slot;
 };
@@ -178,9 +177,13 @@ struct VS_ExConstantBuffer_PerFrame {
 struct VS_ExConstantBuffer_Wind {
     float3 windDir;
     float globalTime;
+
     float minHeight;
     float maxHeight;
-    float Pad[2];
+    float2 padding0;
+
+    float3 playerPos;
+    float padding1;
 };
 
 struct ParticlePointShadingConstantBuffer {

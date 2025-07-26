@@ -338,7 +338,12 @@ bool AdditionalCheckWaterFall(zCTexture* texture)
 
     std::string textureName = texture->GetName();
     std::transform( textureName.begin(), textureName.end(), textureName.begin(), toupper );
-    if ( textureName.find( "FALL" ) != std::string::npos && (textureName.find( "SURFACE" ) != std::string::npos || textureName.find( "STONE" ) != std::string::npos || textureName.find( "A0" ) != std::string::npos) ) {
+#ifdef BUILD_GOTHIC_2_6_fix
+    if ( textureName.find( "FALL" ) != std::string::npos && textureName.find( "SURFACE" ) == std::string::npos && textureName.find( "STONE" ) == std::string::npos
+        && textureName.find( "A0" ) != std::string::npos ) {
+#else
+    if ( textureName.find( "FALL" ) != std::string::npos && (textureName.find( "SURFACE" ) != std::string::npos || textureName.find( "STONE" ) != std::string::npos) ) {
+#endif
         // Let's make it work at least with og waterfall foam
         return true;
     }
@@ -408,16 +413,12 @@ HRESULT WorldConverter::ConvertWorldMesh( zCPolygon** polys, unsigned int numPol
         }
 
         int matGroup = mat->GetMatGroup();
-#if 0
 #ifdef BUILD_GOTHIC_2_6_fix
-        if ( matGroup != zMAT_GROUP_WATER ) {
-            // Potential fix for some fucked up waterfall materials
-            // Disabled because it tends to crash a lot for some reason
+        if ( matGroup != zMAT_GROUP_WATER && !_tex ) {
             if ( AdditionalCheckWaterFall( key.Texture ) ) {
                 matGroup = zMAT_GROUP_WATER;
             }
         }
-#endif
 #endif
 
         // Extract poly vertices

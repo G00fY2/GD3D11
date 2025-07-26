@@ -3,6 +3,10 @@
 #include <VersionHelpers.h>
 #include <ShellScalingAPI.h>
 
+#if defined(BUILD_GOTHIC_1_08k) && !defined(BUILD_1_12F)
+extern bool haveWindAnimations;
+#endif
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
 int GetDpi( HWND hWnd )
@@ -269,20 +273,25 @@ void ImGuiShim::RenderSettingsWindow()
             ImGui::Checkbox( "Compress Backbuffer", &settings.CompressBackBuffer );
             ImGui::Checkbox( "Animate Static Vobs", &settings.AnimateStaticVobs );
 
-#ifdef BUILD_GOTHIC_2_6_fix
-            bool windEffect = settings.WindQuality != GothicRendererSettings::EWindQuality::WIND_QUALITY_NONE;
-            if ( ImGui::Checkbox( "Wind effect", &windEffect ) ) {
-                settings.WindQuality = windEffect
-                    ? GothicRendererSettings::EWindQuality::WIND_QUALITY_ADVANCED
-                    : GothicRendererSettings::EWindQuality::WIND_QUALITY_NONE;
-                Engine::GraphicsEngine->ReloadShaders();
-            }
+#if defined(BUILD_GOTHIC_2_6_fix) || (defined(BUILD_GOTHIC_1_08k) && !defined(BUILD_1_12F))
+#if defined(BUILD_GOTHIC_1_08k) && !defined(BUILD_1_12F)
+            if ( haveWindAnimations )
+#endif
+            {
+                bool windEffect = settings.WindQuality != GothicRendererSettings::EWindQuality::WIND_QUALITY_NONE;
+                if ( ImGui::Checkbox( "Wind effect", &windEffect ) ) {
+                    settings.WindQuality = windEffect
+                        ? GothicRendererSettings::EWindQuality::WIND_QUALITY_ADVANCED
+                        : GothicRendererSettings::EWindQuality::WIND_QUALITY_NONE;
+                    Engine::GraphicsEngine->ReloadShaders();
+                }
 
-            ImGui::Text( "Wind strength" ); ImGui::SameLine();
-            ImGui::BeginDisabled( settings.WindQuality == GothicRendererSettings::EWindQuality::WIND_QUALITY_NONE );
-            ImGui::SliderFloat( "##Wind strength", &settings.GlobalWindStrength, 0.1f, 5.0f, "%.2f");
-            ImGui::EndDisabled();
-#endif //BUILD_GOTHIC_2_6_fix
+                ImGui::Text( "Wind strength" ); ImGui::SameLine();
+                ImGui::BeginDisabled( settings.WindQuality == GothicRendererSettings::EWindQuality::WIND_QUALITY_NONE );
+                ImGui::SliderFloat( "##Wind strength", &settings.GlobalWindStrength, 0.1f, 5.0f, "%.2f" );
+                ImGui::EndDisabled();
+            }
+#endif
 
             ImGui::Checkbox( "Enable Rain", &settings.EnableRain );
             ImGui::Checkbox( "Enable Rain Effects", &settings.EnableRainEffects );
@@ -668,7 +677,15 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
         ImGui::DragFloat( "HDRMiddleGray", &settings.HDRMiddleGray, 0.01f, 0.0f, 0.0f, "%.2f" );
         ImGui::DragFloat( "BloomThreshold", &settings.BloomThreshold, 0.01f, 0.0f, 0.0f, "%.2f" );
         ImGui::DragFloat( "BloomStrength", &settings.BloomStrength, 0.01f, 0.0f, 0.0f, "%.2f" );
-        ImGui::DragFloat( "WindStrength", &settings.GlobalWindStrength, 0.01f, 0.0f, 0.0f, "%.2f" );
+
+#if defined(BUILD_GOTHIC_2_6_fix) || (defined(BUILD_GOTHIC_1_08k) && !defined(BUILD_1_12F))
+#if defined(BUILD_GOTHIC_1_08k) && !defined(BUILD_1_12F)
+        if ( haveWindAnimations )
+#endif
+        {
+            ImGui::DragFloat( "WindStrength", &settings.GlobalWindStrength, 0.01f, 0.0f, 0.0f, "%.2f" );
+        }
+#endif
         ImGui::Checkbox( "FixViewFrustum", &settings.FixViewFrustum );
         ImGui::DragFloat( "GothicUIScale", &settings.GothicUIScale, 0.01f, 0.01f, 20.0f, "%.2f" );
         ImGui::DragFloat( "FOVHoriz", &settings.FOVHoriz, 1.0f, 1.0f, 360.0f, "%.0f" );

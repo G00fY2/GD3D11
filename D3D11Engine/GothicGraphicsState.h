@@ -621,6 +621,7 @@ struct GothicRendererSettings {
         DrawThreaded = true;
 
         WindQuality = WIND_QUALITY_ADVANCED;
+        HeroAffectsObjects = true;
         EnablePointlightShadows = PLS_UPDATE_DYNAMIC;
         MinLightShadowUpdateRange = 300.0f;
         PartialDynamicShadowUpdates = true;
@@ -682,7 +683,7 @@ struct GothicRendererSettings {
         AnimateStaticVobs = true;
         RunInSpacerNet = false;
         BinkVideoRunning = false;
-        EnableWaterAnimation = true;
+        EnableWaterAnimation = false;
     }
 
     void SetupOldWorldSpecificValues() {
@@ -720,6 +721,7 @@ struct GothicRendererSettings {
     bool DrawFog;
     int FogRange;
     int WindQuality;
+    bool HeroAffectsObjects;
     bool DrawG1ForestPortals;
     bool EnableHDR;
     E_HDRToneMap HDRToneMap;

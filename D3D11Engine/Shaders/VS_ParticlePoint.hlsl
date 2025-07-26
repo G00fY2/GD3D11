@@ -45,8 +45,8 @@ struct VS_OUTPUT
 static const float tu[4] = { 0.0, 1.0, 0.0, 1.0 };
 static const float tv[4] = { 1.0, 1.0, 0.0, 0.0 };
 
-static const float vr[4] = { -1.0, 1.0, -1.0,  1.0 };
-static const float vu[4] = {  1.0, 1.0, -1.0, -1.0 };
+static const float vr[4] = { -1.0,  1.0, -1.0, 1.0 };
+static const float vu[4] = { -1.0, -1.0,  1.0, 1.0 };
 
 VS_OUTPUT VSMain( VS_INPUT Input )
 {
