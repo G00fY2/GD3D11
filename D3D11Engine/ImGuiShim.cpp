@@ -291,7 +291,11 @@ void ImGuiShim::RenderSettingsWindow()
                 ImGui::SliderFloat( "##Wind strength", &settings.GlobalWindStrength, 0.1f, 5.0f, "%.2f" );
                 ImGui::EndDisabled();
             }
-#endif
+
+            if ( ImGui::Checkbox( "Hero affects objects[*]", &settings.HeroAffectsObjects ) ) {
+                Engine::GraphicsEngine->ReloadShaders();
+            }
+#endif //BUILD_GOTHIC_2_6_fix
 
             ImGui::Checkbox( "Enable Rain", &settings.EnableRain );
             ImGui::Checkbox( "Enable Rain Effects", &settings.EnableRainEffects );
@@ -685,7 +689,8 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
         {
             ImGui::DragFloat( "WindStrength", &settings.GlobalWindStrength, 0.01f, 0.0f, 0.0f, "%.2f" );
         }
-#endif
+#endif //BUILD_GOTHIC_2_6_fix
+
         ImGui::Checkbox( "FixViewFrustum", &settings.FixViewFrustum );
         ImGui::DragFloat( "GothicUIScale", &settings.GothicUIScale, 0.01f, 0.01f, 20.0f, "%.2f" );
         ImGui::DragFloat( "FOVHoriz", &settings.FOVHoriz, 1.0f, 1.0f, 360.0f, "%.0f" );
