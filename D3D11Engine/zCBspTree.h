@@ -230,25 +230,9 @@ public:
         Engine::RefreshWorkerThreadpool();
 
         int r = HookedFunctions::OriginalFunctions.original_zCBspTreeLoadBIN( thisptr, file, skip );
-        LoadLevelGeometry( reinterpret_cast<zCBspTree*>(thisptr) );
+        Engine::GAPI->OnGeometryLoaded( reinterpret_cast<zCBspTree*>(thisptr) );
 
         return r;
-    }
-
-    /** Loads the world geometry of this BSP-Tree */
-    static void LoadLevelGeometry( zCBspTree* thisptr ) {
-        zCBspTree* tree = thisptr;
-        LogInfo() << "World loaded, getting Levelmesh now!";
-        LogInfo() << " - Found " << tree->GetNumPolys() << " polygons";
-
-        // Save pointer to this
-        Engine::GAPI->GetLoadedWorldInfo()->BspTree = tree;
-
-        //#ifdef BUILD_GOTHIC_1_08k
-        std::vector<zCPolygon*> polys;
-        tree->GetLOD0Polygons( polys );
-
-        Engine::GAPI->OnGeometryLoaded( &polys[0], polys.size() );
     }
 
     /** Returns only the polygons used in LOD0 of the world */

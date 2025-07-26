@@ -25,6 +25,10 @@ class zCVisual;
 typedef int( __thiscall* zCBspTreeLoadBIN )(void*, zCFileBIN&, int);
 typedef void( __thiscall* zCWorldRender )(void*, zCCamera&);
 typedef void( __thiscall* zCWorldVobAddedToWorld )(void*, zCVob*);
+#ifdef BUILD_SPACER_NET
+typedef void( __thiscall* zCWorldCompileWorld )(void*, int&, float, int, int, void*);
+typedef void( __thiscall* zCWorldGenerateStaticWorldLighting )(void*, int&, void*);
+#endif
 typedef void( __thiscall* oCNPCEnable )(void*, XMFLOAT3&);
 typedef void( __thiscall* zCBspTreeAddVob )(void*, zCVob*);
 typedef void( __thiscall* zCWorldLoadWorld )(void*, const zSTRING& fileName, const int loadMode);
@@ -93,6 +97,10 @@ struct HookedFunctionInfo {
     zCBspTreeLoadBIN original_zCBspTreeLoadBIN = reinterpret_cast<zCBspTreeLoadBIN>(GothicMemoryLocations::zCBspTree::LoadBIN);
     zCWorldRender original_zCWorldRender = reinterpret_cast<zCWorldRender>(GothicMemoryLocations::zCWorld::Render);
     zCWorldVobAddedToWorld original_zCWorldVobAddedToWorld = reinterpret_cast<zCWorldVobAddedToWorld>(GothicMemoryLocations::zCWorld::VobAddedToWorld);
+#ifdef BUILD_SPACER_NET
+    zCWorldCompileWorld original_zCWorldCompileWorld = reinterpret_cast<zCWorldCompileWorld>(GothicMemoryLocations::zCWorld::CompileWorld);
+    zCWorldGenerateStaticWorldLighting original_zCWorldGenerateStaticWorldLighting = reinterpret_cast<zCWorldGenerateStaticWorldLighting>(GothicMemoryLocations::zCWorld::GenerateStaticWorldLighting);
+#endif
     zCBspTreeAddVob original_zCBspTreeAddVob = reinterpret_cast<zCBspTreeAddVob>(GothicMemoryLocations::zCBspTree::AddVob);
     zCWorldLoadWorld original_zCWorldLoadWorld = reinterpret_cast<zCWorldLoadWorld>(GothicMemoryLocations::zCWorld::LoadWorld);
     oCGameEnterWorld original_oCGameEnterWorld = reinterpret_cast<oCGameEnterWorld>(GothicMemoryLocations::oCGame::EnterWorld);

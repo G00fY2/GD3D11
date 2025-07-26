@@ -332,9 +332,13 @@ XRESULT WorldConverter::LoadWorldMeshFromFile( const std::string& file, std::map
 
 bool AdditionalCheckWaterFall(zCTexture* texture)
 {
-    std::string textureName = texture->GetNameWithoutExt();
+    if ( !texture ) {
+        return false;
+    }
+
+    std::string textureName = texture->GetName();
     std::transform( textureName.begin(), textureName.end(), textureName.begin(), toupper );
-    if ( textureName.find( "FALL" ) != std::string::npos && (textureName.find( "SURFACE" ) != std::string::npos || textureName.find( "STONE" ) != std::string::npos) ) {
+    if ( textureName.find( "FALL" ) != std::string::npos && (textureName.find( "SURFACE" ) != std::string::npos || textureName.find( "STONE" ) != std::string::npos || textureName.find( "A0" ) != std::string::npos) ) {
         // Let's make it work at least with og waterfall foam
         return true;
     }
@@ -363,7 +367,7 @@ HRESULT WorldConverter::ConvertWorldMesh( zCPolygon** polys, unsigned int numPol
                 } else {
                     // unsafe hack to avoid portal polys assigning material for valid normal polygons
                     // it only work because DrawMeshInfoListAlphablended use texture from material
-                    _tex = reinterpret_cast<zCTexture*>(reinterpret_cast<DWORD>(polymat->GetTextureSingle()) + 1);
+                    _tex = reinterpret_cast<zCTexture*>(reinterpret_cast<DWORD>(tex) + 1);
 
                     MaterialInfo* info = Engine::GAPI->GetMaterialInfoFrom( _tex, textureName );
                     info->MaterialType = MaterialInfo::MT_Portal;
@@ -385,9 +389,36 @@ HRESULT WorldConverter::ConvertWorldMesh( zCPolygon** polys, unsigned int numPol
         XMFLOAT3& bbmax = sectionInfo.BoundingBox.Max;
 
         zCMaterial* mat = poly->GetMaterial();
+        if ( !mat ) {
+            continue;
+        }
         if ( poly->GetNumPolyVertices() < 3 ) {
             LogWarn() << "Poly with less than 3 vertices!";
         }
+
+        // Use the map to put the polygon to those using the same material
+        MeshKey key;
+        key.Texture = _tex ? _tex : mat->GetTextureSingle();
+        key.Material = mat;
+
+        auto it = sectionInfo.WorldMeshes.find( key );
+        if ( it == sectionInfo.WorldMeshes.end() ) {
+            key.Info = Engine::GAPI->GetMaterialInfoFrom( key.Texture );
+            it = sectionInfo.WorldMeshes.emplace( key, new WorldMeshInfo ).first;
+        }
+
+        int matGroup = mat->GetMatGroup();
+#if 0
+#ifdef BUILD_GOTHIC_2_6_fix
+        if ( matGroup != zMAT_GROUP_WATER ) {
+            // Potential fix for some fucked up waterfall materials
+            // Disabled because it tends to crash a lot for some reason
+            if ( AdditionalCheckWaterFall( key.Texture ) ) {
+                matGroup = zMAT_GROUP_WATER;
+            }
+        }
+#endif
+#endif
 
         // Extract poly vertices
         std::vector<ExVertexStruct> polyVertices;
@@ -420,12 +451,12 @@ HRESULT WorldConverter::ConvertWorldMesh( zCPolygon** polys, unsigned int numPol
                 t.Color = DEFAULT_LIGHTMAP_POLY_COLOR;
             } else {
                 t.TexCoord2 = float2( 0.0f, 0.0f );
-                if ( mat && mat->GetMatGroup() == zMAT_GROUP_WATER ) {
+                if ( matGroup == zMAT_GROUP_WATER ) {
                     t.Color = 0xFFFFFFFF;
                 }
             }
 
-            if ( mat && mat->GetMatGroup() == zMAT_GROUP_WATER ) {
+            if ( matGroup == zMAT_GROUP_WATER ) {
                 if ( mat->HasTexAniMap() ) {
                     t.TexCoord2 = mat->GetTexAniMapDelta();
                 } else {
@@ -442,20 +473,8 @@ HRESULT WorldConverter::ConvertWorldMesh( zCPolygon** polys, unsigned int numPol
             }
         }
 
-        // Use the map to put the polygon to those using the same material
-        MeshKey key;
-        key.Texture = _tex ? _tex : mat ? mat->GetTextureSingle() : nullptr;
-        key.Material = mat;
-
-        if ( sectionInfo.WorldMeshes.count( key ) == 0 ) {
-            key.Info = Engine::GAPI->GetMaterialInfoFrom( key.Texture );
-            sectionInfo.WorldMeshes[key] = new WorldMeshInfo;
-        }
-        TriangleFanToList( &polyVertices[0], polyVertices.size(), &sectionInfo.WorldMeshes[key]->Vertices );
-
-        if ( mat && mat->GetMatGroup() == zMAT_GROUP_WATER // Check for water
-            && !mat->HasAlphaTest() ) 
-        {
+        TriangleFanToList( &polyVertices[0], polyVertices.size(), &it->second->Vertices );
+        if ( matGroup == zMAT_GROUP_WATER && !mat->HasAlphaTest() ) {
 #ifdef BUILD_GOTHIC_1_08k
             MaterialInfo* info = Engine::GAPI->GetMaterialInfoFrom( key.Texture );
             if ( !(AdditionalCheckWaterFall( key.Texture )) ) { 

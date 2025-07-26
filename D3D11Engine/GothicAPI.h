@@ -208,7 +208,7 @@ public:
     void OnLoadWorld( const std::string& levelName, int loadMode );
 
     /** Called when the game loaded a new level */
-    void OnGeometryLoaded( zCPolygon** polys, unsigned int numPolygons );
+    void OnGeometryLoaded( zCBspTree* tree );
 
     /** Called when the game is done loading the world */
     void OnWorldLoaded();

@@ -431,7 +431,7 @@ void GothicAPI::OnWorldUpdate() {
     if ( !root->OriginalNode )
         Engine::GAPI->OnWorldLoaded();
 #endif
-#if BUILD_SPACER_NET
+#ifdef BUILD_SPACER_NET
     if ( RendererState.RendererSettings.RunInSpacerNet ) {
         zCBspBase* rootBsp = oCGame::GetGame()->_zCSession_world->GetBspTree()->GetRootNode();
         BspInfo* root = &BspLeafVobLists[rootBsp];
@@ -806,8 +806,14 @@ void GothicAPI::ResetVobs() {
 }
 
 /** Called when the game loaded a new level */
-void GothicAPI::OnGeometryLoaded( zCPolygon** polys, unsigned int numPolygons ) {
+void GothicAPI::OnGeometryLoaded( zCBspTree* tree ) {
+    LogInfo() << "World loaded, getting Levelmesh now!";
+    LogInfo() << " - Found " << tree->GetNumPolys() << " polygons";
     LogInfo() << "Extracting world";
+
+    std::vector<zCPolygon*> polys;
+    tree->GetLOD0Polygons( polys );
+    GetLoadedWorldInfo()->BspTree = tree;
 
     ResetWorld();
     ResetMaterialInfo();
@@ -816,13 +822,13 @@ void GothicAPI::OnGeometryLoaded( zCPolygon** polys, unsigned int numPolygons ) 
     std::string worldStr = "system\\GD3D11\\meshes\\WLD_" + LoadedWorldInfo->WorldName + ".obj";
     // Convert world to our own format
 #ifdef BUILD_GOTHIC_2_6_fix
-    WorldConverter::ConvertWorldMesh( polys, numPolygons, &WorldSections, LoadedWorldInfo.get(), &WrappedWorldMesh, indoorLocation );
+    WorldConverter::ConvertWorldMesh( &polys[0], polys.size(), &WorldSections, LoadedWorldInfo.get(), &WrappedWorldMesh, indoorLocation );
 #else
     if ( Toolbox::FileExists( worldStr ) ) {
         WorldConverter::LoadWorldMeshFromFile( worldStr, &WorldSections, LoadedWorldInfo.get(), &WrappedWorldMesh );
         LoadedWorldInfo->CustomWorldLoaded = true;
     } else {
-        WorldConverter::ConvertWorldMesh( polys, numPolygons, &WorldSections, LoadedWorldInfo.get(), &WrappedWorldMesh, indoorLocation );
+        WorldConverter::ConvertWorldMesh( &polys[0], polys.size(), &WorldSections, LoadedWorldInfo.get(), &WrappedWorldMesh, indoorLocation );
     }
 #endif
     LogInfo() << "Done extracting world!";
@@ -3722,7 +3728,7 @@ void GothicAPI::CollectVisibleVobs( std::vector<VobInfo*>& vobs, std::vector<Vob
                 vii.windSpeed = 0.0f;
 
                 zTAnimationMode aniMode = it->Vob->GetVisualAniMode();
-                if ( aniMode != zVISUAL_ANIMODE_NONE ) {
+                if ( aniMode != zVISUAL_ANIMODE_NONE && !Engine::GAPI->IsGamePaused() ) {
                     ProcessVobAnimation( it->Vob, aniMode, vii );
                 }
 
@@ -3900,10 +3906,12 @@ static void ProcessVobAnimation( zCVob* vob, zTAnimationMode aniMode, VobInstanc
         rainWeight = std::max<float>( 0.0f, std::min<float>( 1.0f, rainWeight ) );
 
         // max multiplayers when rain is 1.0 (max)
-        constexpr float rainMaxStrengthMultiplier = 3.0f;
-        constexpr float rainMaxSpeedMultiplier = 1.75f;
+        constexpr float rainMaxStrengthMultiplier = 2.75f;
+        constexpr float rainMaxSpeedMultiplier = 2.15f;
 
-        vobInstance.windStrenth = std::max<float>( 0.1f, vob->GetVisualAniModeStrength() ) * (1.0f + rainWeight * (rainMaxStrengthMultiplier - 1.0f)) * Engine::GAPI->GetRendererState().RendererSettings.GlobalWindStrength;
+        vobInstance.windStrenth = std::max<float>( 0.1f, vob->GetVisualAniModeStrength() ) * (1.0f + rainWeight * (rainMaxStrengthMultiplier - 1.0f))
+            * Engine::GAPI->GetRendererState().RendererSettings.GlobalWindStrength;
+
         vobInstance.windSpeed = 1.5f * (1.0f + rainWeight * (rainMaxSpeedMultiplier - 1.0f));
     }
 }
@@ -4895,7 +4903,7 @@ XRESULT GothicAPI::LoadMenuSettings( const std::string& file ) {
         if ( gameIni != "GOTHICGAME.INI" && nLastDot != std::string::npos ) {
             Engine::GAPI->SetGameName( gameIni.substr( 0, nLastDot ) );
             LogInfo() << "-> Game: " << Engine::GAPI->GetGameName();
-#if BUILD_SPACER_NET
+#ifdef BUILD_SPACER_NET
             if ( Engine::GAPI->GetGameName() == "SPACER_NET" ) {
                 LogInfo() << "-> Running in Spacer.NET";
                 s.RunInSpacerNet = true;

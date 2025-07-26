@@ -48,7 +48,7 @@ struct VS_OUTPUT
 static const float trunkStiffness = 0.12f;
 static const float phaseVariation = 0.40f;
 static const float windStrengMult = 16.0f; // original engine uses [0.1 -> 5] range, we use higher values in formulas 
-static const float PI_2 = 628.3185; // 2 * PI
+static const float PI_2 = 6.283185; // 2 * PI
 
 float GetInstancePhaseOffset(float4x4 objMatrix)
 {
@@ -67,28 +67,30 @@ float3 ApplyTreeWind(float3 vertexPos, float3 direction, float heightNorm, float
     
     // Smooth height factor with more natural falloff
     float adjustedHeight = saturate((heightNorm - trunkStiffness) / (1.0 - trunkStiffness)) * shouldAffect;
-    float heightFactor = pow(adjustedHeight, 2.5f);
+    float heightFactor = pow(adjustedHeight, 2.6f);
     
     float timeSec = timeMs * 0.001 * windSpeed;
     
-    // Основная волна с плавным покачиванием
+    // Main wave
     float mainWave = sin(timeSec * 1.0 + heightNorm * 3.0 + instancePhase) * 0.8;
     
-    // Вторичная волна для разнообразия движения
-    float secondaryWave = cos(timeSec * 0.7 + heightNorm * 5.0 + instancePhase * 1.5) * 0.4;
+    // Second wave
+    float secondaryWave = cos(timeSec * 0.7 + heightNorm * 5.0 + instancePhase * 1.5) * 0.80;
     
-    // Эффект инерции - вершина продолжает движение после остановки ветра
+    // Inertia
     float inertiaEffect = sin(timeSec * 0.3 + heightNorm * 8.0) * 0.1;
     
-    // Плавное уменьшение амплитуды к верхушке (чтобы не было резкого "дёргания")
+    // Height amplitude
     float topSmoothing = smoothstep(0.7, 0.9, adjustedHeight);
+	
+	// Combine waves
     float combinedWave = (mainWave + secondaryWave * 0.5) * (1.0 - topSmoothing * 0.3) + inertiaEffect * topSmoothing;
     
-    // Добавляем небольшие хаотичные колебания для листьев
+    // Chaotical motion
     float leafTurbulence = (sin(timeSec * 4.0 + vertexPos.x * 15.0) +
-                          cos(timeSec * 3.7 + vertexPos.z * 12.0)) * 0.1 * topSmoothing;
+                          cos(timeSec * 3.7 + vertexPos.z * 12.0)) * 0.05 * topSmoothing;
     
-    // Финальное смещение с плавным переходом
+    // Final offset
     float3 windOffset = direction * windStrength * windStrengMult *
                        (combinedWave + leafTurbulence) * heightFactor;
     

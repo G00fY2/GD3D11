@@ -30,6 +30,11 @@ public:
         DetourAttach( &reinterpret_cast<PVOID&>(HookedFunctions::OriginalFunctions.original_oCWorldEnableVob), hooked_oCWorldEnableVob );
         DetourAttach( &reinterpret_cast<PVOID&>(HookedFunctions::OriginalFunctions.original_oCWorldDisableVob), hooked_oCWorldDisableVob );
         DetourAttach( &reinterpret_cast<PVOID&>(HookedFunctions::OriginalFunctions.original_oCWorldRemoveVob), hooked_oCWorldRemoveVob );
+
+#ifdef BUILD_SPACER_NET
+        DetourAttach( &reinterpret_cast<PVOID&>(HookedFunctions::OriginalFunctions.original_zCWorldCompileWorld), hooked_zCWorldCompileWorld );
+        DetourAttach( &reinterpret_cast<PVOID&>(HookedFunctions::OriginalFunctions.original_zCWorldGenerateStaticWorldLighting), hooked_zCWorldGenerateStaticWorldLighting );
+#endif
     }
 
     static void __fastcall hooked_oCWorldEnableVob( zCWorld* thisptr, void* unknwn, zCVob* vob, zCVob* parent ) {
@@ -117,6 +122,30 @@ public:
 
         hook_outfunc
     }
+
+#ifdef BUILD_SPACER_NET
+    static void __fastcall hooked_zCWorldCompileWorld( zCWorld* thisptr, void* unknwn, int& a2, float a3, int a4, int a5, void* a6 ) {
+        HookedFunctions::OriginalFunctions.original_zCWorldCompileWorld( thisptr, a2, a3, a4, a5, a6 );
+
+        // Make sure worker thread don't work on any point light
+        Engine::RefreshWorkerThreadpool();
+
+        LogInfo() << "Loading world!";
+        Engine::GAPI->GetLoadedWorldInfo()->MainWorld = thisptr;
+        Engine::GAPI->OnGeometryLoaded( thisptr->GetBspTree() );
+    }
+
+    static void __fastcall hooked_zCWorldGenerateStaticWorldLighting( zCWorld* thisptr, void* unknwn, int& a2, void* a3 ) {
+        HookedFunctions::OriginalFunctions.original_zCWorldGenerateStaticWorldLighting( thisptr, a2, a3 );
+
+        // Make sure worker thread don't work on any point light
+        Engine::RefreshWorkerThreadpool();
+
+        LogInfo() << "Loading world!";
+        Engine::GAPI->GetLoadedWorldInfo()->MainWorld = thisptr;
+        Engine::GAPI->OnGeometryLoaded( thisptr->GetBspTree() );
+    }
+#endif
 
     // Get around C2712
     static void Do_hooked_Render( zCWorld* thisptr, zCCamera& camera ) {

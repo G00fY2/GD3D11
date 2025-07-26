@@ -125,6 +125,7 @@ void HookedFunctionInfo::InitHooks() {
     LogInfo() << "Patching: Marking texture as cached-in after cache-out - fix";
     PatchAddr( 0x005CA683, "\x90\x90" );
 
+#ifndef BUILD_SPACER_NET
     LogInfo() << "Patching: Improve loading times by disabling some unnecessary features";
     PatchAddr( 0x005A4FE0, "\xC3\x90\x90" );
     PatchAddr( 0x0055848A, "\xE9\xE2\x01\x00\x00\x90" );
@@ -143,6 +144,7 @@ void HookedFunctionInfo::InitHooks() {
         PatchAddr( 0x00557276, "\xE9\x00\x00\x00\x00" );
         PatchJMP( 0x00557276, reinterpret_cast<DWORD>(&HookedFunctionInfo::hooked_SetLightmap) );
     }
+#endif
 
     LogInfo() << "Patching: Fix using settings in freelook mode";
     PatchAddr( 0x00478FE2, "\x0F\x84\x9A\x00\x00\x00" );

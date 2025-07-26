@@ -1,18 +1,21 @@
 #include <windows.h>
 #include <intrin.h>
 #include <shlwapi.h>
+#include <algorithm>
 #include <string>
 #include <map>
 
 #pragma comment(lib, "shlwapi.lib")
 
-enum { GOTHIC1_EXECUTABLE = 0, GOTHIC1A_EXECUTABLE = 1, GOTHIC2_EXECUTABLE = 2, GOTHIC2A_EXECUTABLE = 3, INVALID_EXECUTABLE = -1 };
+enum { GOTHIC1_EXECUTABLE = 0, GOTHIC1A_EXECUTABLE = 1, GOTHIC2_EXECUTABLE = 2, GOTHIC2A_EXECUTABLE = 3, GOTHIC1_SPACERNET = 4, GOTHIC2_SPACERNET = 5, INVALID_EXECUTABLE = -1 };
 
 std::map<int, std::string> dllBinFiles = {
     { GOTHIC1_EXECUTABLE, "\\GD3D11\\bin\\g1" },
     { GOTHIC1A_EXECUTABLE, "\\GD3D11\\bin\\g1a" },
     { GOTHIC2_EXECUTABLE, "\\GD3D11\\bin\\g2" },
-    { GOTHIC2A_EXECUTABLE, "\\GD3D11\\bin\\g2a" }
+    { GOTHIC2A_EXECUTABLE, "\\GD3D11\\bin\\g2a" },
+    { GOTHIC1_SPACERNET, "\\GD3D11\\bin\\g1_spacer" },
+    { GOTHIC2_SPACERNET, "\\GD3D11\\bin\\g2_spacer" }
 };
 
 struct ddraw_dll {
@@ -186,6 +189,21 @@ BOOL APIENTRY DllMain( HINSTANCE hInst, DWORD reason, LPVOID ) {
         } else if ( *reinterpret_cast<DWORD*>(baseAddr + 0x140) == 0x3BE698 && *reinterpret_cast<DWORD*>(baseAddr + 0x3BE720) == 0x8131E4
             && *reinterpret_cast<DWORD*>(baseAddr + 0x3BE74B) == 0x8131E8 ) {
             foundExecutable = GOTHIC1A_EXECUTABLE;
+        }
+
+        if ( foundExecutable != INVALID_EXECUTABLE ) {
+            std::string commandLine = GetCommandLineA();
+            std::transform( commandLine.begin(), commandLine.end(), commandLine.begin(), tolower );
+            if ( commandLine.find( "-game:spacer_net.ini" ) != std::string::npos ) {
+                // Don't search for avx versions
+                haveAVX2 = false;
+                haveAVX = false;
+                if ( foundExecutable == GOTHIC1_EXECUTABLE ) {
+                    foundExecutable = GOTHIC1_SPACERNET;
+                } else if ( foundExecutable == GOTHIC2A_EXECUTABLE ) {
+                    foundExecutable = GOTHIC2_SPACERNET;
+                }
+            }
         }
 
         char executablePath[MAX_PATH];

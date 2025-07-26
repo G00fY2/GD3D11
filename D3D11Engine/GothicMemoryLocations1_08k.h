@@ -206,6 +206,12 @@ struct GothicMemoryLocations {
     struct zCVob {
         static const unsigned int Offset_WorldMatrixPtr = 0x3C;
         //static const unsigned int Offset_BoundingBoxWS = 0x40;
+
+        static const unsigned int SetCollDetStat = 0x005EF8D0;
+        static const unsigned int s_ShowHelperVisuals = 0x008D75F4;
+        static const unsigned int GetClassHelperVisual = 0x005D5D60;
+        static const unsigned int s_renderVobs = 0x00843734;
+
         static const unsigned int GetVisual = 0x005E9A70;
         static const unsigned int SetVisual = 0x005D6E10;
         static const unsigned int GetPositionWorld = 0x005EE380;
@@ -436,6 +442,10 @@ struct GothicMemoryLocations {
         static const unsigned int LoadWorld = 0x005F8A00;
         static const unsigned int VobRemovedFromWorld = 0x005F64C0;
         static const unsigned int VobAddedToWorld = 0x005F6360;
+#ifdef BUILD_SPACER_NET
+        static const unsigned int CompileWorld = 0x005F4F90;
+        static const unsigned int GenerateStaticWorldLighting = 0x00600B60;
+#endif
         static const unsigned int Offset_GlobalVobTree = 0x24;
         static const unsigned int Call_Render_zCBspTreeRender = 0x005F3F95;
         //static const unsigned int GetActiveSkyController = 0x006060A0;

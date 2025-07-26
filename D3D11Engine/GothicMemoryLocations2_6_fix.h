@@ -616,6 +616,10 @@ struct GothicMemoryLocations {
         static const unsigned int Call_Render_zCBspTreeRender = 0x00621830;
         static const unsigned int Offset_GlobalVobTree = 0x24;
         static const unsigned int LoadWorld = 0x006270D0;
+#ifdef BUILD_SPACER_NET
+        static const unsigned int CompileWorld = 0x00622EC0;
+        static const unsigned int GenerateStaticWorldLighting = 0x0062FB70;
+#endif
         static const unsigned int VobRemovedFromWorld = 0x00624970;
         static const unsigned int Offset_SkyControllerOutdoor = 0x0E4;
         static const unsigned int GetActiveSkyController = 0x006203A0;
