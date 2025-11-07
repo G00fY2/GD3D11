@@ -584,11 +584,8 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
 
         // ImGui::Checkbox( "Draw Sky", &settings.DrawSky );
         ImGui::Checkbox( "Draw Fog", &settings.DrawFog );
-
-        static std::vector<std::pair<const char*, int>> fogRanges = { {"3", 3}, {"4", 4}, {"5", 5}, {"6", 6}, {"7", 7}, {"8", 8}, {"9", 9}, {"10", 10} };
-        if ( ImComboBox( "Fog Range", fogRanges, &settings.FogRange ) ) {
-            ImGui::EndCombo();
-        }
+        // caution, FogRange is reduced by 0.5f (secScale - 0.5f) in D3D11PFX_HeightFog
+        ImGui::SliderFloat( "Fog Range", &settings.FogRange, 0.50f, 10.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
 
         ImGui::Checkbox( "HDR", &settings.EnableHDR );
 
