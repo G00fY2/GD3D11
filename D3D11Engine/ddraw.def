@@ -26,4 +26,6 @@ EXPORTS
 	SetCustomSkyTexture			= SetCustomCloudAndNightTexture
 	SetCustomSkyTexture_ZenGin	= SetCustomSkyTexture_ZenGin
 	SetCustomSkyWavelengths		= SetCustomSkyWavelengths
+	LoadMenuSettings			= LoadMenuSettings
+	LoadCustomZENResources		= LoadCustomZENResources
 	EnableWindAnimations @2137 NONAME

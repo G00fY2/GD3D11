@@ -236,6 +236,7 @@ struct ddraw_dll {
     FARPROC	ReleaseDDThreadLock;
     FARPROC	UpdateCustomFontMultiplier;
     FARPROC	SetCustomSkyTexture;
+    FARPROC	LoadMenuSettings;
 } ddraw;
 
 HRESULT DoHookedDirectDrawCreateEx( GUID FAR* lpGuid, LPVOID* lplpDD, REFIID  iid, IUnknown FAR* pUnkOuter ) {
@@ -309,6 +310,14 @@ extern "C" void WINAPI SetCustomSkyWavelengths( float X, float Y, float Z ) {
     if ( sky ) {
         sky->SetCustomSkyWavelengths( X, Y, Z );
     }
+}
+
+extern "C" void WINAPI LoadMenuSettings() {
+    Engine::GAPI->LoadMenuSettings( MENU_SETTINGS_FILE );
+}
+
+extern "C" void WINAPI LoadCustomZENResources() {
+    Engine::GAPI->LoadCustomZENResources();
 }
 
 extern "C" void WINAPI EnableWindAnimations( void ) {
