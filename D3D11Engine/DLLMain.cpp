@@ -312,8 +312,8 @@ extern "C" void WINAPI SetCustomSkyWavelengths( float X, float Y, float Z ) {
     }
 }
 
-extern "C" void WINAPI LoadMenuSettings() {
-    Engine::GAPI->LoadMenuSettings( MENU_SETTINGS_FILE );
+extern "C" void WINAPI LoadMenuSettings(char* menuSettingsFile) {
+    Engine::GAPI->LoadMenuSettings( !menuSettingsFile ? MENU_SETTINGS_FILE : menuSettingsFile );
 }
 
 extern "C" void WINAPI LoadCustomZENResources() {
