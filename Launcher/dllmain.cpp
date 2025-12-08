@@ -57,6 +57,8 @@ struct ddraw_dll {
 
     FARPROC	UpdateCustomFontMultiplier;
     FARPROC	SetCustomSkyTexture;
+    FARPROC	LoadMenuSettings;
+    FARPROC	LoadCustomZENResources;
 } ddraw;
 
 __declspec(naked) void FakeAcquireDDThreadLock() { _asm { jmp[ddraw.AcquireDDThreadLock] } }
@@ -96,6 +98,8 @@ __declspec(naked) void FakeGDX_OpenMessageBox() { _asm { jmp[ddraw.GDX_OpenMessa
 
 __declspec(naked) void FakeUpdateCustomFontMultiplier() { _asm { jmp[ddraw.UpdateCustomFontMultiplier] } }
 __declspec(naked) void FakeSetCustomSkyTexture() { _asm { jmp[ddraw.SetCustomSkyTexture] } }
+__declspec(naked) void FakeLoadMenuSettings() { _asm { jmp[ddraw.LoadMenuSettings] } }
+__declspec(naked) void FakeLoadCustomZENResources() { _asm { jmp[ddraw.LoadCustomZENResources] } }
 
 bool FakeIsUsingBGRATextures() { return true; }
 
@@ -313,6 +317,8 @@ BOOL APIENTRY DllMain( HINSTANCE hInst, DWORD reason, LPVOID ) {
         ddraw.GDX_OpenMessageBox = GetProcAddress( ddraw.dll, "GDX_OpenMessageBox" );
         ddraw.UpdateCustomFontMultiplier = GetProcAddress( ddraw.dll, "UpdateCustomFontMultiplier" );
         ddraw.SetCustomSkyTexture = GetProcAddress( ddraw.dll, "SetCustomSkyTexture" );
+        ddraw.LoadMenuSettings = GetProcAddress( ddraw.dll, "LoadMenuSettings" );
+        ddraw.LoadCustomZENResources = GetProcAddress( ddraw.dll, "LoadCustomZENResources" );
         
     } else if ( reason == DLL_PROCESS_DETACH ) {
         if ( ddraw.dll ) {
