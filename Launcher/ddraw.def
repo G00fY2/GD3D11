@@ -37,3 +37,5 @@ EXPORTS
 	GDX_Module					= FakeGDX_Module					@34
 	UpdateCustomFontMultiplier	= FakeUpdateCustomFontMultiplier	@35
 	SetCustomSkyTexture			= FakeSetCustomSkyTexture			@36
+	LoadMenuSettings			= FakeLoadMenuSettings				@37
+	LoadCustomZENResources		= FakeLoadCustomZENResources		@38
