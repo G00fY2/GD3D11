@@ -15,11 +15,9 @@ public:
     int layout;						//Shader's input layout
     std::vector<int> cBufferSizes;	//Vector with size for each constant buffer to be created for this shader
     std::vector<D3D_SHADER_MACRO> shaderMakros;
-    std::string entryPoint;
 
     //Constructor
-    ShaderInfo( std::string n, std::string fn, std::string t, int l, std::vector<D3D_SHADER_MACRO>& makros = std::vector<D3D_SHADER_MACRO>(), std::string entryPoint = "" ) {
-
+    ShaderInfo( std::string n, std::string fn, std::string t, int l, std::vector<D3D_SHADER_MACRO>& makros = std::vector<D3D_SHADER_MACRO>() ) {
         name = n;
         fileName = fn;
         type = t;
@@ -27,11 +25,10 @@ public:
         cBufferSizes = std::vector<int>();
 
         shaderMakros = makros;
-        this->entryPoint = entryPoint;
     }
 
     //Constructor
-    ShaderInfo( std::string n, std::string fn, std::string t, std::vector<D3D_SHADER_MACRO>& makros = std::vector<D3D_SHADER_MACRO>(), std::string entryPoint = "" ) {
+    ShaderInfo( std::string n, std::string fn, std::string t, std::vector<D3D_SHADER_MACRO>& makros = std::vector<D3D_SHADER_MACRO>() ) {
         name = n;
         fileName = fn;
         type = t;
@@ -39,7 +36,6 @@ public:
         cBufferSizes = std::vector<int>();
 
         shaderMakros = makros;
-        this->entryPoint = entryPoint;
     }
 };
 

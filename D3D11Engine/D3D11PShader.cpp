@@ -18,31 +18,24 @@ D3D11PShader::~D3D11PShader() {
 }
 
 /** Loads both shaders at the same time */
-XRESULT D3D11PShader::LoadShader( const char* pixelShader, const char* entryPoint, const std::vector<D3D_SHADER_MACRO>& makros ) {
+XRESULT D3D11PShader::LoadShader( const char* pixelShader, const std::vector<D3D_SHADER_MACRO>& makros ) {
     HRESULT hr;
-    D3D11GraphicsEngineBase* engine = reinterpret_cast<D3D11GraphicsEngineBase*>( Engine::GraphicsEngine );
+    D3D11GraphicsEngineBase* engine = reinterpret_cast<D3D11GraphicsEngineBase*>(Engine::GraphicsEngine);
 
     Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.EnableDebugLog )
         LogInfo() << "Compilling pixel shader: " << pixelShader;
 
-    const char* actualEntryPoint = "PSMain";
-    if ( entryPoint != nullptr && strlen( entryPoint ) > 0 ) {
-        actualEntryPoint = entryPoint;
-    }
     // Compile shaders
-    if ( FAILED( D3D11ShaderManager::CompileShaderFromFile( pixelShader, actualEntryPoint, (FeatureLevel10Compatibility ? "ps_4_0" : "ps_5_0"), psBlob.GetAddressOf(), makros ) ) ) {
+    if ( FAILED( D3D11ShaderManager::CompileShaderFromFile( pixelShader, "PSMain", (FeatureLevel10Compatibility ? "ps_4_0" : "ps_5_0"), psBlob.GetAddressOf(), makros)) ) {
         return XR_FAILED;
     }
 
     // Create the shader
     LE( engine->GetDevice()->CreatePixelShader( psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, PixelShader.GetAddressOf() ) );
 
-#ifdef DEBUG_D3D11
-    std::string name( pixelShader );
-    SetDebugName( PixelShader.Get(), (name + "+" + actualEntryPoint).c_str() );
-#endif
+    SetDebugName( PixelShader.Get(), pixelShader );
 
     return XR_SUCCESS;
 }
