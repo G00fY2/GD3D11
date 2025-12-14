@@ -18,7 +18,7 @@ D3D11VShader::~D3D11VShader() {
 }
 
 /** Loads shader */
-XRESULT D3D11VShader::LoadShader( const char* vertexShader, int layout, const std::vector<D3D_SHADER_MACRO>& makros ) {
+XRESULT D3D11VShader::LoadShader( const char* vertexShader, const char* entryPoint, int layout, const std::vector<D3D_SHADER_MACRO>& makros) {
     HRESULT hr;
     D3D11GraphicsEngineBase* engine = reinterpret_cast<D3D11GraphicsEngineBase*>(Engine::GraphicsEngine);
 
@@ -28,7 +28,11 @@ XRESULT D3D11VShader::LoadShader( const char* vertexShader, int layout, const st
         LogInfo() << "Compilling vertex shader: " << vertexShader;
 
     // Compile shader
-    if ( FAILED( D3D11ShaderManager::CompileShaderFromFile( vertexShader, "VSMain", (FeatureLevel10Compatibility ? "vs_4_0" : "vs_5_0"), vsBlob.GetAddressOf(), makros)) ) {
+    const char* actualEntryPoint = "VSMain";
+    if ( entryPoint != nullptr && strlen(entryPoint) > 0 ) {
+        actualEntryPoint = entryPoint;
+    }
+    if ( FAILED( D3D11ShaderManager::CompileShaderFromFile( vertexShader, actualEntryPoint, (FeatureLevel10Compatibility ? "vs_4_0" : "vs_5_0"), vsBlob.GetAddressOf(), makros)) ) {
         return XR_FAILED;
     }
 
@@ -36,7 +40,10 @@ XRESULT D3D11VShader::LoadShader( const char* vertexShader, int layout, const st
     LE( engine->GetDevice()->CreateVertexShader( vsBlob->GetBufferPointer(),
         vsBlob->GetBufferSize(), nullptr, VertexShader.ReleaseAndGetAddressOf() ) );
 
-    SetDebugName( VertexShader.Get(), vertexShader );
+#ifdef DEBUG_D3D11
+    std::string name( vertexShader );
+    SetDebugName( VertexShader.Get(), (name + "+" + actualEntryPoint).c_str() );
+#endif
 
     const D3D11_INPUT_ELEMENT_DESC layout1[] =
     {
