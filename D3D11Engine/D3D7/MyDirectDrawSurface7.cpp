@@ -4,7 +4,6 @@
 #include "../D3D11GraphicsEngineBase.h"
 #include "../D3D11Texture.h"
 #include "../zCTexture.h"
-#include "Conversions.h"
 #include "../D3D11_Helpers.h"
 
 #define DebugWriteTex(x)  DebugWrite(x)
@@ -363,10 +362,6 @@ HRESULT MyDirectDrawSurface7::Lock( LPRECT lpDestRect, LPDDSURFACEDESC2 lpDDSurf
     int alphaBits = Toolbox::GetNumberOfBits( OriginalSurfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask );
 
     int bpp = redBits + greenBits + blueBits + alphaBits;
-    int divisor = 1;
-
-    if ( bpp == 16 )
-        divisor = 2;
 
     if ( bpp == 24 ) {
         // Handle movie frame,
@@ -376,11 +371,11 @@ HRESULT MyDirectDrawSurface7::Lock( LPRECT lpDestRect, LPDDSURFACEDESC2 lpDDSurf
     } else {
         // Allocate some temporary data
         delete[] LockedData;
-        LockedData = new unsigned char[EngineTexture->GetSizeInBytes( 0 ) / divisor];
+        LockedData = new unsigned char[EngineTexture->GetSizeInBytes( 0 )];
     }
 
     lpDDSurfaceDesc->lpSurface = LockedData;
-    lpDDSurfaceDesc->lPitch = EngineTexture->GetRowPitchBytes( 0 ) / divisor;
+    lpDDSurfaceDesc->lPitch = EngineTexture->GetRowPitchBytes( 0 );
 
     return S_OK;
 }
@@ -413,36 +408,13 @@ HRESULT MyDirectDrawSurface7::Unlock( LPRECT lpRect ) {
 
     int bpp = redBits + greenBits + blueBits + alphaBits;
 
-    if ( bpp == 16 ) {
-        // Convert
-        UINT realDataSize = EngineTexture->GetSizeInBytes( 0 );
-        unsigned char* dst = new unsigned char[realDataSize];
-        switch ( OriginalSurfaceDesc.ddpfPixelFormat.dwFourCC ) {
-            case 1: Convert1555to8888( dst, LockedData, realDataSize ); break;
-            case 2: Convert4444to8888( dst, LockedData, realDataSize ); break;
-            default: Convert565to8888( dst, LockedData, realDataSize ); break;
-        }
-
-        if ( Engine::GAPI->GetMainThreadID() != GetCurrentThreadId() ) {
-            EngineTexture->UpdateDataDeferred( dst, 0 );
-            EngineTexture->GenerateMipMapsDeferred();
-            Engine::GAPI->AddFrameLoadedTexture( this );
-        } else {
-            EngineTexture->UpdateData( dst, 0 );
-            EngineTexture->GenerateMipMaps();
-            SetReady( true ); // No need to load other stuff to get this ready
-        }
-
-        delete[] dst;
+    // No conversion needed
+    if ( Engine::GAPI->GetMainThreadID() != GetCurrentThreadId() ) {
+        EngineTexture->UpdateDataDeferred( LockedData, 0 );
+        Engine::GAPI->AddFrameLoadedTexture( this );
     } else {
-        // No conversion needed
-        if ( Engine::GAPI->GetMainThreadID() != GetCurrentThreadId() ) {
-            EngineTexture->UpdateDataDeferred( LockedData, 0 );
-            Engine::GAPI->AddFrameLoadedTexture( this );
-        } else {
-            EngineTexture->UpdateData( LockedData, 0 );
-            SetReady( true ); // No need to load other stuff to get this ready
-        }
+        EngineTexture->UpdateData( LockedData, 0 );
+        SetReady( true ); // No need to load other stuff to get this ready
     }
 
     if ( bpp != 24 ) {
@@ -549,9 +521,14 @@ HRESULT MyDirectDrawSurface7::SetSurfaceDesc( LPDDSURFACEDESC2 lpDDSurfaceDesc, 
     D3D11Texture::ETextureFormat format = D3D11Texture::ETextureFormat::TF_B8G8R8A8;
     switch ( bpp ) {
     case 16:
-        format = D3D11Texture::ETextureFormat::TF_B8G8R8A8;
+    {
+        switch ( OriginalSurfaceDesc.ddpfPixelFormat.dwFourCC ) {
+        case 1: format = D3D11Texture::ETextureFormat::TF_B5G5R5A1; break;
+        case 2: format = D3D11Texture::ETextureFormat::TF_B4G4R4A4; break;
+        default: format = D3D11Texture::ETextureFormat::TF_B5G6R5; break;
+        }
         break;
-
+    }
     case 24:
     case 32:
         format = D3D11Texture::ETextureFormat::TF_B8G8R8A8;

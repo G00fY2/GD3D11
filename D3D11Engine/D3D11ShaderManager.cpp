@@ -443,13 +443,13 @@ XRESULT D3D11ShaderManager::Init() {
         Shaders.back().cBufferSizes.push_back( NUM_MAX_BONES * sizeof( XMFLOAT4X4 ) );
     }
 
-    if ( FeatureLevel10Compatibility ) {
-        Shaders.push_back( ShaderInfo( "GS_ParticleStreamOut", "VS_AdvanceRain.hlsl", "g", 13 ) );
-        Shaders.back().cBufferSizes.push_back( sizeof( ParticleGSInfoConstantBuffer ) );
+    Shaders.push_back( ShaderInfo( "GS_ParticleStreamOut", "VS_AdvanceRain.hlsl", "g", 13 ) );
+    Shaders.back().cBufferSizes.push_back( sizeof( ParticleGSInfoConstantBuffer ) );
 
-        Shaders.push_back( ShaderInfo( "VS_AdvanceRain", "VS_AdvanceRain.hlsl", "v", 13 ) );
-        Shaders.back().cBufferSizes.push_back( sizeof( AdvanceRainConstantBuffer ) );
-    } else {
+    Shaders.push_back( ShaderInfo( "VS_AdvanceRain", "VS_AdvanceRain.hlsl", "v", 13 ) );
+    Shaders.back().cBufferSizes.push_back( sizeof( AdvanceRainConstantBuffer ) );
+
+    if ( !FeatureLevel10Compatibility ) {
         Shaders.push_back( ShaderInfo( "CS_AdvanceRain", "CS_AdvanceRain.hlsl", "c" ) );
         Shaders.back().cBufferSizes.push_back( sizeof( AdvanceRainConstantBuffer ) );
     }

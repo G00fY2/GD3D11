@@ -57,13 +57,12 @@ float ComputeVolumetricFog(float3 cameraToWorldPos, float3 posOriginal)
 	if(abs( cameraToWorldPos.y ) > cSlopeThreshold )
 	{
 		float t = HF_HeightFalloff * cameraToWorldPos.y * w;
-		fogInt *= (	1.0	- exp( -t ) ) / t;
-		
+		fogInt *= (abs( t ) > 0.0001 ? ( ( 1.0 - exp( -t ) ) / t ) : 1.0);
 	}
 	
 	
 	
-	return	exp( -HF_GlobalDensity * w * fogInt);
+	return exp( -HF_GlobalDensity * w * fogInt );
 }
 
 //--------------------------------------------------------------------------------------

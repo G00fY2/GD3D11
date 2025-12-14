@@ -1178,11 +1178,14 @@ void GothicAPI::DrawWorldMeshNaive() {
     FrameMeshInstances.clear();
 
     START_TIMING();
+    /*
     if ( FeatureLevel10Compatibility ) {
         Engine::GraphicsEngine->DrawWorldMesh();
     } else {
         Engine::GraphicsEngine->DrawWorldMesh_Indirect();
     }
+    */
+    Engine::GraphicsEngine->DrawWorldMesh();
     STOP_TIMING( GothicRendererTiming::TT_WorldMesh );
 
     for ( auto const& vegetationBox : VegetationBoxes ) {
@@ -4717,6 +4720,7 @@ XRESULT GothicAPI::SaveMenuSettings( const std::string& file ) {
     WritePrivateProfileStringA( "General", "DrawWorldSectionIntersections", std::to_string( s.DrawSectionIntersections ? TRUE : FALSE ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "General", "SunLightStrength", std::to_string( s.SunLightStrength ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "General", "DrawG1ForestPortals", std::to_string( s.DrawG1ForestPortals ? TRUE : FALSE ).c_str(), ini.c_str() );
+    WritePrivateProfileStringA( "General", "DrawRainThroughTransformFeedback", std::to_string( s.DrawRainThroughTransformFeedback ? TRUE : FALSE ).c_str(), ini.c_str() );
 
     /*
     * Draw-distance is saved on a per World basis using SaveRendererWorldSettings
@@ -4812,6 +4816,7 @@ XRESULT GothicAPI::LoadMenuSettings( const std::string& file ) {
         s.DrawSectionIntersections = GetPrivateProfileBoolA( "General", "DrawWorldSectionIntersections", defaultRendererSettings.DrawSectionIntersections, ini );
         s.SunLightStrength = GetPrivateProfileFloatA( "General", "SunLightStrength", defaultRendererSettings.SunLightStrength, ini );
         s.DrawG1ForestPortals = GetPrivateProfileBoolA( "General", "DrawG1ForestPortals", defaultRendererSettings.DrawG1ForestPortals, ini );
+        s.DrawRainThroughTransformFeedback = GetPrivateProfileBoolA( "General", "DrawRainThroughTransformFeedback", defaultRendererSettings.DrawRainThroughTransformFeedback, ini );
 
         /*
         * Draw-distance is Loaded on a per World basis using LoadRendererWorldSettings

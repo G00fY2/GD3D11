@@ -543,6 +543,7 @@ struct GothicRendererSettings {
 
         DrawG1ForestPortals = false;    //enables the textures around forests and some doors to darken them
                                         //these are only applicable to G1, they don't appear to have been used in G2
+        DrawRainThroughTransformFeedback = false; // Default to compute shaders
 
         FastShadows = false;
         MaxNumFaces = 0;
@@ -723,6 +724,7 @@ struct GothicRendererSettings {
     int WindQuality;
     bool HeroAffectsObjects;
     bool DrawG1ForestPortals;
+    bool DrawRainThroughTransformFeedback;
     bool EnableHDR;
     E_HDRToneMap HDRToneMap;
     bool EnableVSync;

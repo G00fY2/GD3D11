@@ -2600,7 +2600,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
 
     // Draw rain
     if ( Engine::GAPI->GetRainFXWeight() > 0.0f ) {
-        if ( FeatureLevel10Compatibility ) {
+        if ( FeatureLevel10Compatibility || Engine::GAPI->GetRendererState().RendererSettings.DrawRainThroughTransformFeedback ) {
             Effects->DrawRain();
         } else {
             Effects->DrawRain_CS();
