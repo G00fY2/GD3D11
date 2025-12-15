@@ -779,6 +779,9 @@
     <ClInclude Include="zCInput_Win32.h">
       <Filter>ZenGin\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="SMAA\D3D11SMAA.h">
+      <Filter>Engine\D3D11\PFX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1060,6 +1063,9 @@
     </ClCompile>
     <ClCompile Include="include\imgui\backends\imgui_impl_win32.cpp">
       <Filter>Librarys\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="SMAA\D3D11SMAA.cpp">
+      <Filter>Engine\D3D11\PFX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

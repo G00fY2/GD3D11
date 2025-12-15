@@ -1,7 +1,15 @@
 #pragma once
-#include <d3dx11effect.h>
+#include <d3d11_1.h>
+#include <d3d11shader.h>
+#pragma comment( lib, "d3dcompiler.lib" )
+#pragma comment( lib, "dxguid.lib" )
+
 #include "pch.h"
 #include "d3d11pfx_effect.h"
+#include "D3D11PShader.h"
+#include "D3D11VShader.h"
+#include "SMAA/D3D11SMAA.h"
+
 
 struct RenderToTextureBuffer;
 class D3D11PFX_SMAA :
@@ -23,15 +31,6 @@ public:
     XRESULT Render( RenderToTextureBuffer* fxbuffer ) { return XR_SUCCESS; };
 
 private:
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> AreaTextureSRV;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> SearchTextureSRV;
-
-    RenderToTextureBuffer* EdgesTex;
-    RenderToTextureBuffer* BlendTex;
-
-    Microsoft::WRL::ComPtr<ID3DX11Effect> SMAAShader;
-    ID3DX11EffectTechnique* LumaEdgeDetection;
-    ID3DX11EffectTechnique* BlendingWeightCalculation;
-    ID3DX11EffectTechnique* NeighborhoodBlending;
+    std::unique_ptr<D3D11SMAA> m_Native;
 };
 

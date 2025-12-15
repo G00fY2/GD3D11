@@ -963,6 +963,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="oCVisFX.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="BaseShadowedPointLight.h" />
+    <ClInclude Include="SMAA\D3D11SMAA.h" />
     <ClInclude Include="SteamOverlay.h" />
     <ClInclude Include="SV_GMeshInfoView.h" />
     <ClInclude Include="StackWalker.h" />
@@ -1162,6 +1163,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="BaseShadowedPointLight.cpp" />
+    <ClCompile Include="SMAA\D3D11SMAA.cpp" />
     <ClCompile Include="SteamOverlay.cpp" />
     <ClCompile Include="SV_GMeshInfoView.cpp" />
     <ClCompile Include="StackWalker.cpp" />
@@ -1227,7 +1229,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\fx11_desktop_2019.2022.8.18.1\build\native\fx11_desktop_2019.targets" Condition="Exists('..\packages\fx11_desktop_2019.2022.8.18.1\build\native\fx11_desktop_2019.targets')" />
     <Import Project="..\packages\directxmesh_desktop_2019.2023.4.28.1\build\native\directxmesh_desktop_2019.targets" Condition="Exists('..\packages\directxmesh_desktop_2019.2023.4.28.1\build\native\directxmesh_desktop_2019.targets')" />
     <Import Project="..\packages\directxtk_desktop_2019.2023.4.28.1\build\native\directxtk_desktop_2019.targets" Condition="Exists('..\packages\directxtk_desktop_2019.2023.4.28.1\build\native\directxtk_desktop_2019.targets')" />
     <Import Project="..\packages\directxmath.2025.4.3.1\build\native\directxmath.targets" Condition="Exists('..\packages\directxmath.2025.4.3.1\build\native\directxmath.targets')" />
@@ -1237,7 +1238,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <PropertyGroup>
       <ErrorText>Dieses Projekt verweist auf mindestens ein NuGet-Paket, das auf diesem Computer fehlt. Verwenden Sie die Wiederherstellung von NuGet-Paketen, um die fehlenden Dateien herunterzuladen. Weitere Informationen finden Sie unter "http://go.microsoft.com/fwlink/?LinkID=322105". Die fehlende Datei ist "{0}".</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\fx11_desktop_2019.2022.8.18.1\build\native\fx11_desktop_2019.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\fx11_desktop_2019.2022.8.18.1\build\native\fx11_desktop_2019.targets'))" />
     <Error Condition="!Exists('..\packages\directxmesh_desktop_2019.2023.4.28.1\build\native\directxmesh_desktop_2019.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxmesh_desktop_2019.2023.4.28.1\build\native\directxmesh_desktop_2019.targets'))" />
     <Error Condition="!Exists('..\packages\directxtk_desktop_2019.2023.4.28.1\build\native\directxtk_desktop_2019.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk_desktop_2019.2023.4.28.1\build\native\directxtk_desktop_2019.targets'))" />
     <Error Condition="!Exists('..\packages\directxmath.2025.4.3.1\build\native\directxmath.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxmath.2025.4.3.1\build\native\directxmath.targets'))" />

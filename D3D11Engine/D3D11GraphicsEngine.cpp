@@ -279,7 +279,9 @@ XRESULT D3D11GraphicsEngine::Init() {
     Microsoft::WRL::ComPtr<IDXGIAdapter1> DXGIAdapter1;
     Microsoft::WRL::ComPtr<IDXGIFactory6> DXGIFactory6;
     hr = DXGIFactory2.As( &DXGIFactory6 );
-    if ( SUCCEEDED( hr ) ) {
+    if ( SUCCEEDED( hr ) 
+        && ((factoryFlags & DXGI_CREATE_FACTORY_DEBUG) == 0) // Breaks when using Graphics debugging (e.g. from Visual Studio)
+    ) {
         // Windows 10, version 1803 - only
         UINT adapterIndex = 0;
         while ( DXGIFactory6->EnumAdapterByGpuPreference( adapterIndex++, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
