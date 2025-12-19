@@ -766,6 +766,7 @@ struct GothicRendererSettings {
     float VisualFXDrawRadius;
     float SmallVobSize;
     float WorldShadowRangeScale;
+    int NumShadowCascades;
     float GammaValue;
     float BrightnessValue;
     int ShadowMapSize;
