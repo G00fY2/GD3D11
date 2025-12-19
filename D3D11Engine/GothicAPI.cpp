@@ -4835,12 +4835,12 @@ XRESULT GothicAPI::LoadMenuSettings( const std::string& file ) {
         }
 
         static XMFLOAT3 defaultLightDirection = XMFLOAT3( 1, 1, 1 );
-        const float csmShadowScaleFor2048 = 0.2f; // sharp close shadows even with low res shadowmaps
+        const float worldShadowRangeScaleWithBiasTowardsSharper = 0.5f; // sharper close proximity shadows
         s.EnableShadows = GetPrivateProfileBoolA( "Shadows", "EnableShadows", defaultRendererSettings.EnableShadows, ini );
         s.EnableSoftShadows = GetPrivateProfileBoolA( "Shadows", "EnableSoftShadows", defaultRendererSettings.EnableSoftShadows, ini );
         s.ShadowMapSize = GetPrivateProfileIntA( "Shadows", "ShadowMapSize", defaultRendererSettings.ShadowMapSize, ini.c_str() );
         s.EnablePointlightShadows = GothicRendererSettings::EPointLightShadowMode( GetPrivateProfileIntA( "Shadows", "PointlightShadows", GothicRendererSettings::EPointLightShadowMode::PLS_STATIC_ONLY, ini.c_str() ) );
-        s.WorldShadowRangeScale = GetPrivateProfileFloatA( "Shadows", "WorldShadowRangeScale", csmShadowScaleFor2048, ini );
+        s.WorldShadowRangeScale = GetPrivateProfileFloatA( "Shadows", "WorldShadowRangeScale", worldShadowRangeScaleWithBiasTowardsSharper, ini );
         s.NumShadowCascades = GetPrivateProfileIntA( "Shadows", "NumShadowCascades", 3, ini.c_str() );
         s.EnableDynamicLighting = GetPrivateProfileBoolA( "Shadows", "EnableDynamicLighting", defaultRendererSettings.EnableDynamicLighting, ini );
         s.SmoothShadowCameraUpdate = GetPrivateProfileBoolA( "Shadows", "SmoothCameraUpdate", defaultRendererSettings.SmoothShadowCameraUpdate, ini );
