@@ -803,8 +803,8 @@
     <ClInclude Include="include\ImGuizmo\ImZoomSlider.h">
       <Filter>Librarys\ImGuizmo</Filter>
     </ClInclude>
-    <ClInclude Include="D3D11ShadowMap.h">
-      <Filter>Engine</Filter>
+    <ClInclude Include="D3D11CascadedShadowMapBuffer.h">
+      <Filter>Engine\D3D11</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1106,8 +1106,8 @@
     <ClCompile Include="include\ImGuizmo\ImSequencer.cpp">
       <Filter>Librarys\ImGuizmo</Filter>
     </ClCompile>
-    <ClCompile Include="D3D11ShadowMap.cpp">
-      <Filter>Engine</Filter>
+    <ClCompile Include="D3D11CascadedShadowMapBuffer.cpp">
+      <Filter>Engine\D3D11</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

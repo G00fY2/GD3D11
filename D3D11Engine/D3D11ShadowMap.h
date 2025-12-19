@@ -6,6 +6,7 @@
 #include <vector>
 #include <DirectXMath.h>
 #include "RenderToTextureBuffer.h"
+#include "D3D11CascadedShadowMapBuffer.h"
 #include "D3D11_Helpers.h"
 #include "WorldObjects.h"
 #include "D3D11PointLight.h"
@@ -24,13 +25,11 @@ class zCVobLight;
 class GSky;
 
 enum PS_DS_AtmosphericScatteringSlots {
-    TX_Shadowmap = 3,
-    TX_Shadowmap1 = 4,
-    TX_Shadowmap2 = 5,
-    TX_RainShadowmap = 6,
-    TX_ReflectionCube = 7,
-    TX_Distortion = 8,
-    TX_SI_SP = 9,
+    TX_ShadowmapArray = 3,
+    TX_RainShadowmap = 4,
+    TX_ReflectionCube = 5,
+    TX_Distortion = 6,
+    TX_SI_SP = 7,
 };
 
 const int POINTLIGHT_SHADOWMAP_SIZE = 64;
@@ -47,15 +46,22 @@ public:
     // Resize world shadowmap to a new size
     void Resize( int size );
 
-    RenderToDepthStencilBuffer* GetWorldShadowmap(){ return m_worldShadowmap; }
     RenderToTextureBuffer* GetDummyCubeRT() { return m_dummyCubeRT.get(); }
 
+    // Get the cascaded shadow map
+    D3D11CascadedShadowMapBuffer* GetCascadedShadowMap() { return m_cascadedShadowMap.get(); }
+
+    // Get DSV for a specific cascade
+    ID3D11DepthStencilView* GetCascadeDSV( UINT cascadeIndex ) {
+        return m_cascadedShadowMap ? m_cascadedShadowMap->GetCascadeDSV( cascadeIndex ) : nullptr;
+    }
+
     int GetSizeX() const {
-        if ( m_worldShadowmap ) return m_worldShadowmap->GetSizeX();
+        if ( m_cascadedShadowMap ) return m_cascadedShadowMap->GetSize();
         return 0;
     }
 
-    // Bind world shadowmap SRV to a pixel shader slot
+    // Bind world shadowmap SRV to a pixel shader slot (binds entire cascade array)
     void BindToPixelShader( ID3D11DeviceContext1* context, UINT slot );
 
     // Bind the shadowmap sampler to the given slot
@@ -91,10 +97,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Device1> m_device;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext1> m_context;
 
-    // Non-owning pointer to primary cascade (for compatibility)
-    RenderToDepthStencilBuffer* m_worldShadowmap;
-    // Owning cascade containers
-    std::vector<std::unique_ptr<RenderToDepthStencilBuffer>> m_worldShadowmaps;
+    // CSM using texture array
+    std::unique_ptr<D3D11CascadedShadowMapBuffer> m_cascadedShadowMap;
+
     std::unique_ptr<RenderToTextureBuffer> m_dummyCubeRT;
 
     Microsoft::WRL::ComPtr<ID3D11SamplerState> m_shadowmapSampler;

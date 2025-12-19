@@ -41,15 +41,11 @@ SamplerComparisonState SS_Comp : register(s2);
 Texture2D TX_Diffuse : register(t0);
 Texture2D TX_Nrm : register(t1);
 Texture2D TX_Depth : register(t2);
-
-Texture2D TX_Shadowmap : register(t3); // Cascade 0
-Texture2D TX_Shadowmap1 : register(t4); // Cascade 1
-Texture2D TX_Shadowmap2 : register(t5); // Cascade 2
-
-Texture2D TX_RainShadowmap : register(t6);
-TextureCube TX_ReflectionCube : register(t7);
-Texture2D TX_Distortion : register(t8);
-Texture2D TX_SI_SP : register(t9);
+Texture2DArray TX_ShadowmapArray : register(t3);
+Texture2D TX_RainShadowmap : register(t4);
+TextureCube TX_ReflectionCube : register(t5);
+Texture2D TX_Distortion : register(t6);
+Texture2D TX_SI_SP : register(t7);
 
 //--------------------------------------------------------------------------------------
 // Input / Output structures
@@ -86,13 +82,13 @@ float2 TexOffset(int u, int v)
     return float2(u * 1.0f / SQ_ShadowmapSize, v * 1.0f / SQ_ShadowmapSize);
 }
 
-float IsInShadow(float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState)
+float IsInShadow(float3 wsPosition, Texture2DArray shadowmapArray, SamplerComparisonState samplerState)
 {
     float4 vShadowSamplingPos = mul(float4(wsPosition, 1), mul(SQ_ShadowView[0], SQ_ShadowProj[0]));
     vShadowSamplingPos.xyz /= vShadowSamplingPos.www;
 	
     float2 projectedTexCoords = vShadowSamplingPos.xy * float2(0.5f, -0.5f) + float2(0.5f, 0.5f);
-    return shadowmap.SampleCmpLevelZero(samplerState, projectedTexCoords.xy, vShadowSamplingPos.z);
+    return shadowmapArray.SampleCmpLevelZero(samplerState, float3(projectedTexCoords.xy, 0), vShadowSamplingPos.z);
 }
 
 float IsWet(float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState, matrix viewProj)
@@ -132,7 +128,7 @@ float4 GetCascadeUVAndBounds(float3 wsPosition, int cascadeIndex)
 }
 
 //--------------------------------------------------------------------------------------
-// Helper: Sample shadow from a specific cascade
+// Helper: Sample shadow from a specific cascade using Texture2DArray
 //--------------------------------------------------------------------------------------
 float SampleCascadeShadow(float3 wsPosition, int cascadeIndex, float vertLighting, float bias)
 {
@@ -159,22 +155,18 @@ float SampleCascadeShadow(float3 wsPosition, int cascadeIndex, float vertLightin
         [unroll] for (x = -1.5; x <= 1.5; x += 1.0)
         {
             float2 offset = TexOffset(x, y);
-            if (cascadeIndex == 0)
-                sum += TX_Shadowmap.SampleCmpLevelZero(SS_Comp, projectedTexCoords.xy + offset, vShadowSamplingPos.z - bias);
-            else if (cascadeIndex == 1)
-                sum += TX_Shadowmap1.SampleCmpLevelZero(SS_Comp, projectedTexCoords.xy + offset, vShadowSamplingPos.z - bias);
-            else
-                sum += TX_Shadowmap2.SampleCmpLevelZero(SS_Comp, projectedTexCoords.xy + offset, vShadowSamplingPos.z - bias);
+            // Sample from Texture2DArray using cascade index as array slice
+            sum += TX_ShadowmapArray.SampleCmpLevelZero(SS_Comp, 
+                float3(projectedTexCoords.xy + offset, (float)cascadeIndex), 
+                vShadowSamplingPos.z - bias);
         }
     }
     shadow = sum / 16.0;
 #else
-    if (cascadeIndex == 0)
-        shadow = TX_Shadowmap.SampleCmpLevelZero(SS_Comp, projectedTexCoords.xy, vShadowSamplingPos.z - bias);
-    else if (cascadeIndex == 1)
-        shadow = TX_Shadowmap1.SampleCmpLevelZero(SS_Comp, projectedTexCoords.xy, vShadowSamplingPos.z - bias);
-    else
-        shadow = TX_Shadowmap2.SampleCmpLevelZero(SS_Comp, projectedTexCoords.xy, vShadowSamplingPos.z - bias);
+    // Sample from Texture2DArray using cascade index as array slice
+    shadow = TX_ShadowmapArray.SampleCmpLevelZero(SS_Comp, 
+        float3(projectedTexCoords.xy, (float)cascadeIndex), 
+        vShadowSamplingPos.z - bias);
 #endif
     
     return saturate(shadow);
@@ -444,7 +436,7 @@ float4 PSMain(PS_INPUT Input) : SV_TARGET
 		float3 vsRayPos = vsDir * r;
 		float3 wsRayPos = mul(float4(vsRayPos, 1), SQ_InvView).xyz;
 		
-		float s = IsInShadow(wsRayPos, TX_Shadowmap, SS_Comp);
+		float s = IsInShadow(wsRayPos, TX_ShadowmapArray, SS_Comp);
 		
 		shaft += s / numSamples;
 	}*/

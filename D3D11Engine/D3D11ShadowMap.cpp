@@ -25,7 +25,7 @@ const float NUM_FRAME_SHADOW_UPDATES = 2;  // Fraction of lights to update per f
 const int NUM_MIN_FRAME_SHADOW_UPDATES = 4;  // Minimum lights to update per frame
 const int MAX_IMPORTANT_LIGHT_UPDATES = 1;
 
-D3D11ShadowMap::D3D11ShadowMap() : m_worldShadowmap( nullptr ) {}
+D3D11ShadowMap::D3D11ShadowMap() {}
 
 D3D11ShadowMap::~D3D11ShadowMap() {}
 
@@ -54,6 +54,10 @@ void D3D11ShadowMap::Init( Microsoft::WRL::ComPtr<ID3D11Device1>& device, Micros
     // Dummy cube RT used for fallback to satisfy pixel shader runs that expect a RTV bound
     m_dummyCubeRT = std::make_unique<RenderToTextureBuffer>( m_device.Get(), POINTLIGHT_SHADOWMAP_SIZE, POINTLIGHT_SHADOWMAP_SIZE, DXGI_FORMAT_B8G8R8A8_UNORM, nullptr, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN, 1, 6 );
 
+    // Initialize the cascaded shadow map
+    m_cascadedShadowMap = std::make_unique<D3D11CascadedShadowMapBuffer>();
+    m_cascadedShadowMap->Init( m_device, s, MAX_CSM_CASCADES );
+
     Resize( s );
 }
 
@@ -62,27 +66,17 @@ void D3D11ShadowMap::Resize( int size ) {
     if ( !m_device ) return;
 
     int s = std::min<int>( std::max<int>( size, 512 ), (FeatureLevel10Compatibility ? 8192 : 16384) );
-    m_worldShadowmaps.clear();
-    m_worldShadowmaps.reserve( MAX_CSM_CASCADES );
-    for ( size_t i = 0; i < MAX_CSM_CASCADES; ++i ) {
-        m_worldShadowmaps.emplace_back( std::make_unique<RenderToDepthStencilBuffer>( m_device.Get(), s, s, DXGI_FORMAT_R16_TYPELESS, nullptr, DXGI_FORMAT_D16_UNORM, DXGI_FORMAT_R16_UNORM ) );
-        SetDebugName( m_worldShadowmaps.back()->GetTexture().Get(), "WorldShadowmap" + std::to_string( i ) + "->Texture" );
-        SetDebugName( m_worldShadowmaps.back()->GetShaderResView().Get(), "WorldShadowmap" + std::to_string( i ) + "->ShaderResView" );
-        SetDebugName( m_worldShadowmaps.back()->GetDepthStencilView().Get(), "WorldShadowmap" + std::to_string( i ) + "->DepthStencilView" );
-    }
 
-    if ( !m_worldShadowmaps.empty() ) {
-        m_worldShadowmap = m_worldShadowmaps[0].get();
-    } else {
-        m_worldShadowmap = nullptr;
+    // Resize the cascaded shadow map
+    if ( m_cascadedShadowMap ) {
+        m_cascadedShadowMap->Resize( s );
     }
 }
 
 void D3D11ShadowMap::BindToPixelShader( ID3D11DeviceContext1* context, UINT slot ) {
-    if ( m_worldShadowmap ) {
-        m_worldShadowmap->BindToPixelShader( context, slot );
-    } else if ( !m_worldShadowmaps.empty() && m_worldShadowmaps[0] ) {
-        m_worldShadowmaps[0]->BindToPixelShader( context, slot );
+    // Bind the cascaded shadow map (Texture2DArray)
+    if ( m_cascadedShadowMap ) {
+        m_cascadedShadowMap->BindToPixelShader( context, slot );
     }
 }
 
@@ -274,8 +268,11 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
 
     if ( !isOutdoor ) {
         if ( Engine::GAPI->GetRendererState().RendererSettings.EnableShadows && lastBspMode == zBSP_MODE_OUTDOOR ) {
+            // Clear all cascade DSVs
             for ( size_t cascadeIdx = 0; cascadeIdx < MAX_CSM_CASCADES; ++cascadeIdx ) {
-                m_context->ClearDepthStencilView( m_worldShadowmaps[cascadeIdx]->GetDepthStencilView().Get(), D3D11_CLEAR_DEPTH, 0.0f, 0 );
+                if ( auto dsv = GetCascadeDSV( static_cast<UINT>( cascadeIdx ) ) ) {
+                    m_context->ClearDepthStencilView( dsv, D3D11_CLEAR_DEPTH, 0.0f, 0 );
+                }
             }
             lastBspMode = zBSP_MODE_INDOOR;
         }
@@ -336,11 +333,14 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
             XMStoreFloat3( &cascadeCRs[cascadeIdx].PositionReplacement, p );
             XMStoreFloat3( &cascadeCRs[cascadeIdx].LookAtReplacement, lookAt );
 
-            // Render diese Cascade
+            // Render diese Cascade using the new CascadedShadowMap
             Engine::GAPI->SetCameraReplacementPtr( &cascadeCRs[cascadeIdx] );
 
-            RenderShadowmaps( WorldShadowCP, m_worldShadowmaps[cascadeIdx].get(), true, false,
-                m_worldShadowmaps[cascadeIdx]->GetDepthStencilView(),
+            // Get DSV from CascadedShadowMap
+            Microsoft::WRL::ComPtr<ID3D11DepthStencilView> cascadeDSV = GetCascadeDSV( static_cast<UINT>( cascadeIdx ) );
+
+            RenderShadowmaps( WorldShadowCP, nullptr, true, false,
+                cascadeDSV,
                 nullptr,
                 splits[cascadeIdx+1]);
 
@@ -608,10 +608,8 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
     graphicsEngine->GetActiveVS()->GetConstantBuffer()[0]->UpdateBuffer( &vscb );
     graphicsEngine->GetActiveVS()->GetConstantBuffer()[0]->BindToVertexShader( 0 );
 
-    // CSM: Alle 3 Cascades an verschiedene Slots binden
-    m_worldShadowmaps[0]->BindToPixelShader( m_context.Get(), TX_Shadowmap );
-    m_worldShadowmaps[1]->BindToPixelShader( m_context.Get(), TX_Shadowmap1 );
-    m_worldShadowmaps[2]->BindToPixelShader( m_context.Get(), TX_Shadowmap2 );
+    // CSM: Bind the cascade array to a single slot (Texture2DArray)
+    BindToPixelShader( m_context.Get(), TX_ShadowmapArray );
 
     if ( graphicsEngine->Effects->GetRainShadowmap() )
         graphicsEngine->Effects->GetRainShadowmap()->BindToPixelShader( m_context.Get(), TX_RainShadowmap );
@@ -644,11 +642,14 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsvOverwrite,
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> debugRTV,
     float cascadeFar) {
-    if ( !target ) {
-        target = GetWorldShadowmap();
-    }
+
+    // We now assume that "target" always is something else than the world shadowmap
+    UINT targetSize = !target
+        ? m_cascadedShadowMap->GetSize()
+        : target->GetSizeX();
 
     if ( target && !dsvOverwrite.Get() ) dsvOverwrite = target->GetDepthStencilView().Get();
+    const bool isNotWorldShadowMap = target != nullptr;
 
     // todo: remove this dependency at some point
     auto graphicsEngine = (D3D11GraphicsEngine*)Engine::GraphicsEngine;
@@ -664,7 +665,7 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
     vp.TopLeftY = 0;
     vp.MinDepth = 0.0f;
     vp.MaxDepth = 1.0f;
-    vp.Width = static_cast<float>(target ? target->GetSizeX() : 0);
+    vp.Width = static_cast<float>(targetSize);
     vp.Height = vp.Width;
     m_context->RSSetViewports( 1, &vp );
 
@@ -687,7 +688,7 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
     Engine::GAPI->GetRendererState().BlendState.SetDirty();
 
     // Dont render shadows from the sun when it isn't on the sky
-    if ( target != GetWorldShadowmap() ||
+    if ( isNotWorldShadowMap ||
         (Engine::GAPI->GetSky()->GetAtmoshpereSettings().LightDirection.y >
             0 &&  // Only stop rendering if the sun is down on main-shadowmap
             // TODO: Take this out of here!
