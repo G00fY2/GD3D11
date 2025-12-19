@@ -265,7 +265,7 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
     static zTBspMode lastBspMode = zBSP_MODE_OUTDOOR;
 
     // Array für alle Cascade-Matrizen
-    std::array<CameraReplacement, 3> cascadeCRs = {};
+    std::array<CameraReplacement, MAX_CSM_CASCADES> cascadeCRs = {};
 
     bool isOutdoor = Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_OUTDOOR;
 
@@ -568,12 +568,11 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
     scb.SQ_LightColor = float4( sunColor.x, sunColor.y, sunColor.z, sunStrength );
 
     // CSM: Alle Cascade-Matrizen setzen
-    scb.SQ_ShadowView = cascadeCRs[0].ViewReplacement;
-    scb.SQ_ShadowProj = cascadeCRs[0].ProjectionReplacement;
-    scb.SQ_ShadowView1 = cascadeCRs[1].ViewReplacement;
-    scb.SQ_ShadowProj1 = cascadeCRs[1].ProjectionReplacement;
-    scb.SQ_ShadowView2 = cascadeCRs[2].ViewReplacement;
-    scb.SQ_ShadowProj2 = cascadeCRs[2].ProjectionReplacement;
+
+    for ( size_t cascadeIdx = 0; cascadeIdx < MAX_CSM_CASCADES; ++cascadeIdx ) {
+        scb.SQ_ShadowView[cascadeIdx] = cascadeCRs[cascadeIdx].ViewReplacement;
+        scb.SQ_ShadowProj[cascadeIdx] = cascadeCRs[cascadeIdx].ProjectionReplacement;
+    }
     
     // CSM: Split-Distanzen setzen
     scb.SQ_CascadeSplits = float4( 

@@ -4,6 +4,7 @@
 #include <DS_Defines.h>
 
 #include <AtmosphericScattering.h>
+#define MAX_CSM_CASCADES 3
 
 cbuffer DS_ScreenQuadConstantBuffer : register(b0)
 {
@@ -17,8 +18,8 @@ cbuffer DS_ScreenQuadConstantBuffer : register(b0)
     float SQ_ShadowmapSize;
 	
     float4 SQ_LightColor;
-    matrix SQ_ShadowView; // Cascade 0
-    matrix SQ_ShadowProj; // Cascade 0
+    matrix SQ_ShadowView[MAX_CSM_CASCADES];
+    matrix SQ_ShadowProj[MAX_CSM_CASCADES];
 	
     matrix SQ_RainView;
     matrix SQ_RainProj;
@@ -27,12 +28,6 @@ cbuffer DS_ScreenQuadConstantBuffer : register(b0)
     float SQ_ShadowAOStrength;
     float SQ_WorldAOStrength;
     float SQ_Pad;
-	
-	// CSM: Zusätzliche Cascade-Matrizen
-    matrix SQ_ShadowView1; // Cascade 1
-    matrix SQ_ShadowProj1;
-    matrix SQ_ShadowView2; // Cascade 2
-    matrix SQ_ShadowProj2;
 	
 	// CSM: Split-Distanzen (View-Space Z)
     float4 SQ_CascadeSplits; // x=split0->1, y=split1->2, z=split2->far
@@ -92,7 +87,7 @@ float2 TexOffset(int u, int v)
 
 float IsInShadow(float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState)
 {
-    float4 vShadowSamplingPos = mul(float4(wsPosition, 1), mul(SQ_ShadowView, SQ_ShadowProj));
+    float4 vShadowSamplingPos = mul(float4(wsPosition, 1), mul(SQ_ShadowView[0], SQ_ShadowProj[0]));
     vShadowSamplingPos.xyz /= vShadowSamplingPos.www;
 	
     float2 projectedTexCoords = vShadowSamplingPos.xy * float2(0.5f, -0.5f) + float2(0.5f, 0.5f);
@@ -188,9 +183,9 @@ float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, Samp
 float ComputeCascadedShadowValue(float3 wsPosition, float viewSpaceZ, float vertLighting, float bias)
 {
     // Get view-projection matrices for all cascades
-    matrix viewProj0 = mul(SQ_ShadowView, SQ_ShadowProj);
-    matrix viewProj1 = mul(SQ_ShadowView1, SQ_ShadowProj1);
-    matrix viewProj2 = mul(SQ_ShadowView2, SQ_ShadowProj2);
+    matrix viewProj0 = mul(SQ_ShadowView[0], SQ_ShadowProj[0]);
+    matrix viewProj1 = mul(SQ_ShadowView[1], SQ_ShadowProj[1]);
+    matrix viewProj2 = mul(SQ_ShadowView[2], SQ_ShadowProj[2]);
     
     // Get cascade UV and bounds info for all cascades
     float4 cascade0Info = GetCascadeUVAndBounds(wsPosition, viewProj0);
