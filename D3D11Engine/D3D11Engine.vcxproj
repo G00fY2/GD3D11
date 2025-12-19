@@ -190,8 +190,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
@@ -199,8 +199,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Spacer_NET|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
@@ -208,8 +208,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Spacer_NET_G1|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
@@ -217,8 +217,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_AVX|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/;include/ImGuizmo</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
@@ -226,8 +226,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_AVX2|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
@@ -235,44 +235,44 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_G1|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_G1_12f|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_G1_AVX|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_G1_AVX2|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
-    <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
+	<IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <LibraryPath>$(directxtk-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -1257,6 +1257,5 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
   <!-- For NuGet! This is needed because we use different configuration names than the defaults -->
   <PropertyGroup>
     <directxtk-LibPath>$(directxtk-LibPath)\..\Release</directxtk-LibPath>
-    <fx11-LibPath>$(fx11-LibPath)\..\Release</fx11-LibPath>
   </PropertyGroup>
 </Project>
