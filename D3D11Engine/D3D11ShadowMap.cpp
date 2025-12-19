@@ -96,7 +96,7 @@ void D3D11ShadowMap::BindSampler( ID3D11DeviceContext1* context, UINT slot ) {
 std::vector<float> D3D11ShadowMap::ComputeCascadeSplits( float nearPlane, float farPlane, size_t numCascades, float lambda ) {
     if ( numCascades == 0 ) return { nearPlane, farPlane };
     lambda = std::clamp( lambda, 0.0f, 1.0f );
-    std::vector<float> splits;
+    std::vector<float> splits = {};
     splits.reserve( numCascades + 1 );
     splits.push_back( nearPlane );
     for ( size_t i = 1; i <= numCascades; ++i ) {
@@ -334,7 +334,9 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
             // Render diese Cascade
             Engine::GAPI->SetCameraReplacementPtr( &cascadeCRs[cascadeIdx] );
             RenderShadowmaps( WorldShadowCP, m_worldShadowmaps[cascadeIdx].get(), true, false,
-                m_worldShadowmaps[cascadeIdx]->GetDepthStencilView() );
+                m_worldShadowmaps[cascadeIdx]->GetDepthStencilView(),
+                nullptr,
+                splits[cascadeIdx+1]);
             Engine::GAPI->SetCameraReplacementPtr( nullptr );
         }
     }
@@ -648,7 +650,8 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
     RenderToDepthStencilBuffer* target,
     bool cullFront, bool dontCull,
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsvOverwrite,
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> debugRTV ) {
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> debugRTV,
+    float cascadeFar) {
     if ( !target ) {
         target = GetWorldShadowmap();
     }
@@ -702,7 +705,21 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
 
         // Draw the world mesh without textures
         constexpr float NOT_IMPLEMENTED_RANGE = 10000.0f;
+        auto oldRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius;
+        if ( cascadeFar > 0.01f ) {
+            Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius = std::min(
+                oldRadius, cascadeFar * 1.2f );
+        }
+        auto oldVobRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius;
+        if ( cascadeFar > 0.01f ) {
+            Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius = std::min(
+                oldVobRadius, cascadeFar * 1.2f );
+        }
+
         graphicsEngine->DrawWorldAround( cameraPosition, 2, NOT_IMPLEMENTED_RANGE, cullFront, dontCull );
+
+        Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius = oldRadius;
+        Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius = oldVobRadius;
     } else {
         if ( Engine::GAPI->GetSky()->GetAtmoshpereSettings().LightDirection.y <= 0 ) {
             m_context->ClearDepthStencilView( dsvOverwrite.Get(), D3D11_CLEAR_DEPTH, 0.0f,
