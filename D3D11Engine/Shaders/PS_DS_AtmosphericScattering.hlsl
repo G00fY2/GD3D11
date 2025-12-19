@@ -4,7 +4,9 @@
 #include <DS_Defines.h>
 
 #include <AtmosphericScattering.h>
+#ifndef MAX_CSM_CASCADES
 #define MAX_CSM_CASCADES 3
+#endif
 
 cbuffer DS_ScreenQuadConstantBuffer : register(b0)
 {
@@ -28,9 +30,6 @@ cbuffer DS_ScreenQuadConstantBuffer : register(b0)
     float SQ_ShadowAOStrength;
     float SQ_WorldAOStrength;
     float SQ_Pad;
-	
-	// CSM: Split-Distanzen (View-Space Z)
-    float4 SQ_CascadeSplits; // x=split0->1, y=split1->2, z=split2->far
 };
 
 //--------------------------------------------------------------------------------------

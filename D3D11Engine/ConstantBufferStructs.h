@@ -120,7 +120,8 @@ struct DS_PointLightConstantBuffer {
     float PL_Pad3;
 };
 
-constexpr size_t MAX_CSM_CASCADES = 3;
+#define MAX_CSM_CASCADES 3
+
 struct DS_ScreenQuadConstantBuffer {
     XMFLOAT4X4 SQ_InvProj; // Optimize out!
     XMFLOAT4X4 SQ_InvView;
@@ -144,10 +145,6 @@ struct DS_ScreenQuadConstantBuffer {
     float SQ_ShadowAOStrength;
     float SQ_WorldAOStrength;
     float SQ_Pad;
-    
-    // CSM: Split-Distanzen in View-Space Z
-    // x=split0->1, y=split1->2, z=split2->far, w=unused
-    float4 SQ_CascadeSplits;
 };
 
 struct CloudConstantBuffer {

@@ -24,7 +24,6 @@ extern bool FeatureRTArrayIndexFromAnyShader;
 const float NUM_FRAME_SHADOW_UPDATES = 2;  // Fraction of lights to update per frame
 const int NUM_MIN_FRAME_SHADOW_UPDATES = 4;  // Minimum lights to update per frame
 const int MAX_IMPORTANT_LIGHT_UPDATES = 1;
-constexpr size_t MAX_NUM_CASCADES = 3;
 
 D3D11ShadowMap::D3D11ShadowMap() : m_worldShadowmap( nullptr ) {}
 
@@ -64,8 +63,8 @@ void D3D11ShadowMap::Resize( int size ) {
 
     int s = std::min<int>( std::max<int>( size, 512 ), (FeatureLevel10Compatibility ? 8192 : 16384) );
     m_worldShadowmaps.clear();
-    m_worldShadowmaps.reserve( MAX_NUM_CASCADES );
-    for ( size_t i = 0; i < MAX_NUM_CASCADES; ++i ) {
+    m_worldShadowmaps.reserve( MAX_CSM_CASCADES );
+    for ( size_t i = 0; i < MAX_CSM_CASCADES; ++i ) {
         m_worldShadowmaps.emplace_back( std::make_unique<RenderToDepthStencilBuffer>( m_device.Get(), s, s, DXGI_FORMAT_R16_TYPELESS, nullptr, DXGI_FORMAT_D16_UNORM, DXGI_FORMAT_R16_UNORM ) );
         SetDebugName( m_worldShadowmaps.back()->GetTexture().Get(), "WorldShadowmap" + std::to_string( i ) + "->Texture" );
         SetDebugName( m_worldShadowmaps.back()->GetShaderResView().Get(), "WorldShadowmap" + std::to_string( i ) + "->ShaderResView" );
@@ -227,8 +226,8 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
     const float shadowRangeScale = Engine::GAPI->GetRendererState().RendererSettings.WorldShadowRangeScale;
     const float farPlane = baseFarPlane * std::max( 0.1f, shadowRangeScale );
     int numCascades = Engine::GAPI->GetRendererState().RendererSettings.NumShadowCascades;
-    if ( numCascades > 3 || numCascades < 1 ) {
-        numCascades = std::clamp( numCascades, 1, 3 );
+    if ( numCascades > MAX_CSM_CASCADES || numCascades < 1 ) {
+        numCascades = std::clamp( numCascades, 1, MAX_CSM_CASCADES );
         Engine::GAPI->GetRendererState().RendererSettings.NumShadowCascades = numCascades;
     }
 
@@ -275,7 +274,7 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
 
     if ( !isOutdoor ) {
         if ( Engine::GAPI->GetRendererState().RendererSettings.EnableShadows && lastBspMode == zBSP_MODE_OUTDOOR ) {
-            for ( size_t cascadeIdx = 0; cascadeIdx < MAX_NUM_CASCADES; ++cascadeIdx ) {
+            for ( size_t cascadeIdx = 0; cascadeIdx < MAX_CSM_CASCADES; ++cascadeIdx ) {
                 m_context->ClearDepthStencilView( m_worldShadowmaps[cascadeIdx]->GetDepthStencilView().Get(), D3D11_CLEAR_DEPTH, 0.0f, 0 );
             }
             lastBspMode = zBSP_MODE_INDOOR;
@@ -349,11 +348,7 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
         }
     }
 
-    // Nutze Cascade 0 Matrix für den Shader (da Shader nur eine nutzt)
-    CameraReplacement& cr = cascadeCRs[0];
-
     graphicsEngine->SetDefaultStates();
-    // ... rest bleibt gleich
 
     // Restore gothics camera
     Engine::GAPI->SetCameraReplacementPtr( nullptr );
@@ -573,14 +568,6 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
         scb.SQ_ShadowView[cascadeIdx] = cascadeCRs[cascadeIdx].ViewReplacement;
         scb.SQ_ShadowProj[cascadeIdx] = cascadeCRs[cascadeIdx].ProjectionReplacement;
     }
-    
-    // CSM: Split-Distanzen setzen
-    scb.SQ_CascadeSplits = float4( 
-        splits[1],  // Cascade 0 -> 1 boundary
-        splits[2],  // Cascade 1 -> 2 boundary
-        splits[3],  // Cascade 2 -> far boundary
-        0.0f 
-    );
     
     scb.SQ_ShadowmapSize = static_cast<float>(this->GetSizeX());
 

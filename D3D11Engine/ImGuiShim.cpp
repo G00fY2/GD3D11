@@ -722,7 +722,7 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
                 ImGui::EndCombo();
             }
             ImGui::DragFloat( "WorldShadowRangeScale", &settings.WorldShadowRangeScale, 0.01f, 0.00f, 10.0f, "%.2f" );
-            ImGui::DragInt( "Shadow Cascade count", &settings.NumShadowCascades, 1, 1, 3, "%d", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
+            ImGui::DragInt( "Shadow Cascade count", &settings.NumShadowCascades, 1, 1, MAX_CSM_CASCADES, "%d", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
             ImGui::SetItemTooltip( "Higher values can produce better shadows (Impact: High)" );
 
             ImGui::DragFloat( "ShadowStrength", &settings.ShadowStrength, 0.01f, 0.01f, 5.0f, "%.2f" );
