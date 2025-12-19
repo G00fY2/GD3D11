@@ -640,8 +640,12 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
 
         // ImGui::Checkbox( "Draw Sky", &settings.DrawSky );
         ImGui::Checkbox( "Draw Fog", &settings.DrawFog );
-        // caution, FogRange is reduced by 0.5f (secScale - 0.5f) in D3D11PFX_HeightFog
-        ImGui::SliderFloat( "Fog Range", &settings.FogRange, 0.50f, 10.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
+        ImGui::BeginDisabled( !settings.DrawFog );
+        {
+            // caution, FogRange is reduced by 0.5f (secScale - 0.5f) in D3D11PFX_HeightFog
+            ImGui::SliderFloat( "Fog Range", &settings.FogRange, 0.50f, 10.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
+            ImGui::EndDisabled();
+        }
 
         ImGui::Checkbox( "HDR", &settings.EnableHDR );
 
@@ -661,17 +665,25 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
         ImGui::EndDisabled();
 
         ImGui::Checkbox( "SMAA", &settings.EnableSMAA );
-        ImGui::DragFloat( "Sharpen", &settings.SharpenFactor, 0.01f );
-        ImGui::Checkbox( "DynamicLighting", &settings.EnableDynamicLighting );
+        ImGui::BeginDisabled( !settings.EnableSMAA );
+        {
+            ImGui::DragFloat( "Sharpen", &settings.SharpenFactor, 0.01f );
+            ImGui::EndDisabled();
+        }
 
-        static std::vector<std::pair<const char*, int>> pointlightShadows = {
-           {"Disabled", 0},
-           {"Static", 1},
-           {"Update Dynamic", 2},
-           {"Full", 3},
-        };
-        if ( ImComboBox( "PointlightShadows", pointlightShadows, (int*)(&settings.EnablePointlightShadows) ) ) {
-            ImGui::EndCombo();
+        ImGui::Checkbox( "DynamicLighting", &settings.EnableDynamicLighting );
+        ImGui::BeginDisabled( !settings.EnableDynamicLighting );
+        {
+            static std::vector<std::pair<const char*, int>> pointlightShadows = {
+               {"Disabled", 0},
+               {"Static", 1},
+               {"Update Dynamic", 2},
+               {"Full", 3},
+            };
+            if ( ImComboBox( "PointlightShadows", pointlightShadows, (int*)(&settings.EnablePointlightShadows) ) ) {
+                ImGui::EndCombo();
+            }
+            ImGui::EndDisabled();
         }
         // ImGui::Checkbox("FastShadows", &settings.FastShadows );	
         ImGui::Checkbox( "DrawShadowGeometry", &settings.DrawShadowGeometry );
@@ -706,7 +718,6 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
         ImGui::Checkbox( "Enable Shadows", &settings.EnableShadows );
         ImGui::BeginDisabled( !settings.EnableShadows );
         {
-
             if ( ImComboBoxC( "ShadowmapSize", shadowMapSizes, (int*)(&settings.ShadowMapSize), []() { Engine::GraphicsEngine->ReloadShaders(); } ) ) {
                 ImGui::EndCombo();
             }
