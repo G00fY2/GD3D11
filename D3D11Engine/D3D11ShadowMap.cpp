@@ -701,7 +701,8 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
         m_context->ClearDepthStencilView( dsvOverwrite.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0 );
 
         // Draw the world mesh without textures
-        graphicsEngine->DrawWorldAround( cameraPosition, 2, 10000.0f, cullFront, dontCull );
+        constexpr float NOT_IMPLEMENTED_RANGE = 10000.0f;
+        graphicsEngine->DrawWorldAround( cameraPosition, 2, NOT_IMPLEMENTED_RANGE, cullFront, dontCull );
     } else {
         if ( Engine::GAPI->GetSky()->GetAtmoshpereSettings().LightDirection.y <= 0 ) {
             m_context->ClearDepthStencilView( dsvOverwrite.Get(), D3D11_CLEAR_DEPTH, 0.0f,
