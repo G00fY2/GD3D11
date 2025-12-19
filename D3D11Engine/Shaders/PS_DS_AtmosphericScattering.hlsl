@@ -120,17 +120,19 @@ float4 GetCascadeUVAndBounds(float3 wsPosition, matrix viewProj)
 	
     float2 projectedTexCoords = vShadowSamplingPos.xy * float2(0.5f, -0.5f) + float2(0.5f, 0.5f);
     
-    // Check if within bounds (with small margin)
-    const float margin = 0.01f;
+    // Check if within bounds (with margin for blend zone)
+    // The margin should be larger than the blend zone to ensure we don't sample outside valid area
+    const float margin = 0.02f;
     bool inBounds = projectedTexCoords.x > margin && projectedTexCoords.x < (1.0f - margin) &&
                     projectedTexCoords.y > margin && projectedTexCoords.y < (1.0f - margin);
     
     // Calculate blend factor based on distance to edge (for smooth transitions)
     // Use the minimum distance to any edge, normalized
-    const float blendZone = 0.1f; // 10% of cascade for blending
+    // The blend zone starts inside the valid area and goes to the margin
+    const float blendZoneStart = 0.15f; // Start blending at 15% from edge
     float distToEdge = min(min(projectedTexCoords.x, 1.0f - projectedTexCoords.x),
                            min(projectedTexCoords.y, 1.0f - projectedTexCoords.y));
-    float blendFactor = 1.0f - saturate(distToEdge / blendZone);
+    float blendFactor = 1.0f - saturate((distToEdge - margin) / (blendZoneStart - margin));
     
     return float4(projectedTexCoords, inBounds ? 1.0f : 0.0f, blendFactor);
 }
@@ -143,8 +145,10 @@ float ComputeShadowValueDirect(float3 wsPosition, Texture2D shadowmap, SamplerCo
 	
     float2 projectedTexCoords = vShadowSamplingPos.xy * float2(0.5f, -0.5f) + float2(0.5f, 0.5f);
     float shadow = 1.0f;
-    if (!(projectedTexCoords.x > 1 || projectedTexCoords.y > 1 ||
-		projectedTexCoords.x < 0 || projectedTexCoords.y < 0))
+    
+    // Sample shadow map if within valid bounds
+    if (projectedTexCoords.x >= 0.0f && projectedTexCoords.x <= 1.0f &&
+        projectedTexCoords.y >= 0.0f && projectedTexCoords.y <= 1.0f)
     {
 #if SHD_FILTER_16TAP_PCF
 		float sum = 0;
@@ -168,13 +172,6 @@ float ComputeShadowValueDirect(float3 wsPosition, Texture2D shadowmap, SamplerCo
         shadow = shadowmap.SampleCmpLevelZero(samplerState, projectedTexCoords.xy, vShadowSamplingPos.z - bias);
 #endif
     }
-	
-    float border;
-    border = pow(abs(projectedTexCoords.x), 16.0f);
-    border += pow(abs(projectedTexCoords.y), 16.0f);
-    border += pow(abs(1.0f - projectedTexCoords.x), 16.0f);
-    border += pow(abs(1.0f - projectedTexCoords.y), 16.0f);
-    shadow = lerp(shadow, vertLighting, saturate(border));
 	
     return saturate(shadow);
 }
@@ -208,7 +205,7 @@ float ComputeCascadedShadowValue(float3 wsPosition, float viewSpaceZ, float vert
     {
         shadow = ComputeShadowValueDirect(wsPosition, TX_Shadowmap, SS_Comp, vertLighting, viewProj0, bias, 1.0f);
         
-        // Blend with cascade 1 near edges
+        // Blend with cascade 1 near edges - only if cascade 1 also has this pixel in bounds
         if (cascade0Info.w > 0.0f && cascade1Info.z > 0.5f)
         {
             float shadow1 = ComputeShadowValueDirect(wsPosition, TX_Shadowmap1, SS_Comp, vertLighting, viewProj1, bias, 1.0f);
