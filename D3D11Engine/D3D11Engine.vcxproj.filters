@@ -79,6 +79,9 @@
     <Filter Include="Librarys\imgui\backends">
       <UniqueIdentifier>{e4f071b6-4339-4759-8c39-b629df4c8412}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Librarys\ImGuizmo">
+      <UniqueIdentifier>{cd93a51d-0cd2-425d-be4f-d00292503999}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -782,6 +785,24 @@
     <ClInclude Include="SMAA\D3D11SMAA.h">
       <Filter>Engine\D3D11\PFX</Filter>
     </ClInclude>
+    <ClInclude Include="include\ImGuizmo\GraphEditor.h">
+      <Filter>Librarys\ImGuizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ImGuizmo\ImCurveEdit.h">
+      <Filter>Librarys\ImGuizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ImGuizmo\ImGradient.h">
+      <Filter>Librarys\ImGuizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ImGuizmo\ImGuizmo.h">
+      <Filter>Librarys\ImGuizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ImGuizmo\ImSequencer.h">
+      <Filter>Librarys\ImGuizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ImGuizmo\ImZoomSlider.h">
+      <Filter>Librarys\ImGuizmo</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1066,6 +1087,21 @@
     </ClCompile>
     <ClCompile Include="SMAA\D3D11SMAA.cpp">
       <Filter>Engine\D3D11\PFX</Filter>
+    </ClCompile>
+    <ClCompile Include="include\ImGuizmo\GraphEditor.cpp">
+      <Filter>Librarys\ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="include\ImGuizmo\ImCurveEdit.cpp">
+      <Filter>Librarys\ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="include\ImGuizmo\ImGradient.cpp">
+      <Filter>Librarys\ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="include\ImGuizmo\ImGuizmo.cpp">
+      <Filter>Librarys\ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="include\ImGuizmo\ImSequencer.cpp">
+      <Filter>Librarys\ImGuizmo</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

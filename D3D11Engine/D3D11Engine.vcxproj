@@ -217,7 +217,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_AVX|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/</IncludePath>
+    <IncludePath>$(IncludePath);include;include/imgui/;include/imgui/backends/;include/ImGuizmo</IncludePath>
     <LibraryPath>$(directxtk-LibPath);$(fx11-LibPath);lib;$(LibraryPath)</LibraryPath>
     <TargetName>ddraw</TargetName>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -945,6 +945,12 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="include\assimp\Vertex.h" />
     <ClInclude Include="include\assimp\XMLTools.h" />
     <ClInclude Include="include\assimp\ZipArchiveIOSystem.h" />
+    <ClInclude Include="include\ImGuizmo\GraphEditor.h" />
+    <ClInclude Include="include\ImGuizmo\ImCurveEdit.h" />
+    <ClInclude Include="include\ImGuizmo\ImGradient.h" />
+    <ClInclude Include="include\ImGuizmo\ImGuizmo.h" />
+    <ClInclude Include="include\ImGuizmo\ImSequencer.h" />
+    <ClInclude Include="include\ImGuizmo\ImZoomSlider.h" />
     <ClInclude Include="include\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="include\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="include\imgui\imconfig.h" />
@@ -1129,6 +1135,11 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="HookedFunctions.cpp" />
     <ClCompile Include="IkarusBindings.cpp" />
     <ClCompile Include="ImGuiShim.cpp" />
+    <ClCompile Include="include\ImGuizmo\GraphEditor.cpp" />
+    <ClCompile Include="include\ImGuizmo\ImCurveEdit.cpp" />
+    <ClCompile Include="include\ImGuizmo\ImGradient.cpp" />
+    <ClCompile Include="include\ImGuizmo\ImGuizmo.cpp" />
+    <ClCompile Include="include\ImGuizmo\ImSequencer.cpp" />
     <ClCompile Include="include\imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="include\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="include\imgui\imgui.cpp" />
