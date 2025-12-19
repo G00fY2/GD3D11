@@ -38,7 +38,6 @@ public:
     void Resize( int size );
 
     RenderToDepthStencilBuffer* GetWorldShadowmap(){ return m_worldShadowmap; }
-    size_t GetNumCascades() const { return 3; }
     RenderToTextureBuffer* GetDummyCubeRT() { return m_dummyCubeRT.get(); }
 
     int GetSizeX() const {
