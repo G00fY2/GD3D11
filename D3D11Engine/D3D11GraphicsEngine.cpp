@@ -4179,51 +4179,89 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround( FXMVECTOR position,
         ActiveVS->GetConstantBuffer()[1]->UpdateBuffer( &XMMatrixIdentity() );
         ActiveVS->GetConstantBuffer()[1]->BindToVertexShader( 1 );
 
+        static thread_local std::vector<const WorldMeshSectionInfo*> visibleSections;
+        visibleSections.clear();
+
         for ( const auto& itx : Engine::GAPI->GetWorldSections() ) {
             for ( const auto& ity : itx.second ) {
+                float dx = static_cast<float>(itx.first - s.x);
+                float dy = static_cast<float>(ity.first - s.y);
+                float lenSq = dx * dx + dy * dy;
 
-                float len;
-                XMStoreFloat( &len, XMVector2Length( XMVectorSet( static_cast<float>(itx.first - s.x), static_cast<float>(ity.first - s.y), 0, 0 ) ) );
-                if ( len < sectionRange ) {
-                    const WorldMeshSectionInfo& section = ity.second;
+                if ( lenSq < sectionRange * sectionRange ) {
+                    visibleSections.push_back( &ity.second );
+                }
+            }
+        }
 
-                    if ( Engine::GAPI->GetRendererState().RendererSettings.FastShadows ) {
-                        // Draw world mesh
-                        if ( section.FullStaticMesh )
-                            Engine::GAPI->DrawMeshInfo( nullptr, section.FullStaticMesh );
-                    } else {
-                        for ( const auto& it : section.WorldMeshes ) {
-                            // Check surface type
-                            if ( it.first.Info->MaterialType != MaterialInfo::MT_None ) {
-                                continue;
-                            }
+        if ( Engine::GAPI->GetRendererState().RendererSettings.FastShadows ) {
+            if ( !linearDepth )  // Only unbind when not rendering linear depth
+            {
+                // Unbind PS
+                Context->PSSetShader( nullptr, nullptr, 0 );
+            }
 
-                            // Bind texture
-                            if ( it.first.Material && it.first.Material->GetTexture() ) {
-                                if ( it.first.Material->GetTexture()->HasAlphaChannel() ||
-                                    colorWritesEnabled ) {
-                                    if ( alphaRef > 0.0f &&
-                                        it.first.Material->GetTexture()->CacheIn( 0.6f ) ==
-                                        zRES_CACHED_IN ) {
-                                        it.first.Material->GetTexture()->Bind( 0 );
-                                        ActivePS->Apply();
-                                    } else
-                                        continue;  // Don't render if not loaded
-                                } else {
-                                    if ( !linearDepth )  // Only unbind when not rendering linear
-                                                       // depth
-                                    {
-                                        // Unbind PS
-                                        Context->PSSetShader( nullptr, nullptr, 0 );
-                                    }
-                                }
-                            }
+            for ( const WorldMeshSectionInfo* section : visibleSections ) {
+                if ( section->FullStaticMesh ) {
+                    Engine::GAPI->DrawMeshInfo( nullptr, section->FullStaticMesh );
+                }
+            }
+        } else {
+            // Collect all meshes first, then batch by alpha requirement
+            static thread_local std::vector<WorldMeshInfo*> opaqueMeshes;
+            static thread_local std::vector<std::pair<zCTexture*, WorldMeshInfo*>> alphaMeshes;
+            opaqueMeshes.clear();
+            alphaMeshes.clear();
 
-                            // Draw from wrapped mesh
-                            DrawVertexBufferIndexedUINT( nullptr, nullptr,
-                                it.second->Indices.size(), it.second->BaseIndexLocation );
+            for ( const WorldMeshSectionInfo* section : visibleSections ) {
+                for ( const auto& meshPair : section->WorldMeshes ) {
+                    // Skip non-standard materials (water, portals, etc.)
+                    if ( meshPair.first.Info->MaterialType != MaterialInfo::MT_None )
+                        continue;
+
+                    zCTexture* tex = meshPair.first.Material ? meshPair.first.Material->GetTexture() : nullptr;
+
+                    if ( tex && tex->HasAlphaChannel() && alphaRef > 0.0f ) {
+                        // Need alpha testing - cache texture
+                        if ( tex->CacheIn( 0.6f ) == zRES_CACHED_IN ) {
+                            alphaMeshes.emplace_back( tex, meshPair.second );
                         }
+                    } else {
+                        opaqueMeshes.push_back( meshPair.second );
                     }
+                }
+            }
+
+            // Draw all opaque meshes without pixel shader (depth only)
+            if ( !opaqueMeshes.empty() ) {
+                if ( !linearDepth )  // Only unbind when not rendering linear depth
+                {
+                    // Unbind PS
+                    Context->PSSetShader( nullptr, nullptr, 0 );
+                }
+
+                for ( WorldMeshInfo* mesh : opaqueMeshes ) {
+                    DrawVertexBufferIndexedUINT( nullptr, nullptr,
+                        mesh->Indices.size(), mesh->BaseIndexLocation );
+                }
+            }
+
+            // Draw alpha-tested meshes with texture binding
+            if ( !alphaMeshes.empty() ) {
+                // Sort by texture to minimize binding changes
+                std::sort( alphaMeshes.begin(), alphaMeshes.end(),
+                    []( const auto& a, const auto& b ) { return a.first < b.first; } );
+
+                ActivePS->Apply();
+                zCTexture* lastTex = nullptr;
+
+                for ( const auto& [tex, mesh] : alphaMeshes ) {
+                    if ( tex != lastTex ) {
+                        tex->Bind( 0 );
+                        lastTex = tex;
+                    }
+                    DrawVertexBufferIndexedUINT( nullptr, nullptr,
+                        mesh->Indices.size(), mesh->BaseIndexLocation );
                 }
             }
         }
