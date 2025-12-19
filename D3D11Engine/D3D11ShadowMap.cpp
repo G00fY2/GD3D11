@@ -698,12 +698,12 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
 
         // Draw the world mesh without textures
         constexpr float NOT_IMPLEMENTED_RANGE = 10000.0f;
-        auto oldRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius;
+        const auto oldRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius;
         if ( cascadeFar > 0.01f ) {
             Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius = std::min(
                 oldRadius, cascadeFar * 1.2f );
         }
-        auto oldVobRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius;
+        const auto oldVobRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius;
         if ( cascadeFar > 0.01f ) {
             Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius = std::min(
                 oldVobRadius, cascadeFar * 1.2f );

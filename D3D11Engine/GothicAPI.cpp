@@ -1192,6 +1192,8 @@ void GothicAPI::DrawWorldMeshNaive() {
         vegetationBox->RenderVegetation( GetCameraPosition() );
     }
 
+    const auto cameraPosXm = GetCameraPositionXM();
+
     START_TIMING();
     if ( RendererState.RendererSettings.DrawSkeletalMeshes ) {
         // Set up frustum for the camera
@@ -1204,7 +1206,7 @@ void GothicAPI::DrawWorldMeshNaive() {
             if ( !vobInfo->VisualInfo ) continue;
 
             float dist;
-            XMStoreFloat( &dist, XMVector3Length( vobInfo->Vob->GetPositionWorldXM() - GetCameraPositionXM() ) );
+            XMStoreFloat( &dist, XMVector3Length( vobInfo->Vob->GetPositionWorldXM() - cameraPosXm ) );
             if ( dist > RendererState.RendererSettings.SkeletalMeshDrawRadius )
                 continue; // Skip out of range
 
