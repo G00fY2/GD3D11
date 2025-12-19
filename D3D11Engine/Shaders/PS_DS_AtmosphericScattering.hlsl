@@ -41,13 +41,15 @@ SamplerComparisonState SS_Comp : register(s2);
 Texture2D TX_Diffuse : register(t0);
 Texture2D TX_Nrm : register(t1);
 Texture2D TX_Depth : register(t2);
+
 Texture2D TX_Shadowmap : register(t3); // Cascade 0
-Texture2D TX_RainShadowmap : register(t4);
-TextureCube TX_ReflectionCube : register(t5);
-Texture2D TX_Distortion : register(t6);
-Texture2D TX_SI_SP : register(t7);
-Texture2D TX_Shadowmap1 : register(t8); // Cascade 1
-Texture2D TX_Shadowmap2 : register(t9); // Cascade 2
+Texture2D TX_Shadowmap1 : register(t4); // Cascade 1
+Texture2D TX_Shadowmap2 : register(t5); // Cascade 2
+
+Texture2D TX_RainShadowmap : register(t6);
+TextureCube TX_ReflectionCube : register(t7);
+Texture2D TX_Distortion : register(t8);
+Texture2D TX_SI_SP : register(t9);
 
 //--------------------------------------------------------------------------------------
 // Input / Output structures

@@ -23,6 +23,16 @@ class zCVob;
 class zCVobLight;
 class GSky;
 
+enum PS_DS_AtmosphericScatteringSlots {
+    TX_Shadowmap = 3,
+    TX_Shadowmap1 = 4,
+    TX_Shadowmap2 = 5,
+    TX_RainShadowmap = 6,
+    TX_ReflectionCube = 7,
+    TX_Distortion = 8,
+    TX_SI_SP = 9,
+};
+
 const int POINTLIGHT_SHADOWMAP_SIZE = 64;
 
 class D3D11ShadowMap {

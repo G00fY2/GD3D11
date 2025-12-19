@@ -609,28 +609,26 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
     graphicsEngine->GetActiveVS()->GetConstantBuffer()[0]->BindToVertexShader( 0 );
 
     // CSM: Alle 3 Cascades an verschiedene Slots binden
-    m_worldShadowmaps[0]->BindToPixelShader( m_context.Get(), 3 );  // t3
-    m_worldShadowmaps[1]->BindToPixelShader( m_context.Get(), 8 );  // t8
-    m_worldShadowmaps[2]->BindToPixelShader( m_context.Get(), 9 );  // t9
+    m_worldShadowmaps[0]->BindToPixelShader( m_context.Get(), TX_Shadowmap );
+    m_worldShadowmaps[1]->BindToPixelShader( m_context.Get(), TX_Shadowmap1 );
+    m_worldShadowmaps[2]->BindToPixelShader( m_context.Get(), TX_Shadowmap2 );
 
     if ( graphicsEngine->Effects->GetRainShadowmap() )
-        graphicsEngine->Effects->GetRainShadowmap()->BindToPixelShader( m_context.Get(), 4 );
+        graphicsEngine->Effects->GetRainShadowmap()->BindToPixelShader( m_context.Get(), TX_RainShadowmap );
 
     this->BindSampler( m_context.Get(), 2 );
 
-    m_context->PSSetShaderResources( 5, 1, graphicsEngine->ReflectionCube2.GetAddressOf() );
+    m_context->PSSetShaderResources( TX_ReflectionCube, 1, graphicsEngine->ReflectionCube2.GetAddressOf() );
 
-    graphicsEngine->GetDistortionTexture()->BindToPixelShader( 6 );
+    graphicsEngine->GetDistortionTexture()->BindToPixelShader( TX_Distortion );
 
     // CSM: Nur 1x rendern!
     graphicsEngine->GetPfxRenderer()->DrawFullScreenQuad();
 
     // Reset state
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv;
-    m_context->PSSetShaderResources( 2, 1, srv.GetAddressOf() );
-    m_context->PSSetShaderResources( 7, 1, srv.GetAddressOf() );
-    m_context->PSSetShaderResources( 8, 1, srv.GetAddressOf() );
-    m_context->PSSetShaderResources( 9, 1, srv.GetAddressOf() );
+    static ID3D11ShaderResourceView* nullSrv[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+    m_context->PSSetShaderResources( 3, ARRAYSIZE( nullSrv ), nullSrv );
+
     m_context->OMSetRenderTargets( 1, graphicsEngine->GetHDRBackBuffer().GetRenderTargetView().GetAddressOf(),
         graphicsEngine->GetDepthBuffer()->GetDepthStencilView().Get() );
 
