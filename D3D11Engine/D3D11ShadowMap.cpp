@@ -233,7 +233,7 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
     }
 
     // Compute cascade splits
-    auto splits = ComputeCascadeSplits( nearPlane, farPlane, numCascades, 0.90f );
+    auto splits = ComputeCascadeSplits( nearPlane, farPlane, numCascades, 0.97f );
     splits[numCascades] = baseFarPlane; // Let the last cascade reach the full far plane
 
     // Get light direction
@@ -337,11 +337,6 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
             XMStoreFloat3( &cascadeCRs[cascadeIdx].PositionReplacement, p );
             XMStoreFloat3( &cascadeCRs[cascadeIdx].LookAtReplacement, lookAt );
 
-            auto oldFastShadows = Engine::GAPI->GetRendererState().RendererSettings.FastShadows;
-            if ( cascadeIdx >= 1 && cascadeIdx == numCascades-1 ) {
-                // For the last cascade, enable fast shadows to save performance
-                Engine::GAPI->GetRendererState().RendererSettings.FastShadows = true;
-            }
             // Render diese Cascade
             Engine::GAPI->SetCameraReplacementPtr( &cascadeCRs[cascadeIdx] );
 
@@ -350,7 +345,6 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
                 nullptr,
                 splits[cascadeIdx+1]);
 
-            Engine::GAPI->GetRendererState().RendererSettings.FastShadows = oldFastShadows;
             Engine::GAPI->SetCameraReplacementPtr( nullptr );
         }
     }
