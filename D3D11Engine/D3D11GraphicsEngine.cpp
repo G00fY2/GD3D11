@@ -5279,9 +5279,6 @@ LRESULT D3D11GraphicsEngine::OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam
 
 /** Handles an UI-Event */
 void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
-    if ( !UIView ) {
-        CreateMainUIView();
-    }
 
     if ( uiEvent == UI_OpenSettings ) {
         if ( auto hImgui = Engine::ImGuiHandle ) {
@@ -5332,6 +5329,9 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
 
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_OpenEditor ) {
+        if ( !UIView ) {
+            CreateMainUIView();
+        }
         if ( UIView ) {
             // Show settings
             Engine::GAPI->GetRendererState().RendererSettings.EnableEditorPanel =
