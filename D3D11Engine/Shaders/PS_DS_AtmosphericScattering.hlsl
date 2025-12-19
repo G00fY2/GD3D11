@@ -109,7 +109,33 @@ float IsWet(float3 wsPosition, Texture2D shadowmap, SamplerComparisonState sampl
     return shadowmap.SampleCmpLevelZero(samplerState, projectedTexCoords.xy, vShadowSamplingPos.z - bias);
 }
 
-float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState, float distance, float vertLighting, matrix viewProj, float bias = 0.01f, float softnessScale = 1.0f)
+//--------------------------------------------------------------------------------------
+// Helper: Get shadow map UV and check if position is within cascade bounds
+// Returns: projectedTexCoords in xy, isInBounds as 0 or 1 in z, blend factor in w
+//--------------------------------------------------------------------------------------
+float4 GetCascadeUVAndBounds(float3 wsPosition, matrix viewProj)
+{
+    float4 vShadowSamplingPos = mul(float4(wsPosition, 1), viewProj);
+    vShadowSamplingPos.xyz /= vShadowSamplingPos.www;
+	
+    float2 projectedTexCoords = vShadowSamplingPos.xy * float2(0.5f, -0.5f) + float2(0.5f, 0.5f);
+    
+    // Check if within bounds (with small margin)
+    const float margin = 0.01f;
+    bool inBounds = projectedTexCoords.x > margin && projectedTexCoords.x < (1.0f - margin) &&
+                    projectedTexCoords.y > margin && projectedTexCoords.y < (1.0f - margin);
+    
+    // Calculate blend factor based on distance to edge (for smooth transitions)
+    // Use the minimum distance to any edge, normalized
+    const float blendZone = 0.1f; // 10% of cascade for blending
+    float distToEdge = min(min(projectedTexCoords.x, 1.0f - projectedTexCoords.x),
+                           min(projectedTexCoords.y, 1.0f - projectedTexCoords.y));
+    float blendFactor = 1.0f - saturate(distToEdge / blendZone);
+    
+    return float4(projectedTexCoords, inBounds ? 1.0f : 0.0f, blendFactor);
+}
+
+float ComputeShadowValueDirect(float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState, float vertLighting, matrix viewProj, float bias = 0.01f, float softnessScale = 1.0f)
 {
 	// Reconstruct VS World ShadowViewPosition from depth
     float4 vShadowSamplingPos = mul(float4(wsPosition, 1), viewProj);
@@ -121,26 +147,10 @@ float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, Samp
 		projectedTexCoords.x < 0 || projectedTexCoords.y < 0))
     {
 #if SHD_FILTER_16TAP_PCF
-		float dist = shadowmap.Sample(SS_Linear, projectedTexCoords).r - vShadowSamplingPos.z;
-		
 		float sum = 0;
 		float x, y;
 		
-		float dx = ddx(projectedTexCoords.xy);
-		float dy = ddy(projectedTexCoords.xy);
-	 
-				float minValue = 999999.0f;
-		/*for (y = -1.5; y <= 1.5; y += 1.0)
-		{
-			for (x = -1.5; x <= 1.5; x += 1.0)
-			{
-				
-				minValue = min(minValue, shadowmap.SampleGrad(SS_Linear, projectedTexCoords.xy + TexOffset(x,y), dx, dy)).r;
-			}
-		}*/
-		
-		float scale = softnessScale;//1 + (minValue - vShadowSamplingPos.z) * 500.0f;
-		
+		float scale = softnessScale;
 		
 		//perform PCF filtering on a 4 x 4 texel neighborhood
 		[unroll] for (y = -1.5; y <= 1.5; y += 1.0)
@@ -169,76 +179,58 @@ float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, Samp
     return saturate(shadow);
 }
 
-//--------------------------------------------------------------------------------------
-// CSM: Cascade-Auswahl und Blend-Faktor berechnen
-//--------------------------------------------------------------------------------------
-void SelectCascadeWithBlend(float viewSpaceZ, out int cascadeIdx, out float blendFactor)
+float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, SamplerComparisonState samplerState, float distance, float vertLighting, matrix viewProj, float bias = 0.01f, float softnessScale = 1.0f)
 {
-    float depth = abs(viewSpaceZ);
-    
-    // Blend-Zone: 10% der Cascade-Breite
-    const float blendZone = 0.1f;
-    
-    if (depth < SQ_CascadeSplits.x)
-    {
-        cascadeIdx = 0;
-        // Berechne Blend-Faktor für Übergang zu Cascade 1
-        float splitWidth = SQ_CascadeSplits.x;
-        float blendStart = SQ_CascadeSplits.x * (1.0f - blendZone);
-        blendFactor = saturate((depth - blendStart) / (SQ_CascadeSplits.x - blendStart));
-    }
-    else if (depth < SQ_CascadeSplits.y)
-    {
-        cascadeIdx = 1;
-        // Berechne Blend-Faktor für Übergang zu Cascade 2
-        float splitWidth = SQ_CascadeSplits.y - SQ_CascadeSplits.x;
-        float blendStart = SQ_CascadeSplits.y - splitWidth * blendZone;
-        blendFactor = saturate((depth - blendStart) / (SQ_CascadeSplits.y - blendStart));
-    }
-    else
-    {
-        cascadeIdx = 2;
-        blendFactor = 0.0f; // Keine weitere Cascade zum Blenden
-    }
+    return ComputeShadowValueDirect(wsPosition, shadowmap, samplerState, vertLighting, viewProj, bias, softnessScale);
 }
 
 //--------------------------------------------------------------------------------------
-// CSM: Shadow-Sampling für eine spezifische Cascade
-//--------------------------------------------------------------------------------------
-float SampleCascade(int cascadeIdx, float3 wsPosition, float viewSpaceZ, float vertLighting, float bias)
-{
-    if (cascadeIdx == 0)
-    {
-        return ComputeShadowValue(0.0f, wsPosition, TX_Shadowmap, SS_Comp, viewSpaceZ, vertLighting, mul(SQ_ShadowView, SQ_ShadowProj), bias, 1.0f);
-    }
-    else if (cascadeIdx == 1)
-    {
-        return ComputeShadowValue(0.0f, wsPosition, TX_Shadowmap1, SS_Comp, viewSpaceZ, vertLighting, mul(SQ_ShadowView1, SQ_ShadowProj1), bias, 1.0f);
-    }
-    else
-    {
-        return ComputeShadowValue(0.0f, wsPosition, TX_Shadowmap2, SS_Comp, viewSpaceZ, vertLighting, mul(SQ_ShadowView2, SQ_ShadowProj2), bias, 1.0f);
-    }
-}
-
-//--------------------------------------------------------------------------------------
-// CSM: Shadow-Sampling für Cascaded Shadow Maps mit Blending
+// CSM: Shadow-Sampling für Cascaded Shadow Maps mit verbessertem Blending
+// Uses projected coordinates to determine cascade selection and blending
 //--------------------------------------------------------------------------------------
 float ComputeCascadedShadowValue(float3 wsPosition, float viewSpaceZ, float vertLighting, float bias)
 {
-    int cascadeIdx;
-    float blendFactor;
-    SelectCascadeWithBlend(viewSpaceZ, cascadeIdx, blendFactor);
+    // Get view-projection matrices for all cascades
+    matrix viewProj0 = mul(SQ_ShadowView, SQ_ShadowProj);
+    matrix viewProj1 = mul(SQ_ShadowView1, SQ_ShadowProj1);
+    matrix viewProj2 = mul(SQ_ShadowView2, SQ_ShadowProj2);
     
-    // Sample aktuelle Cascade
-    float shadow = SampleCascade(cascadeIdx, wsPosition, viewSpaceZ, vertLighting, bias);
+    // Get cascade UV and bounds info for all cascades
+    float4 cascade0Info = GetCascadeUVAndBounds(wsPosition, viewProj0);
+    float4 cascade1Info = GetCascadeUVAndBounds(wsPosition, viewProj1);
+    float4 cascade2Info = GetCascadeUVAndBounds(wsPosition, viewProj2);
     
-    // Blend mit nächster Cascade wenn nötig
-    if (blendFactor > 0.0f && cascadeIdx < 2)
+    float shadow = vertLighting;
+    
+    // Determine which cascade to use based on projection bounds
+    // Start with highest resolution cascade and fall back to lower ones
+    if (cascade0Info.z > 0.5f) // In bounds of cascade 0
     {
-        float nextShadow = SampleCascade(cascadeIdx + 1, wsPosition, viewSpaceZ, vertLighting, bias);
-        shadow = lerp(shadow, nextShadow, blendFactor);
+        shadow = ComputeShadowValueDirect(wsPosition, TX_Shadowmap, SS_Comp, vertLighting, viewProj0, bias, 1.0f);
+        
+        // Blend with cascade 1 near edges
+        if (cascade0Info.w > 0.0f && cascade1Info.z > 0.5f)
+        {
+            float shadow1 = ComputeShadowValueDirect(wsPosition, TX_Shadowmap1, SS_Comp, vertLighting, viewProj1, bias, 1.0f);
+            shadow = lerp(shadow, shadow1, cascade0Info.w);
+        }
     }
+    else if (cascade1Info.z > 0.5f) // In bounds of cascade 1
+    {
+        shadow = ComputeShadowValueDirect(wsPosition, TX_Shadowmap1, SS_Comp, vertLighting, viewProj1, bias, 1.0f);
+        
+        // Blend with cascade 2 near edges
+        if (cascade1Info.w > 0.0f && cascade2Info.z > 0.5f)
+        {
+            float shadow2 = ComputeShadowValueDirect(wsPosition, TX_Shadowmap2, SS_Comp, vertLighting, viewProj2, bias, 1.0f);
+            shadow = lerp(shadow, shadow2, cascade1Info.w);
+        }
+    }
+    else if (cascade2Info.z > 0.5f) // In bounds of cascade 2
+    {
+        shadow = ComputeShadowValueDirect(wsPosition, TX_Shadowmap2, SS_Comp, vertLighting, viewProj2, bias, 1.0f);
+    }
+    // else: outside all cascades, use vertLighting (default)
     
     return shadow;
 }
