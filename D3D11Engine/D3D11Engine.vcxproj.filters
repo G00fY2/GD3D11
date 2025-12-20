@@ -813,6 +813,9 @@
     <ClInclude Include="GraphicsEventRecord.h">
       <Filter>Engine</Filter>
     </ClInclude>
+    <ClInclude Include="ShaderCategory.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />

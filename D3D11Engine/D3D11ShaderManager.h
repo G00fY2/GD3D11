@@ -1,5 +1,5 @@
 #pragma once
-#include "BaseGraphicsEngine.h"
+#include "ShaderCategory.h"
 #include <unordered_map>
 #include "D3D11VShader.h"
 #include "D3D11PShader.h"

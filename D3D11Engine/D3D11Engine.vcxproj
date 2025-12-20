@@ -973,6 +973,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="oCVisFX.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="BaseShadowedPointLight.h" />
+    <ClInclude Include="ShaderCategory.h" />
     <ClInclude Include="SMAA\D3D11SMAA.h" />
     <ClInclude Include="SteamOverlay.h" />
     <ClInclude Include="SV_GMeshInfoView.h" />
