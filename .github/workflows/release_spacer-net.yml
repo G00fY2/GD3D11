@@ -51,12 +51,6 @@ jobs:
         cd "${{env.RELEASE_DIR}}"
         7z a -tzip "..\${{env.RELEASE_DIR}}.zip" -r
 
-    - name: Calculate distribution zip hash
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: |
-        (Get-FileHash "${{env.RELEASE_DIR}}.zip" -Algorithm SHA256).hash | Out-File -FilePath "${{env.RELEASE_DIR}}.zip.sha256"
-        type "${{env.RELEASE_DIR}}.zip.sha256"
-
     - name: Create github release
       run: |
         gh release create ${{env.RELEASE_VERSION}} --notes-from-tag
@@ -68,6 +62,5 @@ jobs:
     - name: Upload artifacts to github release
       run: |
         gh release upload ${{env.RELEASE_VERSION}} "${{env.RELEASE_DIR}}.zip"
-        gh release upload ${{env.RELEASE_VERSION}} "${{env.RELEASE_DIR}}.zip.sha256"
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -106,13 +106,6 @@ jobs:
         cd "${{env.RELEASE_DIR}}"
         7z a -tzip "..\${{env.RELEASE_DIR}}.zip" -r
 
-    - name: Calculate distribution zip hash
-      if: github.ref_name == 'master'
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: |
-        (Get-FileHash "${{env.RELEASE_DIR}}.zip" -Algorithm SHA256).hash | Out-File -FilePath "${{env.RELEASE_DIR}}.zip.sha256"
-        type "${{env.RELEASE_DIR}}.zip.sha256"
-    
     - name: Delete old nightly
       if: github.ref_name == 'master'
       run: gh release delete nightly --yes --cleanup-tag
@@ -132,5 +125,5 @@ jobs:
         draft: false
         omitDraftDuringUpdate: false
         removeArtifacts: true
-        artifacts: "${{env.RELEASE_DIR}}.zip,${{env.RELEASE_DIR}}.zip.sha256"
+        artifacts: "${{env.RELEASE_DIR}}.zip"
         token: ${{ secrets.GITHUB_TOKEN }}
