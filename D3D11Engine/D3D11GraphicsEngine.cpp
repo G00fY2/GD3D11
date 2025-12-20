@@ -5151,8 +5151,8 @@ XRESULT D3D11GraphicsEngine::OnKeyDown( unsigned int key ) {
 }
 
 /** Reloads shaders */
-XRESULT D3D11GraphicsEngine::ReloadShaders() {
-    XRESULT xr = ShaderManager->ReloadShaders();
+XRESULT D3D11GraphicsEngine::ReloadShaders( ShaderCategory categories ) {
+    XRESULT xr = ShaderManager->ReloadShaders( categories );
 
     return xr;
 }

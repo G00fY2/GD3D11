@@ -29,7 +29,7 @@ int GetDpi( HWND hWnd )
                 if ( success == S_OK ) {
                     FreeLibrary( hShcore );
                     return static_cast<int>(ydpi);
-                }        
+                }
             }
             FreeLibrary( hShcore );
         }
@@ -125,7 +125,7 @@ void ImGuiShim::RenderLoop()
     }
     //if ( DemoVisible )
     //    ImGui::ShowDemoWindow();
-    
+
     ImGui::GetIO().MouseDrawCursor = INT2( ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y ) != Engine::GraphicsEngine->GetResolution();
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData( ImGui::GetDrawData() );
@@ -211,7 +211,7 @@ bool ImComboBox( const char* id, std::vector<std::pair<const char*, T>>& items, 
     return false;
 }
 
-void ImText( const char * label, const ImVec2& size ) {
+void ImText( const char* label, const ImVec2& size ) {
     auto& col = ImGui::GetStyleColorVec4( ImGuiCol_::ImGuiCol_Button );
 
     ImGui::PushStyleColor( ImGuiCol_::ImGuiCol_ButtonActive, col );
@@ -231,43 +231,43 @@ bool ImGuizmoDirectionEdit( const char* label, XMFLOAT3& direction, float widget
     // Normalize the input direction
     XMVECTOR dirVec = XMLoadFloat3( &direction );
     dirVec = XMVector3Normalize( dirVec );
-    
+
     // Build a view matrix looking in the direction
     XMFLOAT3 dirNorm;
     XMStoreFloat3( &dirNorm, dirVec );
-    
+
     XMVECTOR upVec = fabsf( dirNorm.y ) < 0.99f ? XMVectorSet( 0, 1, 0, 0 ) : XMVectorSet( 1, 0, 0, 0 );
     XMVECTOR rightVec = XMVector3Normalize( XMVector3Cross( upVec, dirVec ) );
     upVec = XMVector3Normalize( XMVector3Cross( dirVec, rightVec ) );
-    
+
     XMFLOAT3 right, up;
     XMStoreFloat3( &right, rightVec );
     XMStoreFloat3( &up, upVec );
-    
+
     float viewMatrix[16] = {
         right.x,    up.x,    dirNorm.x,  0,
         right.y,    up.y,    dirNorm.y,  0,
         right.z,    up.z,    dirNorm.z,  0,
         0,          0,       0,          1
     };
-    
+
     // Get current cursor position for the widget placement
     ImVec2 widgetPos = ImGui::GetCursorScreenPos();
-    
+
     ImGui::Text( "%s", label );
     ImGui::SameLine();
 
     // Draw the ViewManipulate gizmo
     ImGuizmo::SetDrawlist();
     ImGuizmo::ViewManipulate( viewMatrix, 1.0f, ImVec2( widgetPos.x + 120.0f, widgetPos.y ), ImVec2( widgetSize, widgetSize ), 0x10101010 );
-    
+
     // Extract the new direction from the view matrix (forward vector / third column)
     XMFLOAT3 newDirection( viewMatrix[2], viewMatrix[6], viewMatrix[10] );
-    
+
     // Check if direction changed
     bool modified = (newDirection.x != direction.x || newDirection.y != direction.y || newDirection.z != direction.z);
     direction = newDirection;
-    
+
     // Reserve space for the widget, use InvisibleButton to stop mouse movement from moving the current window
     ImGui::PushID( label );
     ImGui::InvisibleButton( "##invisible", ImVec2( widgetSize + 120.0f, widgetSize ) );
@@ -275,13 +275,13 @@ bool ImGuizmoDirectionEdit( const char* label, XMFLOAT3& direction, float widget
     // Also provide a numeric input for precise control
     modified |= ImGui::DragFloat3( "##values", &direction.x, 0.001f );
     ImGui::PopID();
-    
+
     return modified;
 }
 
 int InterpretWindowMode( const GothicRendererSettings& s ) {
-    
-    if ( s.DisplayFlip  && s.LowLatency  && s.StretchWindow) {
+
+    if ( s.DisplayFlip && s.LowLatency && s.StretchWindow ) {
         return WINDOW_MODE_FULLSCREEN_LOWLATENCY;
     }
     if ( s.DisplayFlip && !s.LowLatency && s.StretchWindow ) {
@@ -323,8 +323,13 @@ void ImGuiShim::RenderSettingsWindow()
             ImGui::Checkbox( "Godrays", &settings.EnableGodRays );
             ImGui::Checkbox( "SMAA", &settings.EnableSMAA );
             ImGui::Checkbox( "HDR", &settings.EnableHDR );
-            ImGui::Checkbox( "Shadows", &settings.EnableShadows );
-            ImGui::Checkbox( "Shadow filtering", &settings.EnableSoftShadows );
+            if ( ImGui::Checkbox( "Shadows", &settings.EnableShadows ) ) {
+                Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows );
+            }
+            if ( ImGui::Checkbox( "Shadow filtering", &settings.EnableSoftShadows ) ) {
+                Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows );
+            }
+
             ImGui::Checkbox( "Compress Backbuffer", &settings.CompressBackBuffer );
             ImGui::Checkbox( "Animate Static Vobs", &settings.AnimateStaticVobs );
 
@@ -338,7 +343,7 @@ void ImGuiShim::RenderSettingsWindow()
                     settings.WindQuality = windEffect
                         ? GothicRendererSettings::EWindQuality::WIND_QUALITY_ADVANCED
                         : GothicRendererSettings::EWindQuality::WIND_QUALITY_NONE;
-                    Engine::GraphicsEngine->ReloadShaders();
+                    Engine::GraphicsEngine->ReloadShaders( ShaderCategory::Other );
                 }
 
                 ImGui::Text( "Wind strength" ); ImGui::SameLine();
@@ -348,16 +353,16 @@ void ImGuiShim::RenderSettingsWindow()
             }
 
             if ( ImGui::Checkbox( "Hero affects objects[*]", &settings.HeroAffectsObjects ) ) {
-                Engine::GraphicsEngine->ReloadShaders();
+                Engine::GraphicsEngine->ReloadShaders( ShaderCategory::Other );
             }
 #endif //BUILD_GOTHIC_2_6_fix
 
             ImGui::Checkbox( "Enable Rain", &settings.EnableRain );
             ImGui::Checkbox( "Enable Rain Effects", &settings.EnableRainEffects );
             if ( ImGui::Checkbox( "Enable Water waves", &settings.EnableWaterAnimation ) ) {
-                Engine::GraphicsEngine->ReloadShaders();
+                Engine::GraphicsEngine->ReloadShaders( ShaderCategory::Water );
             }
-            ImGui::Checkbox( "Limit Light Intensity", &settings.LimitLightIntesity);
+            ImGui::Checkbox( "Limit Light Intensity", &settings.LimitLightIntesity );
             ImGui::Checkbox( "Draw World Section Intersections", &settings.DrawSectionIntersections );
             if ( ImGui::IsItemHovered() )
                 ImGui::SetTooltip( "This option draws every world chunk that intersect with GD3D11 world draw distance." );
@@ -431,8 +436,8 @@ void ImGuiShim::RenderSettingsWindow()
             }
 
             ImText( "Display Mode [*]", buttonWidth ); ImGui::SameLine();
-            static auto displayModeState = InterpretWindowMode(settings);
-            static std::vector<std::pair<const char *, int>> DisplayEnums = {
+            static auto displayModeState = InterpretWindowMode( settings );
+            static std::vector<std::pair<const char*, int>> DisplayEnums = {
                 { "Fullscreen Borderless", WindowModes::WINDOW_MODE_FULLSCREEN_BORDERLESS },
                 { "Fullscreen Exclusive", WindowModes::WINDOW_MODE_FULLSCREEN_EXCLUSIVE },
                 { "Fullscreen Lowlatency", WindowModes::WINDOW_MODE_FULLSCREEN_LOWLATENCY },
@@ -442,12 +447,12 @@ void ImGuiShim::RenderSettingsWindow()
             if ( ImComboBoxC( "##DisplayMode", DisplayEnums, &displayModeState, [&settings]() {
                 // selected
                 settings.ChangeWindowPreset = displayModeState;
-                }) ) {
+                } ) ) {
                 ImGui::EndCombo();
             }
 
             ImText( "Shadow Quality", buttonWidth ); ImGui::SameLine();
-            
+
             static std::vector<std::pair<const char*, int>> shadowMapSizesMax = {
                 {"very low", 512},
                 {"low", 1024},
@@ -468,7 +473,7 @@ void ImGuiShim::RenderSettingsWindow()
                 shadowMapSizes = shadowMapSizesDxFeature10;
             }
 
-            if ( ImComboBoxC( "##ShadowQuality", shadowMapSizes, (int*)(&settings.ShadowMapSize), []() { Engine::GraphicsEngine->ReloadShaders(); } ) ) {
+            if ( ImComboBoxC( "##ShadowQuality", shadowMapSizes, (int*)(&settings.ShadowMapSize), []() { Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows ); } ) ) {
                 ImGui::EndCombo();
             }
 
@@ -494,8 +499,8 @@ void ImGuiShim::RenderSettingsWindow()
             static bool fpsLimitEnabled = 0;
             fpsLimitEnabled = settings.FpsLimit > 0;
 
-            ImText( "FPS Limit", { buttonWidth.x - ImGui::GetFrameHeight() - style.ItemSpacing.x, buttonWidth.y }); ImGui::SameLine();
-            if ( ImGui::Checkbox( "##Enable FPS Limit", &fpsLimitEnabled )) {
+            ImText( "FPS Limit", { buttonWidth.x - ImGui::GetFrameHeight() - style.ItemSpacing.x, buttonWidth.y } ); ImGui::SameLine();
+            if ( ImGui::Checkbox( "##Enable FPS Limit", &fpsLimitEnabled ) ) {
                 if ( !fpsLimitEnabled ) {
                     settings.FpsLimit = 0;
                 } else {
@@ -516,7 +521,7 @@ void ImGuiShim::RenderSettingsWindow()
 
             float smallObjectDrawDistance = settings.OutdoorSmallVobDrawRadius / 1000.0f;
             ImText( "Small Object Draw Distance", buttonWidth ); ImGui::SameLine();
-            if ( ImGui::SliderFloat( "##OutdoorSmallVobDrawRadius", &smallObjectDrawDistance, 1.f, 100.0f, "%.0f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput) ) {
+            if ( ImGui::SliderFloat( "##OutdoorSmallVobDrawRadius", &smallObjectDrawDistance, 1.f, 100.0f, "%.0f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput ) ) {
                 settings.OutdoorSmallVobDrawRadius = static_cast<float>(smallObjectDrawDistance * 1000.0f);
             }
 
@@ -581,7 +586,7 @@ void RenderAdvancedColumn1( GothicRendererSettings& settings, GothicAPI* gapi ) 
 
 
         ImGui::BeginDisabled( !settings.ReplaceSunDirection );
-        
+
         ImGuizmoDirectionEdit( "LightDirection", atmosphereSettings.LightDirection );
         ImGui::SetItemTooltip( "The direction the sun should come from. Only active when ReplaceSunDirection is active.\nAlso useful to fix the sun in one position" );
 
@@ -607,11 +612,14 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
         ImGui::Text( VERSION_NUMBER );
 
         ImGui::Checkbox( "Enable DebugLog", &settings.EnableDebugLog );
-        if ( ImGui::Button( "Save ZEN-Resources" ) ) {
+        if ( ImGui::Button( "Save ZEN-Resources", ImVec2( ImGui::GetContentRegionAvail().x, 30.f ) ) ) {
             gapi->SaveCustomZENResources();
         }
-        if ( ImGui::Button( "Load ZEN-Resources" ) ) {
+        if ( ImGui::Button( "Load ZEN-Resources", ImVec2( ImGui::GetContentRegionAvail().x, 30.f ) ) ) {
             gapi->LoadCustomZENResources();
+        }
+        if ( ImGui::Button( "Reload all Shaders", ImVec2( ImGui::GetContentRegionAvail().x, 30.f ) ) ) {
+            Engine::GraphicsEngine->ReloadShaders( ShaderCategory::All );
         }
         ImGui::Separator();
         ImGui::Checkbox( "DisableRendering", &settings.DisableRendering );
@@ -621,17 +629,17 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
         ImGui::Checkbox( "Draw VOBs", &settings.DrawVOBs );
         ImGui::Checkbox( "Draw Dynamic Vobs", &settings.DrawDynamicVOBs );
         ImGui::SliderFloat( "OutdoorVobDrawRadius", &settings.OutdoorVobDrawRadius, 1.0f, 100000.0f, "%.0f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
-        ImGui::SliderFloat( "IndoorVobDrawRadius", &settings.IndoorVobDrawRadius, 1.0f, 100000.0f,  "%.0f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
+        ImGui::SliderFloat( "IndoorVobDrawRadius", &settings.IndoorVobDrawRadius, 1.0f, 100000.0f, "%.0f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
         ImGui::SliderFloat( "OutdoorSmallVobRadius", &settings.OutdoorSmallVobDrawRadius, 1.0f, 100000.0f, "%.0f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
-        
+
         ImGui::Checkbox( "Draw Skeletal Meshes", &settings.DrawSkeletalMeshes );
         ImGui::BeginDisabled( !settings.DrawSkeletalMeshes );
         ImGui::SliderFloat( "SkeletalMeshDrawRadius", &settings.SkeletalMeshDrawRadius, 0.0f, 18000.0f, "%.0f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
         ImGui::SetItemTooltip( "Draw distance for NPCs" );
         ImGui::EndDisabled();
-        
+
         ImGui::Checkbox( "Draw Mobs", &settings.DrawMobs );
-        
+
         ImGui::Checkbox( "Draw ParticleEffects", &settings.DrawParticleEffects );
         ImGui::BeginDisabled( !settings.DrawParticleEffects );
         ImGui::SliderFloat( "VisualFXDrawRadius", &settings.VisualFXDrawRadius, 0.0f, 50000.0f, "%.0f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
@@ -718,17 +726,30 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
         ImGui::Checkbox( "Enable Shadows", &settings.EnableShadows );
         ImGui::BeginDisabled( !settings.EnableShadows );
         {
-            if ( ImComboBoxC( "ShadowmapSize", shadowMapSizes, (int*)(&settings.ShadowMapSize), []() { Engine::GraphicsEngine->ReloadShaders(); } ) ) {
+            if ( ImComboBoxC( "ShadowmapSize", shadowMapSizes, (int*)(&settings.ShadowMapSize), []() { Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows ); } ) ) {
                 ImGui::EndCombo();
             }
             ImGui::DragFloat( "WorldShadowRangeScale", &settings.WorldShadowRangeScale, 0.01f, 0.00f, 10.0f, "%.2f" );
-            ImGui::DragInt( "Shadow Cascade count", &settings.NumShadowCascades, 1, 1, MAX_CSM_CASCADES, "%d", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
+            if ( ImGui::InputInt( "Shadow Cascade count", &settings.NumShadowCascades, 1, 1 ) ) {
+                settings.NumShadowCascades = std::clamp( settings.NumShadowCascades, 1, MAX_CSM_CASCADES );
+                Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows );
+            }
+
+            if ( ImGui::Checkbox( "Shadow filtering", &settings.EnableSoftShadows ) ) {
+                Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows );
+            }
+
             ImGui::SetItemTooltip( "Higher values can produce better shadows (Impact: High)" );
+            if ( ImGui::InputInt( "Soft shadow limit", &settings.ShadowCascadePCFLimit, 1, 1 ) ) {
+                settings.ShadowCascadePCFLimit = std::clamp( settings.ShadowCascadePCFLimit, 1, settings.NumShadowCascades );
+                Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows );
+            }
+            ImGui::SetItemTooltip( "Which shadow cascades should be filtered using '16xPCF'" );
 
             ImGui::DragFloat( "ShadowStrength", &settings.ShadowStrength, 0.01f, 0.01f, 5.0f, "%.2f" );
             ImGui::DragFloat( "ShadowAOStrength", &settings.ShadowAOStrength, 0.01f, -5.0f, 2.0f, "%.2f" );
             ImGui::DragFloat( "WorldAOStrength", &settings.WorldAOStrength, 0.01f, -5.0f, 2.0f, "%.2f" );
-            
+
             ImGui::EndDisabled();
         }
 
