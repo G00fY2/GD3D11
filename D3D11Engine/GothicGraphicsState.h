@@ -602,6 +602,7 @@ struct GothicRendererSettings {
         ShadowMapSize = 2048;
         WorldShadowRangeScale = 1.0f;
         NumShadowCascades = 2; // looks OK and performance friendly
+        ShadowCascadePCFLimit = 1;
 
         ShadowStrength = 0.40f;
         ShadowAOStrength = 0.50f;
@@ -739,6 +740,7 @@ struct GothicRendererSettings {
     bool WireframeVobs;
     bool EnableSoftShadows;
     bool EnableShadows;
+    int ShadowCascadePCFLimit;
     bool DrawShadowGeometry;
     bool VegetationAlphaToCoverage;
     bool DisableWatermark;

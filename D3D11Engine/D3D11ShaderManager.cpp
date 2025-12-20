@@ -258,17 +258,7 @@ XRESULT D3D11ShaderManager::Init() {
     Shaders.push_back( ShaderInfo( "PS_DS_PointLightDynShadow", "PS_DS_PointLightDynShadow.hlsl", "p" ) );
     Shaders.back().cBufferSizes.push_back( sizeof( DS_PointLightConstantBuffer ) );
 
-    makros.clear();
-
-    m.Name = "SHD_ENABLE";
-    m.Definition = "1";
-    makros.push_back( m );
-
-    m.Name = "MAX_CSM_CASCADES";
-    m.Definition = TO_LITERAL(MAX_CSM_CASCADES);
-    makros.push_back( m );
-
-    Shaders.push_back( ShaderInfo( "PS_DS_AtmosphericScattering", "PS_DS_AtmosphericScattering.hlsl", "p", makros ) );
+    Shaders.push_back( ShaderInfo( "PS_DS_AtmosphericScattering", "PS_DS_AtmosphericScattering.hlsl", "p" ) ); // see ConstructShaderMakroList
     Shaders.back().cBufferSizes.push_back( sizeof( DS_ScreenQuadConstantBuffer ) );
     Shaders.back().cBufferSizes.push_back( sizeof( AtmosphereConstantBuffer ) );
 
@@ -295,14 +285,6 @@ XRESULT D3D11ShaderManager::Init() {
 
     m.Name = "APPLY_RAIN_EFFECTS";
     m.Definition = "1";
-    makros.push_back( m );
-
-    m.Name = "SHD_ENABLE";
-    m.Definition = "1";
-    makros.push_back( m );
-
-    m.Name = "MAX_CSM_CASCADES";
-    m.Definition = TO_LITERAL( MAX_CSM_CASCADES );
     makros.push_back( m );
 
     Shaders.push_back( ShaderInfo( "PS_DS_AtmosphericScattering_Rain", "PS_DS_AtmosphericScattering.hlsl", "p", makros ) );

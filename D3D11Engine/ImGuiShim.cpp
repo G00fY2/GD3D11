@@ -323,8 +323,13 @@ void ImGuiShim::RenderSettingsWindow()
             ImGui::Checkbox( "Godrays", &settings.EnableGodRays );
             ImGui::Checkbox( "SMAA", &settings.EnableSMAA );
             ImGui::Checkbox( "HDR", &settings.EnableHDR );
-            ImGui::Checkbox( "Shadows", &settings.EnableShadows );
-            ImGui::Checkbox( "Shadow filtering", &settings.EnableSoftShadows );
+            if (ImGui::Checkbox( "Shadows", &settings.EnableShadows )) {
+                Engine::GraphicsEngine->ReloadShaders();
+            }
+            if ( ImGui::Checkbox( "Shadow filtering", &settings.EnableSoftShadows ) ) {
+                Engine::GraphicsEngine->ReloadShaders();
+            }
+
             ImGui::Checkbox( "Compress Backbuffer", &settings.CompressBackBuffer );
             ImGui::Checkbox( "Animate Static Vobs", &settings.AnimateStaticVobs );
 
@@ -722,8 +727,21 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
                 ImGui::EndCombo();
             }
             ImGui::DragFloat( "WorldShadowRangeScale", &settings.WorldShadowRangeScale, 0.01f, 0.00f, 10.0f, "%.2f" );
-            ImGui::DragInt( "Shadow Cascade count", &settings.NumShadowCascades, 1, 1, MAX_CSM_CASCADES, "%d", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
+            if ( ImGui::InputInt( "Shadow Cascade count", &settings.NumShadowCascades, 1, 1) ) {
+                settings.NumShadowCascades = std::clamp( settings.NumShadowCascades, 1, MAX_CSM_CASCADES );
+                Engine::GraphicsEngine->ReloadShaders();
+            }
+
+            if ( ImGui::Checkbox( "Shadow filtering", &settings.EnableSoftShadows ) ) {
+                Engine::GraphicsEngine->ReloadShaders();
+            }
+
             ImGui::SetItemTooltip( "Higher values can produce better shadows (Impact: High)" );
+            if ( ImGui::InputInt( "Soft shadow limit", &settings.ShadowCascadePCFLimit, 1, 1 ) ) {
+                settings.ShadowCascadePCFLimit = std::clamp( settings.ShadowCascadePCFLimit, 1, settings.NumShadowCascades );
+                Engine::GraphicsEngine->ReloadShaders();
+            }
+            ImGui::SetItemTooltip( "Which shadow cascades should be filtered using '16xPCF'" );
 
             ImGui::DragFloat( "ShadowStrength", &settings.ShadowStrength, 0.01f, 0.01f, 5.0f, "%.2f" );
             ImGui::DragFloat( "ShadowAOStrength", &settings.ShadowAOStrength, 0.01f, -5.0f, 2.0f, "%.2f" );
