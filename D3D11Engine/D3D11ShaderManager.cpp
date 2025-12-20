@@ -26,7 +26,7 @@ extern bool FeatureLevel10Compatibility;
 extern bool FeatureRTArrayIndexFromAnyShader;
 
 D3D11ShaderManager::D3D11ShaderManager() {
-    ReloadShadersNextFrame = false;
+    ShaderCategoriesToReloadNextFrame = ShaderCategory::None;
 }
 
 D3D11ShaderManager::~D3D11ShaderManager() {
@@ -79,6 +79,8 @@ HRESULT D3D11ShaderManager::CompileShaderFromFile( const CHAR* szFileName, LPCST
 
 /** Creates list with ShaderInfos */
 XRESULT D3D11ShaderManager::Init() {
+    static std::vector<D3D_SHADER_MACRO> noMakros = std::vector<D3D_SHADER_MACRO>();
+
     Shaders = std::vector<ShaderInfo>();
     VShaders = std::unordered_map<std::string, std::shared_ptr<D3D11VShader>>();
     PShaders = std::unordered_map<std::string, std::shared_ptr<D3D11PShader>>();
@@ -168,7 +170,7 @@ XRESULT D3D11ShaderManager::Init() {
     Shaders.back().cBufferSizes.push_back( sizeof( PerObjectState ) );
 
 
-    Shaders.push_back( ShaderInfo( "PS_Water", "PS_Water.hlsl", "p" ) );
+    Shaders.push_back( ShaderInfo( "PS_Water", "PS_Water.hlsl", "p", noMakros, ShaderCategory::Water ) );
     Shaders.back().cBufferSizes.push_back( sizeof( GothicGraphicsState ) );
     Shaders.back().cBufferSizes.push_back( sizeof( AtmosphereConstantBuffer ) );
     Shaders.back().cBufferSizes.push_back( sizeof( RefractionInfoConstantBuffer ) );
@@ -252,13 +254,13 @@ XRESULT D3D11ShaderManager::Init() {
     Shaders.push_back( ShaderInfo( "PS_Video", "PS_Video.hlsl", "p" ) );
     Shaders.back().cBufferSizes.push_back( sizeof( GothicGraphicsState ) );
 
-    Shaders.push_back( ShaderInfo( "PS_DS_PointLight", "PS_DS_PointLight.hlsl", "p" ) );
+    Shaders.push_back( ShaderInfo( "PS_DS_PointLight", "PS_DS_PointLight.hlsl", "p", noMakros, ShaderCategory::LightsAndShadows ) );
     Shaders.back().cBufferSizes.push_back( sizeof( DS_PointLightConstantBuffer ) );
 
-    Shaders.push_back( ShaderInfo( "PS_DS_PointLightDynShadow", "PS_DS_PointLightDynShadow.hlsl", "p" ) );
+    Shaders.push_back( ShaderInfo( "PS_DS_PointLightDynShadow", "PS_DS_PointLightDynShadow.hlsl", "p", noMakros, ShaderCategory::LightsAndShadows ) );
     Shaders.back().cBufferSizes.push_back( sizeof( DS_PointLightConstantBuffer ) );
 
-    Shaders.push_back( ShaderInfo( "PS_DS_AtmosphericScattering", "PS_DS_AtmosphericScattering.hlsl", "p" ) ); // see ConstructShaderMakroList
+    Shaders.push_back( ShaderInfo( "PS_DS_AtmosphericScattering", "PS_DS_AtmosphericScattering.hlsl", "p", noMakros, ShaderCategory::LightsAndShadows ) ); // see ConstructShaderMakroList
     Shaders.back().cBufferSizes.push_back( sizeof( DS_ScreenQuadConstantBuffer ) );
     Shaders.back().cBufferSizes.push_back( sizeof( AtmosphereConstantBuffer ) );
 
@@ -287,7 +289,7 @@ XRESULT D3D11ShaderManager::Init() {
     m.Definition = "1";
     makros.push_back( m );
 
-    Shaders.push_back( ShaderInfo( "PS_DS_AtmosphericScattering_Rain", "PS_DS_AtmosphericScattering.hlsl", "p", makros ) );
+    Shaders.push_back( ShaderInfo( "PS_DS_AtmosphericScattering_Rain", "PS_DS_AtmosphericScattering.hlsl", "p", makros, ShaderCategory::LightsAndShadows ) );
     Shaders.back().cBufferSizes.push_back( sizeof( DS_ScreenQuadConstantBuffer ) );
     Shaders.back().cBufferSizes.push_back( sizeof( AtmosphereConstantBuffer ) );
 
@@ -608,7 +610,7 @@ XRESULT D3D11ShaderManager::CompileShader( const ShaderInfo& si ) {
 }
 
 /** Loads/Compiles Shaderes from list */
-XRESULT D3D11ShaderManager::LoadShaders() {
+XRESULT D3D11ShaderManager::LoadShaders( ShaderCategory categories ) {
     // Temporarily disable multi-core shader compilation
 
     /*size_t numThreads = std::thread::hardware_concurrency();
@@ -620,6 +622,31 @@ XRESULT D3D11ShaderManager::LoadShaders() {
     */
     LogInfo() << "Compiling/Reloading shaders";
     for ( const ShaderInfo& si : Shaders ) {
+        // Determine shader type category
+        ShaderCategory shaderTypeCategory = ShaderCategory::None;
+        if ( si.type == "v" ) {
+            shaderTypeCategory = ShaderCategory::Vertex;
+        } else if ( si.type == "p" ) {
+            shaderTypeCategory = ShaderCategory::Pixel;
+        } else if ( si.type == "g" ) {
+            shaderTypeCategory = ShaderCategory::Geometry;
+        } else if ( si.type == "hd" ) {
+            shaderTypeCategory = ShaderCategory::HullDomain;
+        } else if ( si.type == "c" ) {
+            shaderTypeCategory = ShaderCategory::Compute;
+        }
+
+        // Check if shader type matches requested categories
+        bool typeMatches = HasCategory( categories, shaderTypeCategory );
+        
+        // Check if shader content category matches requested categories
+        bool contentMatches = HasCategory( categories, si.contentCategory );
+
+        if ( !typeMatches && !contentMatches ) {
+            // Skip if neither type nor content category matches
+            continue;
+        }
+
         CompileShader( si );
         // compilationTP->enqueue( [this, si]() { CompileShader( si ); } );
     }
@@ -631,17 +658,17 @@ XRESULT D3D11ShaderManager::LoadShaders() {
 }
 
 /** Deletes all shaders and loads them again */
-XRESULT D3D11ShaderManager::ReloadShaders() {
-    ReloadShadersNextFrame = true;
+XRESULT D3D11ShaderManager::ReloadShaders( ShaderCategory categories ) {
+    ShaderCategoriesToReloadNextFrame |= categories;
 
     return XR_SUCCESS;
 }
 
 /** Called on frame start */
 XRESULT D3D11ShaderManager::OnFrameStart() {
-    if ( ReloadShadersNextFrame ) {
-        LoadShaders();
-        ReloadShadersNextFrame = false;
+    if ( ShaderCategoriesToReloadNextFrame != ShaderCategory::None ) {
+        LoadShaders( ShaderCategoriesToReloadNextFrame );
+        ShaderCategoriesToReloadNextFrame = ShaderCategory::None;
     }
 
     return XR_SUCCESS;

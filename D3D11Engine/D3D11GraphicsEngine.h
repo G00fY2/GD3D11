@@ -3,6 +3,7 @@
 #include "fpslimiter.h"
 #include "GothicAPI.h"
 #include "D3D11ShadowMap.h"
+#include "D3D11ShaderManager.h"
 
 struct RenderToDepthStencilBuffer;
 
@@ -299,7 +300,7 @@ public:
     virtual LRESULT OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
     /** Reloads shaders */
-    virtual XRESULT ReloadShaders();
+    virtual XRESULT ReloadShaders( ShaderCategory categories = ShaderCategory::All);
 
     /** Draws the given mesh infos as water */
     void DrawWaterSurfaces();

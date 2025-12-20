@@ -1,4 +1,5 @@
 #pragma once
+#include "BaseGraphicsEngine.h"
 #include <unordered_map>
 #include "D3D11VShader.h"
 #include "D3D11PShader.h"
@@ -15,27 +16,28 @@ public:
     int layout;						//Shader's input layout
     std::vector<int> cBufferSizes;	//Vector with size for each constant buffer to be created for this shader
     std::vector<D3D_SHADER_MACRO> shaderMakros;
+    ShaderCategory contentCategory;	//Content category for selective reloading
 
     //Constructor
-    ShaderInfo( std::string n, std::string fn, std::string t, int l, std::vector<D3D_SHADER_MACRO>& makros = std::vector<D3D_SHADER_MACRO>() ) {
+    ShaderInfo( std::string n, std::string fn, std::string t, int l, std::vector<D3D_SHADER_MACRO>& makros = std::vector<D3D_SHADER_MACRO>(), ShaderCategory category = ShaderCategory::Other ) {
         name = n;
         fileName = fn;
         type = t;
         layout = l;
         cBufferSizes = std::vector<int>();
-
         shaderMakros = makros;
+        contentCategory = category;
     }
 
     //Constructor
-    ShaderInfo( std::string n, std::string fn, std::string t, std::vector<D3D_SHADER_MACRO>& makros = std::vector<D3D_SHADER_MACRO>() ) {
+    ShaderInfo( std::string n, std::string fn, std::string t, std::vector<D3D_SHADER_MACRO>& makros = std::vector<D3D_SHADER_MACRO>(), ShaderCategory category = ShaderCategory::Other ) {
         name = n;
         fileName = fn;
         type = t;
         layout = 0;
         cBufferSizes = std::vector<int>();
-
         shaderMakros = makros;
+        contentCategory = category;
     }
 };
 
@@ -51,10 +53,10 @@ public:
     XRESULT Init();
 
     /** Loads/Compiles Shaderes from list */
-    XRESULT LoadShaders();
+    XRESULT LoadShaders( ShaderCategory categories = ShaderCategory::All );
 
     /** Deletes all shaders and loads them again */
-    XRESULT ReloadShaders();
+    XRESULT ReloadShaders( ShaderCategory categories = ShaderCategory::All );
 
     /** Called on frame start */
     XRESULT OnFrameStart();
@@ -100,6 +102,6 @@ private:
     std::mutex _GShaderMutex;
     std::mutex _CShaderMutex;
 
-    /** Whether we need to reload the shaders next frame or not */
-    bool ReloadShadersNextFrame;
+    /** Shader categories to reload next frame (OR-ed together from multiple calls) */
+    ShaderCategory ShaderCategoriesToReloadNextFrame;
 };
