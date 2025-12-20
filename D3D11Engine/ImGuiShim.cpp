@@ -526,7 +526,49 @@ void RenderAdvancedColumn1( GothicRendererSettings& settings, GothicAPI* gapi ) 
 
 
         ImGui::BeginDisabled( !settings.ReplaceSunDirection );
-        ImGui::DragFloat3( "LightDirection", &atmosphereSettings.LightDirection.x, 0.001f );
+        
+        // Create a view matrix from the light direction for ImGuizmo::ViewManipulate
+        XMVECTOR lightDirVec = XMLoadFloat3( &atmosphereSettings.LightDirection );
+        lightDirVec = XMVector3Normalize( lightDirVec );
+        
+        // Build a view matrix looking in the light direction
+        XMFLOAT3 lightDirNorm;
+        XMStoreFloat3( &lightDirNorm, lightDirVec );
+        
+        XMVECTOR upVec = fabsf( lightDirNorm.y ) < 0.99f ? XMVectorSet( 0, 1, 0, 0 ) : XMVectorSet( 1, 0, 0, 0 );
+        XMVECTOR rightVec = XMVector3Normalize( XMVector3Cross( upVec, lightDirVec ) );
+        upVec = XMVector3Normalize( XMVector3Cross( lightDirVec, rightVec ) );
+        
+        XMFLOAT3 right, up;
+        XMStoreFloat3( &right, rightVec );
+        XMStoreFloat3( &up, upVec );
+        
+        float viewMatrix[16] = {
+            right.x,        up.x,        lightDirNorm.x,  0,
+            right.y,        up.y,        lightDirNorm.y,  0,
+            right.z,        up.z,        lightDirNorm.z,  0,
+            0,              0,           0,               1
+        };
+        
+        // Get current cursor position for the widget placement
+        ImVec2 widgetPos = ImGui::GetCursorScreenPos();
+        float widgetSize = 100.0f;
+        
+        ImGui::Text( "LightDirection" );
+        ImGui::SameLine();
+        
+        // Draw the ViewManipulate gizmo
+        ImGuizmo::SetDrawlist();
+        ImGuizmo::ViewManipulate( viewMatrix, 1.0f, ImVec2( widgetPos.x + 120.0f, widgetPos.y ), ImVec2( widgetSize, widgetSize ), 0x10101010 );
+        
+        // Extract the new light direction from the view matrix (forward vector / third column)
+        atmosphereSettings.LightDirection = XMFLOAT3( viewMatrix[2], viewMatrix[6], viewMatrix[10] );
+        
+        // Reserve space for the widget
+        ImGui::Dummy( ImVec2( widgetSize + 120.0f, widgetSize ) );
+        
+        // Also keep a numeric input for precise control
+        ImGui::DragFloat3( "##LightDirectionValues", &atmosphereSettings.LightDirection.x, 0.001f );
         ImGui::SetItemTooltip( "The direction the sun should come from. Only active when ReplaceSunDirection is active.\nAlso useful to fix the sun in one position" );
 
         ImGui::EndDisabled();
