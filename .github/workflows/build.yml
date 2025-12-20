@@ -27,10 +27,11 @@ jobs:
         configuration: [Release_AVX, Release_AVX2, Release_G1_AVX, Release_G1_AVX2, Release, Release_G1, Spacer_NET, Launcher]
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v6
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1
+      uses: microsoft/setup-msbuild@v2
 
     - name: Set tag and directory name env
       run: |
@@ -44,9 +45,9 @@ jobs:
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: msbuild /p:Configuration=${{matrix.configuration}} .
-      
+
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.configuration }}
         path: ${{ matrix.configuration }}/ddraw.dll
@@ -57,7 +58,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v6
 
     - name: Set tag and directory name env
       run: |
@@ -68,11 +70,12 @@ jobs:
         echo "RELEASE_VERSION=${tagName}" >> $Env:GITHUB_ENV
         echo "RELEASE_DIR=${dirName}" >> $Env:GITHUB_ENV
 
-    - uses: actions/download-artifact@v4
-    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v7
+
     - name: Display structure of downloaded files
       run: ls -R
-    
+
     - name: Create distribution
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
@@ -90,9 +93,9 @@ jobs:
         copy "Release_G1_AVX\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g1_avx.dll"
         copy "Release_G1_AVX2\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g1_avx2.dll"
         copy "Launcher\ddraw.dll" "${{env.RELEASE_DIR}}\"
-    
+
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ env.RELEASE_DIR }}
         path: ${{ env.RELEASE_DIR }}
@@ -114,8 +117,7 @@ jobs:
 
     - name: Create new nightly
       if: github.ref_name == 'master'
-      # v1.16.0
-      uses: ncipollo/release-action@440c8c1cb0ed28b9f43e4d1d670870f059653174
+      uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
       with:
         name: Nightly
         tag: nightly
