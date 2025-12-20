@@ -612,11 +612,14 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
         ImGui::Text( VERSION_NUMBER );
 
         ImGui::Checkbox( "Enable DebugLog", &settings.EnableDebugLog );
-        if ( ImGui::Button( "Save ZEN-Resources" ) ) {
+        if ( ImGui::Button( "Save ZEN-Resources", ImVec2( ImGui::GetContentRegionAvail().x, 30.f ) ) ) {
             gapi->SaveCustomZENResources();
         }
-        if ( ImGui::Button( "Load ZEN-Resources" ) ) {
+        if ( ImGui::Button( "Load ZEN-Resources", ImVec2( ImGui::GetContentRegionAvail().x, 30.f ) ) ) {
             gapi->LoadCustomZENResources();
+        }
+        if ( ImGui::Button( "Reload all Shaders", ImVec2( ImGui::GetContentRegionAvail().x, 30.f ) ) ) {
+            Engine::GraphicsEngine->ReloadShaders( ShaderCategory::All );
         }
         ImGui::Separator();
         ImGui::Checkbox( "DisableRendering", &settings.DisableRendering );
