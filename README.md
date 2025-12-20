@@ -5,6 +5,7 @@ This mod for the games **Gothic** and **Gothic II** brings the engine of those g
 The new renderer is able to utilize more of the current GPU generation's power. Since Gothic's engine in its original state tries to cull as much as possible, this takes a lot of work from the CPU, which was slowing down the game even on today's processors. While the original renderer did a really great job with the tech from 2002, GPUs have grown much faster. And now, that they can actually use their power to render, we not only get a big performance boost on most systems, but also more features:
 
 * Dynamic Shadows
+* Cascaded Shadow Maps, more than 1 Cascade produces much better shadows.
 * Increased draw distance
 * Increased Performance
 * HBAO+
