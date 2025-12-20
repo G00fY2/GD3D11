@@ -1,5 +1,6 @@
 #pragma once
-#include "basegraphicsengine.h"
+#include "BaseGraphicsEngine.h"
+#include "D3DGraphicsEventRecord.h"
 #include <dxgi1_5.h>
 
 class D3D11DepthBufferState;
@@ -99,6 +100,8 @@ public:
     void UnbindActivePS() { ActivePS = nullptr; }
     std::shared_ptr<D3D11PShader>& GetActivePS() { return ActivePS; }
     std::shared_ptr<D3D11VShader>& GetActiveVS() { return ActiveVS; }
+    std::shared_ptr<D3D11GShader>& GetActiveGS() { return ActiveGS; }
+    std::shared_ptr<D3D11PShader>& SetActivePS(std::shared_ptr<D3D11PShader>& ps) { return ActivePS = ps; }
 
     /** Returns the current resolution */
     virtual INT2 GetResolution() { return Resolution; }
@@ -131,6 +134,10 @@ public:
 
     HWND GetOutputWindow() { return OutputWindow; }
 
+    std::unique_ptr<GraphicsEventRecord> RecordGraphicsEvent( LPCWSTR region ) override {
+        return std::make_unique<D3DGraphicsEventRecord>( m_UserDefinedAnnotation.Get(), region );
+    }
+
 protected:
     /** Updates the transformsCB with new values from the GAPI */
     void UpdateTransformsCB();
@@ -142,6 +149,7 @@ protected:
 
     Microsoft::WRL::ComPtr<ID3D11Device1> Device;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext1> Context;
+    Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation> m_UserDefinedAnnotation;
 
     /** Swapchain and resources */
     Microsoft::WRL::ComPtr<IDXGISwapChain1> SwapChain;

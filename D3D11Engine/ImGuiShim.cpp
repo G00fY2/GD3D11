@@ -224,6 +224,61 @@ void ImText( const char * label, const ImVec2& size ) {
     ImGui::PopStyleColor( 2 );
 }
 
+// Helper function to edit a direction vector using ImGuizmo::ViewManipulate
+// Returns true if the direction was modified
+bool ImGuizmoDirectionEdit( const char* label, XMFLOAT3& direction, float widgetSize = 100.0f )
+{
+    // Normalize the input direction
+    XMVECTOR dirVec = XMLoadFloat3( &direction );
+    dirVec = XMVector3Normalize( dirVec );
+    
+    // Build a view matrix looking in the direction
+    XMFLOAT3 dirNorm;
+    XMStoreFloat3( &dirNorm, dirVec );
+    
+    XMVECTOR upVec = fabsf( dirNorm.y ) < 0.99f ? XMVectorSet( 0, 1, 0, 0 ) : XMVectorSet( 1, 0, 0, 0 );
+    XMVECTOR rightVec = XMVector3Normalize( XMVector3Cross( upVec, dirVec ) );
+    upVec = XMVector3Normalize( XMVector3Cross( dirVec, rightVec ) );
+    
+    XMFLOAT3 right, up;
+    XMStoreFloat3( &right, rightVec );
+    XMStoreFloat3( &up, upVec );
+    
+    float viewMatrix[16] = {
+        right.x,    up.x,    dirNorm.x,  0,
+        right.y,    up.y,    dirNorm.y,  0,
+        right.z,    up.z,    dirNorm.z,  0,
+        0,          0,       0,          1
+    };
+    
+    // Get current cursor position for the widget placement
+    ImVec2 widgetPos = ImGui::GetCursorScreenPos();
+    
+    ImGui::Text( "%s", label );
+    ImGui::SameLine();
+
+    // Draw the ViewManipulate gizmo
+    ImGuizmo::SetDrawlist();
+    ImGuizmo::ViewManipulate( viewMatrix, 1.0f, ImVec2( widgetPos.x + 120.0f, widgetPos.y ), ImVec2( widgetSize, widgetSize ), 0x10101010 );
+    
+    // Extract the new direction from the view matrix (forward vector / third column)
+    XMFLOAT3 newDirection( viewMatrix[2], viewMatrix[6], viewMatrix[10] );
+    
+    // Check if direction changed
+    bool modified = (newDirection.x != direction.x || newDirection.y != direction.y || newDirection.z != direction.z);
+    direction = newDirection;
+    
+    // Reserve space for the widget, use InvisibleButton to stop mouse movement from moving the current window
+    ImGui::PushID( label );
+    ImGui::InvisibleButton( "##invisible", ImVec2( widgetSize + 120.0f, widgetSize ) );
+
+    // Also provide a numeric input for precise control
+    modified |= ImGui::DragFloat3( "##values", &direction.x, 0.001f );
+    ImGui::PopID();
+    
+    return modified;
+}
+
 int InterpretWindowMode( const GothicRendererSettings& s ) {
     
     if ( s.DisplayFlip  && s.LowLatency  && s.StretchWindow) {
@@ -527,48 +582,7 @@ void RenderAdvancedColumn1( GothicRendererSettings& settings, GothicAPI* gapi ) 
 
         ImGui::BeginDisabled( !settings.ReplaceSunDirection );
         
-        // Create a view matrix from the light direction for ImGuizmo::ViewManipulate
-        XMVECTOR lightDirVec = XMLoadFloat3( &atmosphereSettings.LightDirection );
-        lightDirVec = XMVector3Normalize( lightDirVec );
-        
-        // Build a view matrix looking in the light direction
-        XMFLOAT3 lightDirNorm;
-        XMStoreFloat3( &lightDirNorm, lightDirVec );
-        
-        XMVECTOR upVec = fabsf( lightDirNorm.y ) < 0.99f ? XMVectorSet( 0, 1, 0, 0 ) : XMVectorSet( 1, 0, 0, 0 );
-        XMVECTOR rightVec = XMVector3Normalize( XMVector3Cross( upVec, lightDirVec ) );
-        upVec = XMVector3Normalize( XMVector3Cross( lightDirVec, rightVec ) );
-        
-        XMFLOAT3 right, up;
-        XMStoreFloat3( &right, rightVec );
-        XMStoreFloat3( &up, upVec );
-        
-        float viewMatrix[16] = {
-            right.x,        up.x,        lightDirNorm.x,  0,
-            right.y,        up.y,        lightDirNorm.y,  0,
-            right.z,        up.z,        lightDirNorm.z,  0,
-            0,              0,           0,               1
-        };
-        
-        // Get current cursor position for the widget placement
-        ImVec2 widgetPos = ImGui::GetCursorScreenPos();
-        float widgetSize = 100.0f;
-        
-        ImGui::Text( "LightDirection" );
-        ImGui::SameLine();
-        
-        // Draw the ViewManipulate gizmo
-        ImGuizmo::SetDrawlist();
-        ImGuizmo::ViewManipulate( viewMatrix, 1.0f, ImVec2( widgetPos.x + 120.0f, widgetPos.y ), ImVec2( widgetSize, widgetSize ), 0x10101010 );
-        
-        // Extract the new light direction from the view matrix (forward vector / third column)
-        atmosphereSettings.LightDirection = XMFLOAT3( viewMatrix[2], viewMatrix[6], viewMatrix[10] );
-        
-        // Reserve space for the widget
-        ImGui::Dummy( ImVec2( widgetSize + 120.0f, widgetSize ) );
-        
-        // Also keep a numeric input for precise control
-        ImGui::DragFloat3( "##LightDirectionValues", &atmosphereSettings.LightDirection.x, 0.001f );
+        ImGuizmoDirectionEdit( "LightDirection", atmosphereSettings.LightDirection );
         ImGui::SetItemTooltip( "The direction the sun should come from. Only active when ReplaceSunDirection is active.\nAlso useful to fix the sun in one position" );
 
         ImGui::EndDisabled();
@@ -626,8 +640,12 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
 
         // ImGui::Checkbox( "Draw Sky", &settings.DrawSky );
         ImGui::Checkbox( "Draw Fog", &settings.DrawFog );
-        // caution, FogRange is reduced by 0.5f (secScale - 0.5f) in D3D11PFX_HeightFog
-        ImGui::SliderFloat( "Fog Range", &settings.FogRange, 0.50f, 10.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
+        ImGui::BeginDisabled( !settings.DrawFog );
+        {
+            // caution, FogRange is reduced by 0.5f (secScale - 0.5f) in D3D11PFX_HeightFog
+            ImGui::SliderFloat( "Fog Range", &settings.FogRange, 0.50f, 10.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
+            ImGui::EndDisabled();
+        }
 
         ImGui::Checkbox( "HDR", &settings.EnableHDR );
 
@@ -647,17 +665,25 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
         ImGui::EndDisabled();
 
         ImGui::Checkbox( "SMAA", &settings.EnableSMAA );
-        ImGui::DragFloat( "Sharpen", &settings.SharpenFactor, 0.01f );
-        ImGui::Checkbox( "DynamicLighting", &settings.EnableDynamicLighting );
+        ImGui::BeginDisabled( !settings.EnableSMAA );
+        {
+            ImGui::DragFloat( "Sharpen", &settings.SharpenFactor, 0.01f );
+            ImGui::EndDisabled();
+        }
 
-        static std::vector<std::pair<const char*, int>> pointlightShadows = {
-           {"Disabled", 0},
-           {"Static", 1},
-           {"Update Dynamic", 2},
-           {"Full", 3},
-        };
-        if ( ImComboBox( "PointlightShadows", pointlightShadows, (int*)(&settings.EnablePointlightShadows) ) ) {
-            ImGui::EndCombo();
+        ImGui::Checkbox( "DynamicLighting", &settings.EnableDynamicLighting );
+        ImGui::BeginDisabled( !settings.EnableDynamicLighting );
+        {
+            static std::vector<std::pair<const char*, int>> pointlightShadows = {
+               {"Disabled", 0},
+               {"Static", 1},
+               {"Update Dynamic", 2},
+               {"Full", 3},
+            };
+            if ( ImComboBox( "PointlightShadows", pointlightShadows, (int*)(&settings.EnablePointlightShadows) ) ) {
+                ImGui::EndCombo();
+            }
+            ImGui::EndDisabled();
         }
         // ImGui::Checkbox("FastShadows", &settings.FastShadows );	
         ImGui::Checkbox( "DrawShadowGeometry", &settings.DrawShadowGeometry );
@@ -689,13 +715,23 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
             shadowMapSizes = shadowMapSizesDxFeature10;
         }
 
-        if ( ImComboBoxC( "ShadowmapSize", shadowMapSizes, (int*)(&settings.ShadowMapSize), []() { Engine::GraphicsEngine->ReloadShaders(); } ) ) {
-            ImGui::EndCombo();
+        ImGui::Checkbox( "Enable Shadows", &settings.EnableShadows );
+        ImGui::BeginDisabled( !settings.EnableShadows );
+        {
+            if ( ImComboBoxC( "ShadowmapSize", shadowMapSizes, (int*)(&settings.ShadowMapSize), []() { Engine::GraphicsEngine->ReloadShaders(); } ) ) {
+                ImGui::EndCombo();
+            }
+            ImGui::DragFloat( "WorldShadowRangeScale", &settings.WorldShadowRangeScale, 0.01f, 0.00f, 10.0f, "%.2f" );
+            ImGui::DragInt( "Shadow Cascade count", &settings.NumShadowCascades, 1, 1, MAX_CSM_CASCADES, "%d", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
+            ImGui::SetItemTooltip( "Higher values can produce better shadows (Impact: High)" );
+
+            ImGui::DragFloat( "ShadowStrength", &settings.ShadowStrength, 0.01f, 0.01f, 5.0f, "%.2f" );
+            ImGui::DragFloat( "ShadowAOStrength", &settings.ShadowAOStrength, 0.01f, -5.0f, 2.0f, "%.2f" );
+            ImGui::DragFloat( "WorldAOStrength", &settings.WorldAOStrength, 0.01f, -5.0f, 2.0f, "%.2f" );
+            
+            ImGui::EndDisabled();
         }
-        ImGui::DragFloat( "WorldShadowRangeScale", &settings.WorldShadowRangeScale, 0.01f, 0.0f, 0.0f, "%.2f" );
-        ImGui::DragFloat( "ShadowStrength", &settings.ShadowStrength, 0.01f, 0.01f, 5.0f, "%.2f" );
-        ImGui::DragFloat( "ShadowAOStrength", &settings.ShadowAOStrength, 0.01f, -5.0f, 2.0f, "%.2f" );
-        ImGui::DragFloat( "WorldAOStrength", &settings.WorldAOStrength, 0.01f, -5.0f, 2.0f, "%.2f" );
+
         ImGui::Checkbox( "WireframeWorld", &settings.WireframeWorld );
         ImGui::Checkbox( "WireframeVobs", &settings.WireframeVobs );
         // ImGui::Checkbox("Grass AlphaToCoverage", &settings.VegetationAlphaToCoverage );	

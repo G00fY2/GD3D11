@@ -120,6 +120,8 @@ struct DS_PointLightConstantBuffer {
     float PL_Pad3;
 };
 
+#define MAX_CSM_CASCADES 4
+
 struct DS_ScreenQuadConstantBuffer {
     XMFLOAT4X4 SQ_InvProj; // Optimize out!
     XMFLOAT4X4 SQ_InvView;
@@ -131,15 +133,14 @@ struct DS_ScreenQuadConstantBuffer {
     float SQ_ShadowmapSize;
 
     float4 SQ_LightColor;
-
-    XMFLOAT4X4 SQ_ShadowView;
-    XMFLOAT4X4 SQ_ShadowProj;
+    
+    // CSM: Cascade 0 (für Kompatibilität mit bestehenden Shadern)
+    XMFLOAT4X4 SQ_ShadowView[MAX_CSM_CASCADES];
+    XMFLOAT4X4 SQ_ShadowProj[MAX_CSM_CASCADES];
 
     XMFLOAT4X4 SQ_RainView;
     XMFLOAT4X4 SQ_RainProj;
 
-    //float2 SQ_ProjAB;
-    //float2 SQ_Pad2;
     float SQ_ShadowStrength;
     float SQ_ShadowAOStrength;
     float SQ_WorldAOStrength;

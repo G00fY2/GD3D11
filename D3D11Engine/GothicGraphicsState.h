@@ -600,7 +600,8 @@ struct GothicRendererSettings {
 
         textureMaxSize = 16384;
         ShadowMapSize = 2048;
-        WorldShadowRangeScale = 8.0f;
+        WorldShadowRangeScale = 1.0f;
+        NumShadowCascades = 2; // looks OK and performance friendly
 
         ShadowStrength = 0.40f;
         ShadowAOStrength = 0.50f;
@@ -766,6 +767,7 @@ struct GothicRendererSettings {
     float VisualFXDrawRadius;
     float SmallVobSize;
     float WorldShadowRangeScale;
+    int NumShadowCascades;
     float GammaValue;
     float BrightnessValue;
     int ShadowMapSize;

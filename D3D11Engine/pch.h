@@ -43,6 +43,10 @@ extern bool GMPModeActive;
 #define SAFE_DELETE(x) delete x; x = nullptr;
 //#define V(x) x
 
+// Makro to convert a makro value to a string literal
+#define VALUE(string) #string
+#define TO_LITERAL(string) VALUE(string)
+
 /** zCObject Managing */
 void zCObject_AddRef( void* o );
 void zCObject_Release( void* o );

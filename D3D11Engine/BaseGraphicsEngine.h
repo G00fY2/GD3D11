@@ -1,5 +1,6 @@
 #pragma once
 #include "WorldObjects.h"
+#include "GraphicsEventRecord.h"
 
 class BaseLineRenderer;
 class BaseShadowedPointLight;
@@ -213,6 +214,8 @@ public:
     virtual void DrawFrameParticles( std::map<zCTexture*, std::vector<ParticleInstanceInfo>>& particles, std::map<zCTexture*, ParticleRenderInfo>& info ) {}
 
     virtual void DrawString( const std::string& str, float x, float y, const zFont* font, zColor& fontColor ) {};
-
+    
     virtual XRESULT UpdateRenderStates() { return XR_SUCCESS; };
+
+    virtual std::unique_ptr<GraphicsEventRecord> RecordGraphicsEvent( LPCWSTR region ) { return std::make_unique<GraphicsEventRecord>(); }
 };
