@@ -256,7 +256,7 @@ bool ImGuizmoDirectionEdit( const char* label, XMFLOAT3& direction, float widget
     
     ImGui::Text( "%s", label );
     ImGui::SameLine();
-    
+
     // Draw the ViewManipulate gizmo
     ImGuizmo::SetDrawlist();
     ImGuizmo::ViewManipulate( viewMatrix, 1.0f, ImVec2( widgetPos.x + 120.0f, widgetPos.y ), ImVec2( widgetSize, widgetSize ), 0x10101010 );
@@ -268,11 +268,11 @@ bool ImGuizmoDirectionEdit( const char* label, XMFLOAT3& direction, float widget
     bool modified = (newDirection.x != direction.x || newDirection.y != direction.y || newDirection.z != direction.z);
     direction = newDirection;
     
-    // Reserve space for the widget
-    ImGui::Dummy( ImVec2( widgetSize + 120.0f, widgetSize ) );
-    
-    // Also provide a numeric input for precise control
+    // Reserve space for the widget, use InvisibleButton to stop mouse movement from moving the current window
     ImGui::PushID( label );
+    ImGui::InvisibleButton( "##invisible", ImVec2( widgetSize + 120.0f, widgetSize ) );
+
+    // Also provide a numeric input for precise control
     modified |= ImGui::DragFloat3( "##values", &direction.x, 0.001f );
     ImGui::PopID();
     
