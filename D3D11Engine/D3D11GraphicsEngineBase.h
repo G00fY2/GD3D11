@@ -1,5 +1,6 @@
 #pragma once
-#include "basegraphicsengine.h"
+#include "BaseGraphicsEngine.h"
+#include "D3DGraphicsEventRecord.h"
 #include <dxgi1_5.h>
 
 class D3D11DepthBufferState;
@@ -18,44 +19,6 @@ class D3D11ShaderManager;
 class D3D11VertexBuffer;
 class D3D11LineRenderer;
 class D3D11ConstantBuffer;
-
-
-class D3DGraphicsEventRecord :
-    public GraphicsEventRecord {
-public:
-    D3DGraphicsEventRecord() = default;
-
-    D3DGraphicsEventRecord( ID3DUserDefinedAnnotation* userAnnotation, LPCWSTR region )
-        : m_Annotation( userAnnotation ),
-        m_region( region )
-    {
-        if ( m_Annotation ) {
-            m_Annotation->BeginEvent( region );
-        }
-    }
-    ~D3DGraphicsEventRecord() override {
-        if ( m_Annotation ) {
-            m_Annotation->EndEvent();
-        }
-        m_Annotation = nullptr;
-    }
-
-    D3DGraphicsEventRecord( const D3DGraphicsEventRecord& other ) = delete;
-    D3DGraphicsEventRecord& operator=( const D3DGraphicsEventRecord& ) = delete;
-
-    D3DGraphicsEventRecord( D3DGraphicsEventRecord&& other ) noexcept
-        : m_region( std::move( other.m_region ) ),
-        m_Annotation( std::move( other.m_Annotation ) )
-    {
-        other.m_Annotation = nullptr;
-        other.m_region = nullptr;
-    }
-
-private:
-    LPCWSTR m_region;
-    ID3DUserDefinedAnnotation* m_Annotation;
-};
-
 
 class D3D11GraphicsEngineBase : public BaseGraphicsEngine {
 public:

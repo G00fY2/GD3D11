@@ -1,5 +1,6 @@
 #pragma once
 #include "WorldObjects.h"
+#include "GraphicsEventRecord.h"
 
 class BaseLineRenderer;
 class BaseShadowedPointLight;
@@ -12,12 +13,6 @@ struct SkeletalMeshVisualInfo;
 struct VobInfo;
 struct VobLightInfo;
 class zFont;
-
-class GraphicsEventRecord {
-public:
-    GraphicsEventRecord() {};
-    virtual ~GraphicsEventRecord() {};
-};
 
 struct DisplayModeInfo {
     DisplayModeInfo() {}

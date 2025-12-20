@@ -806,6 +806,13 @@
     <ClInclude Include="D3D11CascadedShadowMapBuffer.h">
       <Filter>Engine\D3D11</Filter>
     </ClInclude>
+    <ClInclude Include="D3D11ShadowMap.h" />
+    <ClInclude Include="D3DGraphicsEventRecord.h">
+      <Filter>Engine\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsEventRecord.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1109,6 +1116,7 @@
     <ClCompile Include="D3D11CascadedShadowMapBuffer.cpp">
       <Filter>Engine\D3D11</Filter>
     </ClCompile>
+    <ClCompile Include="D3D11ShadowMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">
