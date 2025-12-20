@@ -191,10 +191,25 @@ float SampleCascadeShadow(float3 wsPosition, int cascadeIndex, float vertLightin
         }
         shadow = sum / 16.0;
     } else {
-        // Sample from Texture2DArray using cascade index as array slice
-        shadow = TX_ShadowmapArray.SampleCmpLevelZero(SS_Comp, 
-            float3(projectedTexCoords.xy, (float)cascadeIndex), 
-            vShadowSamplingPos.z - bias);
+        // Efficient 4-tap PCF fallback for distant cascades (rotated poisson disk)
+        // Uses bilinear PCF hardware filtering for effective 8+ sample quality
+        static const float2 poissonDisk[4] = {
+            float2(-0.94201624f, -0.39906216f),
+            float2( 0.94558609f, -0.76890725f),
+            float2(-0.09418410f, -0.92938870f),
+            float2( 0.34495938f,  0.29387760f)
+        };
+        
+        float sum = 0;
+        float texelSize = 1.0f / SQ_ShadowmapSize;
+        
+        [unroll] for (int i = 0; i < 4; i++)
+        {
+            sum += TX_ShadowmapArray.SampleCmpLevelZero(SS_Comp,
+                float3(projectedTexCoords.xy + poissonDisk[i] * texelSize, (float)cascadeIndex),
+                vShadowSamplingPos.z - bias);
+        }
+        shadow = sum * 0.25;
     }
 #endif
 #else
