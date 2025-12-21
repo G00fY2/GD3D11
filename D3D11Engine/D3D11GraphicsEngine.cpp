@@ -3525,6 +3525,7 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround(
 
     std::vector<WorldMeshSectionInfo*> drawnSections;
 
+    auto rangeSquared = range * range;
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawWorldMesh ) {
         // Bind wrapped mesh vertex buffers
         DrawVertexBufferIndexedUINT( Engine::GAPI->GetWrappedWorldMesh()->MeshVertexBuffer,
@@ -3638,9 +3639,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround(
 
                     // Check vob range
 
-                    float dist;
-                    XMStoreFloat( &dist, XMVector3Length( position - XMLoadFloat3( &it->LastRenderPosition ) ) );
-                    if ( dist > range ) {
+                    float distSq;
+                    XMStoreFloat( &distSq, XMVector3LengthSq( position - XMLoadFloat3( &it->LastRenderPosition ) ) );
+                    if ( distSq > rangeSquared ) {
                         continue;
                     }
 
@@ -3702,10 +3703,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround(
                 }
 
                 // Check vob range
-                float dist;
-                XMStoreFloat( &dist, XMVector3Length( position - it->Vob->GetPositionWorldXM() ) );
-
-                if ( dist > range ) {
+                float distSq;
+                XMStoreFloat( &distSq, XMVector3LengthSq( position - it->Vob->GetPositionWorldXM() ) );
+                if ( distSq > rangeSquared ) {
                     continue;
                 }
 
@@ -3751,13 +3751,12 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround(
                 }
 
                 // Check vob range
-                float dist;
-                XMStoreFloat( &dist, XMVector3Length( position - skeletalMeshVob->Vob->GetPositionWorldXM() ) );
-
-                if ( dist > range ) {
-                    // Not in range
+                float distSq;
+                XMStoreFloat( &distSq, XMVector3LengthSq( position - skeletalMeshVob->Vob->GetPositionWorldXM() ) );
+                if ( distSq > rangeSquared ) {
                     continue;
                 }
+
                 // Check for inside vob. Don't render inside-vobs when the light is
                 // outside and vice-versa.
                 if ( isOutdoor && skeletalMeshVob->Vob->IsIndoorVob() != indoor ) {
@@ -3838,6 +3837,8 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
     bool isOutdoor = (Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_OUTDOOR);
 
     std::vector<WorldMeshSectionInfo*> drawnSections;
+
+    auto rangeSquared = range * range;
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawWorldMesh ) {
         // Bind wrapped mesh vertex buffers
@@ -3952,9 +3953,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
 
                     // Check vob range
 
-                    float dist;
-                    XMStoreFloat( &dist, XMVector3Length( position - XMLoadFloat3( &it->LastRenderPosition ) ) );
-                    if ( dist > range ) {
+                    float distSq;
+                    XMStoreFloat( &distSq, XMVector3LengthSq( position - XMLoadFloat3( &it->LastRenderPosition ) ) );
+                    if ( distSq > rangeSquared ) {
                         continue;
                     }
 
@@ -4016,10 +4017,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
                 }
 
                 // Check vob range
-                float dist;
-                XMStoreFloat( &dist, XMVector3Length( position - it->Vob->GetPositionWorldXM() ) );
-
-                if ( dist > range ) {
+                float distSq;
+                XMStoreFloat( &distSq, XMVector3LengthSq( position - it->Vob->GetPositionWorldXM() ) );
+                if ( distSq > rangeSquared ) {
                     continue;
                 }
 
@@ -4065,11 +4065,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
                 }
 
                 // Check vob range
-                float dist;
-                XMStoreFloat( &dist, XMVector3Length( position - skeletalMeshVob->Vob->GetPositionWorldXM() ) );
-
-                if ( dist > range ) {
-                    // Not in range
+                float distSq;
+                XMStoreFloat( &distSq, XMVector3LengthSq( position - skeletalMeshVob->Vob->GetPositionWorldXM() ) );
+                if ( distSq > rangeSquared ) {
                     continue;
                 }
                 // Check for inside vob. Don't render inside-vobs when the light is
@@ -4404,6 +4402,8 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAroundForWorldShadow( FXMVECTOR p
     }
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawSkeletalMeshes ) {
+        auto indorRadiusSq = Engine::GAPI->GetRendererState().RendererSettings.SkeletalMeshDrawRadius
+            * Engine::GAPI->GetRendererState().RendererSettings.SkeletalMeshDrawRadius;
         // Draw skeletal meshes
         for ( auto const& skeletalMeshVob : Engine::GAPI->GetSkeletalMeshVobs() ) {
             if ( !skeletalMeshVob->VisualInfo ) continue;
@@ -4413,8 +4413,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAroundForWorldShadow( FXMVECTOR p
                 continue;
             }
 
-            float dist; XMStoreFloat( &dist, XMVector3Length( skeletalMeshVob->Vob->GetPositionWorldXM() - position ) );
-            if ( dist > Engine::GAPI->GetRendererState().RendererSettings.IndoorVobDrawRadius )
+            float distSq;
+            XMStoreFloat( &distSq, XMVector3LengthSq( skeletalMeshVob->Vob->GetPositionWorldXM() - position ) );
+            if ( distSq > indorRadiusSq )
                 continue;  // Skip out of range
 
             Engine::GAPI->DrawSkeletalMeshVob( skeletalMeshVob, FLT_MAX );
@@ -5687,11 +5688,13 @@ void D3D11GraphicsEngine::DrawQuadMarks() {
     SetupVS_ExConstantBuffer();
 
     int alphaFunc = zMAT_ALPHA_FUNC_NONE;
+
+    auto vfxRadiusSq = Engine::GAPI->GetRendererState().RendererSettings.VisualFXDrawRadius * Engine::GAPI->GetRendererState().RendererSettings.VisualFXDrawRadius;
     for ( auto const& it : quadMarks ) {
         if ( !it.first->GetConnectedVob() ) continue;
 
-        float len; XMStoreFloat( &len, XMVector3Length( camPos - XMLoadFloat3( it.second.Position.toXMFLOAT3() ) ) );
-        if ( len > Engine::GAPI->GetRendererState().RendererSettings.VisualFXDrawRadius )
+        float distSq; XMStoreFloat( &distSq, XMVector3LengthSq( camPos - XMLoadFloat3( it.second.Position.toXMFLOAT3() ) ) );
+        if ( distSq > vfxRadiusSq )
             continue;
 
         zCMaterial* mat = it.first->GetMaterial();
@@ -5873,10 +5876,11 @@ void D3D11GraphicsEngine::DrawFrameParticleMeshes( std::unordered_map<zCVob*, Me
 
     FXMVECTOR camPos = Engine::GAPI->GetCameraPositionXM();
     int lastBlend = zRND_ALPHA_FUNC_NONE;
+    auto vfxRadiusSq = state.RendererSettings.VisualFXDrawRadius * state.RendererSettings.VisualFXDrawRadius;
     for ( auto const& it : progMeshes ) {
-        float dist;
-        XMStoreFloat( &dist, XMVector3Length( it.first->GetPositionWorldXM() - camPos ) );
-        if ( dist > state.RendererSettings.VisualFXDrawRadius )
+        float distSq;
+        XMStoreFloat( &distSq, XMVector3LengthSq( it.first->GetPositionWorldXM() - camPos ) );
+        if ( distSq > vfxRadiusSq )
             continue;
 
         if ( zCParticleFX* particle = reinterpret_cast<zCParticleFX*>(it.first->GetVisual()) ) {
