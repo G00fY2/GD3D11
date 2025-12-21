@@ -2471,7 +2471,7 @@ void GothicAPI::DrawSkeletalMeshVob( SkeletalVobInfo* vi, float distance, bool u
                 }
 
                 // Update animated textures
-                bool isMMS = std::string( mvi->Visual->GetFileExtension( 0 ) ) == ".MMS";
+                bool isMMS = strcmp( mvi->Visual->GetFileExtension( 0 ), ".MMS") == 0;
                 if ( updateState ) {
                     node->TexAniState.UpdateTexList();
                     if ( isMMS ) {
@@ -2514,16 +2514,29 @@ void GothicAPI::DrawSkeletalMeshVob( SkeletalVobInfo* vi, float distance, bool u
                 VShader->GetConstantBuffer()[1]->BindToVertexShader( 1 );
 
                 // Go through all materials registered here
-                for ( auto const& itm : mvi->Meshes ) {
-                    zCTexture* texture;
-                    if ( itm.first && (texture = itm.first->GetAniTexture()) != nullptr ) {
-                        if ( !g->BindTextureNRFX( texture, (g->GetRenderingStage() == DES_MAIN) ) )
-                            continue;
-                    }
 
-                    // Go through all meshes using that material
-                    for ( unsigned int m = 0; m < itm.second.size(); m++ ) {
-                        DrawMeshInfo( itm.first, itm.second[m] );
+                if ( g->GetRenderingStage() == DES_SHADOWMAP 
+                    || g->GetRenderingStage() == DES_SHADOWMAP_CUBE ) {
+                    for ( auto const& itm : mvi->Meshes ) {
+                        // no texture binding for shadowmap
+
+                        // Go through all meshes using that material
+                        for ( unsigned int m = 0; m < itm.second.size(); m++ ) {
+                            DrawMeshInfo( itm.first, itm.second[m] );
+                        }
+                    }
+                } else {
+                    for ( auto const& itm : mvi->Meshes ) {
+                        zCTexture* texture;
+                        if ( itm.first && (texture = itm.first->GetAniTexture()) != nullptr ) {
+                            if ( !g->BindTextureNRFX( texture, (g->GetRenderingStage() == DES_MAIN) ) )
+                                continue;
+                        }
+
+                        // Go through all meshes using that material
+                        for ( unsigned int m = 0; m < itm.second.size(); m++ ) {
+                            DrawMeshInfo( itm.first, itm.second[m] );
+                        }
                     }
                 }
             }
@@ -2680,7 +2693,7 @@ void GothicAPI::DrawSkeletalMeshVob_Layered( SkeletalVobInfo* vi, float distance
                 }
 
                 // Update animated textures
-                bool isMMS = std::string( mvi->Visual->GetFileExtension( 0 ) ) == ".MMS";
+                bool isMMS = strcmp( mvi->Visual->GetFileExtension( 0 ), ".MMS" ) == 0;
                 if ( updateState ) {
                     node->TexAniState.UpdateTexList();
                     if ( isMMS ) {
