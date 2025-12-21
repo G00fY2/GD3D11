@@ -63,12 +63,6 @@ const XMFLOAT4 UNDERWATER_COLOR_MOD = XMFLOAT4( 0.5f, 0.7f, 1.0f, 1.0f );
 static const GUID IID_IDXGIVkInteropAdapter = { 0x3A6D8F2C, 0xB0E8, 0x4AB4, { 0xB4, 0xDC, 0x4F, 0xD2, 0x48, 0x91, 0xBF, 0xA5 } };
 static const GUID IID_IDXGIDeviceRenderDoc = { 0xa7aa6116, 0x9c8d, 0x4bba, { 0x90, 0x83, 0xb4, 0xd8, 0x16, 0xb7, 0x1b, 0x78 } };
 
-const float NUM_FRAME_SHADOW_UPDATES =
-2;  // Fraction of lights to update per frame
-const int NUM_MIN_FRAME_SHADOW_UPDATES =
-4;  // Minimum lights to update per frame
-const int MAX_IMPORTANT_LIGHT_UPDATES = 1;
-
 constexpr float inv255f = (1.f / 255.f);
 float vobAnimation_WindStrength = 1.0f;
 
@@ -4208,9 +4202,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround( FXMVECTOR position,
             }
         } else {
             // Collect all meshes first, then batch by alpha requirement
-            static thread_local std::vector<WorldMeshInfo*> opaqueMeshes;
+            static thread_local std::vector<D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS> opaqueDrawArgs;
             static thread_local std::vector<std::pair<zCTexture*, WorldMeshInfo*>> alphaMeshes;
-            opaqueMeshes.clear();
+            opaqueDrawArgs.clear();
             alphaMeshes.clear();
 
             for ( const WorldMeshSectionInfo* section : visibleSections ) {
@@ -4227,23 +4221,48 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround( FXMVECTOR position,
                             alphaMeshes.emplace_back( tex, meshPair.second );
                         }
                     } else {
-                        opaqueMeshes.push_back( meshPair.second );
+                        D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS args;
+                        args.IndexCountPerInstance = static_cast<UINT>(meshPair.second->Indices.size());
+                        args.InstanceCount = 1;
+                        args.StartIndexLocation = meshPair.second->BaseIndexLocation;
+                        args.BaseVertexLocation = 0;
+                        args.StartInstanceLocation = 0;
+                        opaqueDrawArgs.push_back( args );
                     }
+
+                    Engine::GAPI->GetRendererState().RendererInfo.FrameDrawnTriangles +=
+                        meshPair.second->Indices.size() / 3;
                 }
             }
 
-            // Draw all opaque meshes without pixel shader (depth only)
-            if ( !opaqueMeshes.empty() ) {
-                if ( !linearDepth )  // Only unbind when not rendering linear depth
-                {
-                    // Unbind PS
+            // Draw all opaque meshes without pixel shader (depth only) using MDI
+            if ( !opaqueDrawArgs.empty() ) {
+                if ( !linearDepth ) {
+                    // Unbind PS for depth-only rendering
                     Context->PSSetShader( nullptr, nullptr, 0 );
                 }
 
-                for ( WorldMeshInfo* mesh : opaqueMeshes ) {
-                    DrawVertexBufferIndexedUINT( nullptr, nullptr,
-                        mesh->Indices.size(), mesh->BaseIndexLocation );
+                // Initialize or resize the indirect buffer if needed
+                const size_t requiredSize = opaqueDrawArgs.size() * sizeof( D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS );
+
+                if ( !WorldMeshIndirectBuffer || WorldMeshIndirectBuffer->GetSizeInBytes() < requiredSize ) {
+                    WorldMeshIndirectBuffer.reset( new D3D11IndirectBuffer );
+                    WorldMeshIndirectBuffer->Init(
+                            opaqueDrawArgs.data(), requiredSize,
+                            D3D11IndirectBuffer::B_INDEXBUFFER, D3D11IndirectBuffer::U_DYNAMIC,
+                            D3D11IndirectBuffer::CA_WRITE );
+                } else {
+                    WorldMeshIndirectBuffer->UpdateBuffer( opaqueDrawArgs.data(), requiredSize );
                 }
+
+                // Execute multi-draw indirect call for all opaque meshes
+                // DrawMultiIndexedInstancedIndirect falls back to individual DrawIndexedInstancedIndirect 
+                // calls via Stub_DrawMultiIndexedInstancedIndirect if hardware doesn't support MDI
+                DrawMultiIndexedInstancedIndirect( Context.Get(),
+                    static_cast<unsigned int>(opaqueDrawArgs.size()),
+                    WorldMeshIndirectBuffer->GetIndirectBuffer().Get(),
+                    0,
+                    sizeof( D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS ) );
             }
 
             // Draw alpha-tested meshes with texture binding
