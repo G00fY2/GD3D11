@@ -229,7 +229,7 @@ public:
     virtual void DrawVobSingle( VobInfo* vob, zCCamera& camera ) override;
 
     /** Draws everything around the given position */
-    void XM_CALLCONV DrawWorldAround( FXMVECTOR position, float sectionRange, float vobXZRange, bool cullFront = true, bool dontCull = false );
+    void XM_CALLCONV DrawWorldAroundForWorldShadow( FXMVECTOR position, float sectionRange, bool cullFront = true, bool dontCull = false );
     void XM_CALLCONV DrawWorldAround( FXMVECTOR position,
         float range,
         bool cullFront = true,

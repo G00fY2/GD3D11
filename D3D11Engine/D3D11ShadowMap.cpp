@@ -697,7 +697,6 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
         m_context->ClearDepthStencilView( dsvOverwrite.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0 );
 
         // Draw the world mesh without textures
-        constexpr float NOT_IMPLEMENTED_RANGE = 10000.0f;
         const auto oldRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius;
         if ( cascadeFar > 0.01f ) {
             Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius = std::min(
@@ -709,7 +708,7 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
                 oldVobRadius, cascadeFar * 1.2f );
         }
 
-        graphicsEngine->DrawWorldAround( cameraPosition, 2, NOT_IMPLEMENTED_RANGE, cullFront, dontCull );
+        graphicsEngine->DrawWorldAroundForWorldShadow( cameraPosition, 2, cullFront, dontCull );
 
         Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius = oldRadius;
         Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius = oldVobRadius;

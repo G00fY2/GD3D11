@@ -4085,8 +4085,8 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
 }
 
 /** Draws everything around the given position */
-void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround( FXMVECTOR position,
-    float sectionRange, float vobXZRange,
+void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAroundForWorldShadow( FXMVECTOR position,
+    float sectionRange,
     bool cullFront, bool dontCull ) {
     // Setup renderstates
     Engine::GAPI->GetRendererState().RasterizerState.SetDefault();
