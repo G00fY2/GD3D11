@@ -455,12 +455,12 @@ XRESULT D3D11GraphicsEngine::Init() {
         nvapiDevice->RegisterDevice( Device11.Get() );
     } else if ( agsDevice ) {
         if ( agsDevice->IsDrawMultiIndexedInstancedIndirectAvailable() ) {
-            DrawMultiIndexedInstancedIndirect = IGDEXT_DrawMultiIndexedInstancedIndirect;
+            DrawMultiIndexedInstancedIndirect = AGS_DrawMultiIndexedInstancedIndirect;
         }
 
         if ( agsDevice->IsUAVOverlapAvailable() ) {
-            BeginUAVOverlap = IGDEXT_BeginUAVOverlap;
-            EndUAVOverlap = IGDEXT_EndUAVOverlap;
+            BeginUAVOverlap = AGS_BeginUAVOverlap;
+            EndUAVOverlap = AGS_EndUAVOverlap;
         }
     } else if ( adpDesc.VendorId == 0x8086 ) {
         // Intel extension is initialized late
