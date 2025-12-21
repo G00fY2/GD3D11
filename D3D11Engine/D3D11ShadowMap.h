@@ -13,6 +13,7 @@
 #include "Engine.h"
 #include "GothicAPI.h"
 #include "GSky.h"
+#include "Frustum.h"
 
 struct RenderToDepthStencilBuffer;
 struct RenderToTextureBuffer;
@@ -75,7 +76,9 @@ public:
     static std::vector<float> ComputeCascadeSplits( float nearPlane, float farPlane, size_t numCascades, float lambda = 0.95f );
 
     /** Renders the shadowmaps for the sun */
-    void XM_CALLCONV RenderShadowmaps( FXMVECTOR cameraPosition, RenderToDepthStencilBuffer* target = nullptr, bool cullFront = true, bool dontCull = false, Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsvOverwrite = nullptr, Microsoft::WRL::ComPtr<ID3D11RenderTargetView> debugRTV = nullptr, float cascadeFar = 0.0f );
+    void XM_CALLCONV RenderShadowmaps( FXMVECTOR cameraPosition, RenderToDepthStencilBuffer* target = nullptr, bool cullFront = true, bool dontCull = false, Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsvOverwrite = nullptr, Microsoft::WRL::ComPtr<ID3D11RenderTargetView> debugRTV = nullptr, 
+        int cascadeIndex = -1,
+        const std::vector<float>& cascadeSplits = std::vector<float>() );
 
     XRESULT DrawLighting( std::vector<VobLightInfo*>& lights );
 

@@ -4085,7 +4085,8 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
 /** Draws everything around the given position */
 void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAroundForWorldShadow( FXMVECTOR position,
     float sectionRange,
-    bool cullFront, bool dontCull ) {
+    bool cullFront, bool dontCull,
+    const Frustum& frustum ) {
     // Setup renderstates
     Engine::GAPI->GetRendererState().RasterizerState.SetDefault();
     Engine::GAPI->GetRendererState().RasterizerState.CullMode =
@@ -4412,7 +4413,7 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAroundForWorldShadow( FXMVECTOR p
             if ( skeletalMeshVob->Vob->GetVisualAlpha() && skeletalMeshVob->Vob->GetVobTransparency() < 0.7f ) {
                 continue;
             }
-
+            
             float distSq;
             XMStoreFloat( &distSq, XMVector3LengthSq( skeletalMeshVob->Vob->GetPositionWorldXM() - position ) );
             if ( distSq > indorRadiusSq )

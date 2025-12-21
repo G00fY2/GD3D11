@@ -342,7 +342,8 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
             RenderShadowmaps( WorldShadowCP, nullptr, true, false,
                 cascadeDSV,
                 nullptr,
-                splits[cascadeIdx+1]);
+                cascadeIdx,
+                splits);
 
             Engine::GAPI->SetCameraReplacementPtr( nullptr );
         }
@@ -641,7 +642,8 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
     bool cullFront, bool dontCull,
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsvOverwrite,
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> debugRTV,
-    float cascadeFar) {
+    int cascadeIndex,
+    const std::vector<float>& cascadeSplits) {
 
     // We now assume that "target" always is something else than the world shadowmap
     UINT targetSize = !target
@@ -698,17 +700,21 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
 
         // Draw the world mesh without textures
         const auto oldRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius;
-        if ( cascadeFar > 0.01f ) {
-            Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius = std::min(
-                oldRadius, cascadeFar * 1.2f );
-        }
         const auto oldVobRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius;
-        if ( cascadeFar > 0.01f ) {
+        if ( cascadeIndex >= 0 ) {
+            auto cascadeFar = cascadeSplits[cascadeIndex + 1];
             Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius = std::min(
                 oldVobRadius, cascadeFar * 1.2f );
         }
+        
+        Frustum f;
+        f.BuildOrthographic(
+            XMMatrixTranspose( Engine::GAPI->GetViewMatrixXM()),
+            XMMatrixTranspose( XMLoadFloat4x4( &Engine::GAPI->GetProjectionMatrix() ) ),
+            0,
+            0 );
 
-        graphicsEngine->DrawWorldAroundForWorldShadow( cameraPosition, 2, cullFront, dontCull );
+        graphicsEngine->DrawWorldAroundForWorldShadow( cameraPosition, 2, cullFront, dontCull, f );
 
         Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius = oldRadius;
         Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius = oldVobRadius;
