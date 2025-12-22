@@ -35,7 +35,7 @@ jobs:
           target: ${{ matrix.configuration }}
 
   deploy-release:
-    if: github.ref_name == 'master'
+    # if: github.ref_name == 'master'
     needs: build
     runs-on: windows-latest
 
