@@ -37,11 +37,11 @@ jobs:
           nightly: false
 
       - name: Package artifacts
-        uses: ./.github/actions/package-artifact
+        uses: ./.github/actions/package-artifacts
         with:
           include-spacer-net: true
 
       - name: Create release
-        uses: ./.github/actions/deploy-artifact
+        uses: ./.github/actions/deploy-artifacts
         with:
           nightly: false
