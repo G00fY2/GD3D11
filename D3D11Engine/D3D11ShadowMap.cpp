@@ -189,11 +189,19 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
             (UINT)NUM_MIN_FRAME_SHADOW_UPDATES,
             (UINT)(graphicsEngine->FrameShadowUpdateLights.size() / NUM_FRAME_SHADOW_UPDATES) );
         while ( !graphicsEngine->FrameShadowUpdateLights.empty() ) {
-            D3D11PointLight* l = static_cast<D3D11PointLight*>(graphicsEngine->FrameShadowUpdateLights.front()->LightShadowBuffers);
-
+            auto light = graphicsEngine->FrameShadowUpdateLights.front();
+            if ( !light ) {
+                graphicsEngine->FrameShadowUpdateLights.pop_front();
+                continue;
+            }
+            D3D11PointLight* l = static_cast<D3D11PointLight*>(light->LightShadowBuffers);
+            if ( !l ) {
+                graphicsEngine->FrameShadowUpdateLights.pop_front();
+                continue;
+            }
             // Check if we have to force this light to update itself (NPCs moving around, for example)
-            bool force = graphicsEngine->FrameShadowUpdateLights.front()->UpdateShadows;
-            graphicsEngine->FrameShadowUpdateLights.front()->UpdateShadows = false;
+            bool force = light->UpdateShadows;
+            light->UpdateShadows = false;
 
             l->RenderCubemap( force );
             graphicsEngine->DebugPointlight = l;
