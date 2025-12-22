@@ -13,8 +13,8 @@ runs:
     - name: Set nightly env vars
       if: ${{ inputs.nightly }}
       run: |
-        $$shortHash = $Env:GITHUB_SHA.Substring(0, 9)
-        $dirName = "GD3D11-git-$$shortHash"
+        $shortHash = $Env:GITHUB_SHA.Substring(0, 9)
+        $dirName = "GD3D11-git-$shortHash"
         echo "Hash: ${$shortHash}"
         echo "Directory: ${dirName}"
         echo "RELEASE_VERSION=${$shortHash}" >> $Env:GITHUB_ENV
@@ -27,7 +27,6 @@ runs:
       run: |
         $tagName = $Env:GITHUB_REF -replace 'refs/tags/', ''
         $dirName = "GD3D11-${tagName}"
-        $shortHash = $Env:GITHUB_SHA.Substring(0, 9)
         echo "Tag: ${tagName}"
         echo "Directory: ${dirName}"
         echo "RELEASE_VERSION=${tagName}" >> $Env:GITHUB_ENV
