@@ -27,6 +27,8 @@ jobs:
         configuration: [ Release_AVX, Release_AVX2, Release_G1_AVX, Release_G1_AVX2, Release, Release_G1, Spacer_NET, Launcher ]
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
       - name: Build target
         uses: ./.github/actions/build-target
         with:
@@ -38,6 +40,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
       - name: Setup env vars
         uses: ./.github/actions/setup-env-vars
         with:
