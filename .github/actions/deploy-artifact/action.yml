@@ -1,0 +1,40 @@
+name: Deploy artifacts
+description: Deploy artifacts and create or replace a GitHub release
+
+inputs:
+  nightly:
+    description: Defines if nightly or regular release
+    required: true
+    type: boolean
+
+runs:
+  using: composite
+  steps:
+    - name: Delete old nightly
+      if: ${{ inputs.nightly }}
+      run: gh release delete nightly --yes --cleanup-tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: pwsh
+
+    - name: Create nightly release
+      if: ${{ inputs.nightly }}
+      uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
+      with:
+        allowUpdates: true
+        artifacts: "${{ env.RELEASE_DIR }}.zip,${{ env.SPACER_RELEASE_DIR }}.zip"
+        generateReleaseNotes: true
+        name: Nightly
+        prerelease: true
+        removeArtifacts: true
+        tag: nightly
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create regular release
+      if: ${{ ! inputs.nightly }}
+      uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
+      with:
+        allowUpdates: true
+        artifacts: "${{ env.RELEASE_DIR }}.zip,${{ env.SPACER_RELEASE_DIR }}.zip"
+        generateReleaseNotes: true
+        token: ${{ secrets.GITHUB_TOKEN }}

@@ -5,13 +5,13 @@ on:
     branches:
       - '**'
     paths-ignore:
-      - 'README.md'
+      - '**/*.md'
 
   pull_request:
     branches:
       - '**'
     paths-ignore:
-      - 'README.md'
+      - '**/*.md'
 
   workflow_dispatch:
 
@@ -27,105 +27,28 @@ jobs:
         configuration: [ Release_AVX, Release_AVX2, Release_G1_AVX, Release_G1_AVX2, Release, Release_G1, Spacer_NET, Launcher ]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Set tag and directory name env
-        run: |
-          $shortHash = $Env:GITHUB_SHA.Substring(0, 9)
-          echo (-join("CL=/DVERSION_NUMBER#",'\"',"-git-${shortHash}",'\"')) >> $Env:GITHUB_ENV
-
-      - name: Restore NuGet packages
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: nuget restore .
-
-      - name: Build
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild /p:Configuration=${{matrix.configuration}} .
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v6
+      - name: Build target
+        uses: ./.github/actions/build-target
         with:
-          name: ${{ matrix.configuration }}
-          path: ${{ matrix.configuration }}/ddraw.dll
-          retention-days: 2
+          target: ${{ matrix.configuration }}
 
-  artifacts:
+  deploy-release:
+    if: github.ref_name == 'master'
     needs: build
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set tag and directory name env
-        run: |
-          $tagName = $Env:GITHUB_SHA.Substring(0, 9)
-          $dirName = "GD3D11-git-$tagName"
-          echo "Tag: ${tagName}"
-          echo "Directory: ${dirName}"
-          echo "RELEASE_VERSION=${tagName}" >> $Env:GITHUB_ENV
-          echo "RELEASE_DIR=${dirName}" >> $Env:GITHUB_ENV
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v7
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Create distribution
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: |
-          mkdir "${{env.RELEASE_DIR}}\GD3D11\Bin" -Force
-          Xcopy "D3D11Engine\Shaders\*" "${{env.RELEASE_DIR}}\GD3D11\shaders\" /S /Y
-          Xcopy "blobs\Meshes" "${{env.RELEASE_DIR}}\GD3D11\Meshes\" /S /Y
-          Xcopy "blobs\Textures" "${{env.RELEASE_DIR}}\GD3D11\Textures\" /S /Y
-          Xcopy "blobs\Fonts" "${{env.RELEASE_DIR}}\GD3D11\Fonts\" /S /Y
-          Xcopy "blobs\libs\*" "${{env.RELEASE_DIR}}\" /S /Y
-          copy "blobs\bin\wine-d2d1.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\d2d1.dll"
-          copy "Release\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g2a.dll"
-          copy "Release_AVX\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g2a_avx.dll"
-          copy "Release_AVX2\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g2a_avx2.dll"
-          copy "Release_G1\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g1.dll"
-          copy "Release_G1_AVX\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g1_avx.dll"
-          copy "Release_G1_AVX2\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g1_avx2.dll"
-          copy "Launcher\ddraw.dll" "${{env.RELEASE_DIR}}\"
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v6
+      - name: Setup env vars
+        uses: ./.github/actions/setup-env-vars
         with:
-          name: ${{ env.RELEASE_DIR }}
-          path: ${{ env.RELEASE_DIR }}
-          # higher values don't get us much due to DLLs, libs, textures...
-          compression-level: 1
+          nightly: true
 
-      - name: zip distribution for nightly
-        if: github.ref_name == 'master'
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: |
-          cd "${{env.RELEASE_DIR}}"
-          7z a -tzip "..\${{env.RELEASE_DIR}}.zip" -r
-
-      - name: Delete old nightly
-        if: github.ref_name == 'master'
-        run: gh release delete nightly --yes --cleanup-tag
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Create new nightly
-        if: github.ref_name == 'master'
-        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
+      - name: Package nightly artifact
+        uses: ./.github/actions/package-artifact
         with:
-          name: Nightly
-          tag: nightly
-          generateReleaseNotes: true
-          allowUpdates: true
-          prerelease: true
-          draft: false
-          omitDraftDuringUpdate: false
-          removeArtifacts: true
-          artifacts: "${{env.RELEASE_DIR}}.zip"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          include-spacer-net: false
+
+      - name: Create nightly release
+        uses: ./.github/actions/deploy-artifact
+        with:
+          nightly: true

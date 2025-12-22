@@ -12,87 +12,32 @@ defaults:
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [ Release_AVX, Release_AVX2, Release_G1_AVX, Release_G1_AVX2, Release, Release_G1, Spacer_NET, Launcher ]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - name: Build configuration
+        uses: ./.github/actions/build-configuration
+        with:
+          configuration: ${{ matrix.configuration }}
 
-      - name: Set tag and directory name env
-        run: |
-          $tagName = $Env:GITHUB_REF -replace 'refs/tags/', ''
-          $dirName = "GD3D11-${tagName}"
-          $shortHash = $Env:GITHUB_SHA.Substring(0, 9)
-          echo "Tag: ${tagName}"
-          echo "Directory: ${dirName}"
-          echo "RELEASE_VERSION=${tagName}" >> $Env:GITHUB_ENV
-          echo "RELEASE_DIR=${dirName}" >> $Env:GITHUB_ENV
-          echo (-join("CL=/DVERSION_NUMBER#",'\"',"${tagName}-${shortHash}",'\"')) >> $Env:GITHUB_ENV
+  deploy-release:
+    needs: build
+    runs-on: windows-latest
 
-      - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v2
+    steps:
+      - name: Setup env vars
+        uses: ./.github/actions/setup-env-vars
+        with:
+          nightly: false
 
-      - name: Restore NuGet packages
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: nuget restore .
+      - name: Package artifacts
+        uses: ./.github/actions/package-artifact
+        with:
+          include-spacer-net: true
 
-      - name: Build G2 NotR AVX
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild /p:Configuration=Release_AVX .
-
-      - name: Build G2 NotR AVX2
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild /p:Configuration=Release_AVX2 .
-
-      - name: Build G1 AVX
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild /p:Configuration=Release_G1_AVX .
-
-      - name: Build G1 AVX2
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild /p:Configuration=Release_G1_AVX2 .
-
-      - name: Build G2 NotR
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild /p:Configuration=Release .
-
-      - name: Build G1
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild /p:Configuration=Release_G1 .
-
-      - name: Build Launcher
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild /p:Configuration=Launcher .
-
-      - name: Create distribution zip
-        working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: |
-          mkdir "${{env.RELEASE_DIR}}\GD3D11\Bin" -Force
-          Xcopy "D3D11Engine\Shaders\*" "${{env.RELEASE_DIR}}\GD3D11\shaders\" /S /Y
-          Xcopy "blobs\Meshes" "${{env.RELEASE_DIR}}\GD3D11\Meshes\" /S /Y
-          Xcopy "blobs\Textures" "${{env.RELEASE_DIR}}\GD3D11\Textures\" /S /Y
-          Xcopy "blobs\Fonts" "${{env.RELEASE_DIR}}\GD3D11\Fonts\" /S /Y
-          Xcopy "blobs\libs\*" "${{env.RELEASE_DIR}}\" /S /Y
-          copy "blobs\bin\wine-d2d1.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\d2d1.dll"
-          copy "Release\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g2a.dll"
-          copy "Release_AVX\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g2a_avx.dll"
-          copy "Release_AVX2\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g2a_avx2.dll"
-          copy "Release_G1\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g1.dll"
-          copy "Release_G1_AVX\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g1_avx.dll"
-          copy "Release_G1_AVX2\ddraw.dll" "${{env.RELEASE_DIR}}\GD3D11\Bin\g1_avx2.dll"
-          copy "Launcher\ddraw.dll" "${{env.RELEASE_DIR}}\"
-          cd "${{env.RELEASE_DIR}}"
-          7z a -tzip "..\${{env.RELEASE_DIR}}.zip" -r
-
-      - name: Create github release
-        run: |
-          gh release create ${{env.RELEASE_VERSION}} --notes-from-tag
-          echo "Ignore 'Validation Failed' results. Expected since only the first job that reaches this step can create the release."
-          exit 0
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Upload artifacts to github release
-        run: |
-          gh release upload ${{env.RELEASE_VERSION}} "${{env.RELEASE_DIR}}.zip"
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Create release
+        uses: ./.github/actions/deploy-artifact
+        with:
+          nightly: false

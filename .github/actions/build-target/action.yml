@@ -1,0 +1,39 @@
+name: Build
+description: Build the project with the specified target
+
+inputs:
+  target:
+    description: The target that should be build
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Set compiler flags
+      run: |
+        $shortHash = $Env:GITHUB_SHA.Substring(0, 9)
+        echo (-join("CL=/DVERSION_NUMBER#",'\"',"-git-${shortHash}",'\"')) >> $Env:GITHUB_ENV
+      shell: pwsh
+
+    - name: Restore NuGet packages
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: nuget restore .
+      shell: pwsh
+
+    - name: Build
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: msbuild /p:Configuration=${{ inputs.target }} .
+      shell: pwsh
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ inputs.target }}
+        path: ${{ inputs.target }}/ddraw.dll
+        retention-days: 2

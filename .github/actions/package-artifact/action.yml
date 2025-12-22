@@ -1,0 +1,81 @@
+name: Package artifact
+description: Packages the artifact
+
+inputs:
+  include-spacer-net:
+    description: Defines if nightly or regular release
+    required: true
+    type: boolean
+
+runs:
+  using: composite
+  steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v7
+
+    - name: Display structure of downloaded files
+      run: ls -R
+      shell: pwsh
+
+    - name: Copy (nightly) release files
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: |
+        mkdir "${{ env.RELEASE_DIR }}\GD3D11\Bin" -Force
+        Xcopy "D3D11Engine\Shaders\*" "${{ env.RELEASE_DIR }}\GD3D11\shaders\" /S /Y
+        Xcopy "blobs\Fonts" "${{ env.RELEASE_DIR }}\GD3D11\Fonts\" /S /Y
+        Xcopy "blobs\Meshes" "${{ env.RELEASE_DIR }}\GD3D11\Meshes\" /S /Y
+        Xcopy "blobs\Textures" "${{ env.RELEASE_DIR }}\GD3D11\Textures\" /S /Y
+        Xcopy "blobs\libs\*" "${{ env.RELEASE_DIR }}\" /S /Y
+        copy "blobs\bin\wine-d2d1.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\d2d1.dll
+        copy "Release\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g2a.dll"
+        copy "Release_AVX\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g2a_avx.dll"
+        copy "Release_AVX2\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g2a_avx2.dll"
+        copy "Release_G1\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g1.dll"
+        copy "Release_G1_AVX\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g1_avx.dll"
+        copy "Release_G1_AVX2\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g1_avx2.dll"
+        copy "Launcher\ddraw.dll" "${{ env.RELEASE_DIR }}\"
+      shell: pwsh
+
+    - name: Copy spacer_net release files
+      if: ${{ inputs.include-spacer-net }}
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: |
+        mkdir "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Bin" -Force
+        Xcopy "D3D11Engine\Shaders\*" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\shaders\" /S /Y
+        Xcopy "blobs\Fonts" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Fonts\" /S /Y
+        Xcopy "blobs\Meshes" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Meshes\" /S /Y
+        Xcopy "blobs\Textures" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Textures\" /S /Y
+        Xcopy "blobs\libs\*" "${{ env.SPACER_RELEASE_DIR }}\" /S /Y
+        copy "blobs\bin\wine-d2d1.dll" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Bin\d2d1.dll
+        copy "Spacer_NET\ddraw.dll" "${{ env.RELEASE_DIR }}"
+      shell: pwsh
+
+    - name: Upload (nightly) release artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ env.RELEASE_DIR }}
+        path: ${{ env.RELEASE_DIR }}
+        compression-level: 1
+
+    - name: Upload spacer_net artifacts
+      if: ${{ inputs.include-spacer-net }}
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ env.SPACER_RELEASE_DIR }}
+        path: ${{ env.SPACER_RELEASE_DIR }}
+        compression-level: 1
+
+    - name: Compress distribution
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: |
+        cd "${{ env.RELEASE_DIR }}"
+        7z a -tzip "..\${{ env.RELEASE_DIR }}.zip" -r
+      shell: pwsh
+
+    - name: Compress spacer_net distribution
+      if: ${{ inputs.include-spacer-net }}
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: |
+        cd "${{ env.SPACER_RELEASE_DIR }}"
+        7z a -tzip "..\${{ env.SPACER_RELEASE_DIR }}.zip" -r
+      shell: pwsh
