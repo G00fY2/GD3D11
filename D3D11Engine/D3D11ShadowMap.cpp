@@ -1,4 +1,4 @@
-#include "D3D11ShadowMap.h"
+ï»¿#include "D3D11ShadowMap.h"
 #include <algorithm>
 #include <cmath>
 #include <DirectXMath.h>
@@ -223,8 +223,8 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
 
     const float nearPlane = std::max( 1.0f, camera->GetNearPlane() );
     const float baseFarPlane = camera->GetFarPlane();
-    
-    // WorldShadowRangeScale als Multiplikator für die Schattenreichweite
+
+    // WorldShadowRangeScale als Multiplikator fÃ¼r die Schattenreichweite
     const float shadowRangeScale = Engine::GAPI->GetRendererState().RendererSettings.WorldShadowRangeScale;
     const float farPlane = baseFarPlane * std::max( 0.1f, shadowRangeScale );
     int numCascades = Engine::GAPI->GetRendererState().RendererSettings.NumShadowCascades;
@@ -265,7 +265,7 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
     // Indoor check
     static zTBspMode lastBspMode = zBSP_MODE_OUTDOOR;
 
-    // Array für alle Cascade-Matrizen
+    // Array fÃ¼r alle Cascade-Matrizen
     std::array<CameraReplacement, MAX_CSM_CASCADES> cascadeCRs = {};
 
     bool isOutdoor = Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_OUTDOOR;
@@ -285,7 +285,7 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
             lastBspMode = zBSP_MODE_INDOOR;
         }
 
-        // Setze Default für Indoor
+        // Setze Default fÃ¼r Indoor
         for ( size_t i = 0; i < numCascades; ++i ) {
             XMStoreFloat4x4( &cascadeCRs[i].ViewReplacement, XMMatrixTranspose( XMMatrixLookAtLH( p, lookAt, c_XM_Up ) ) );
             XMStoreFloat4x4( &cascadeCRs[i].ProjectionReplacement, XMMatrixTranspose( XMMatrixOrthographicLH(
@@ -298,37 +298,37 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
 
         // *** RENDER EACH CASCADE mit korrekter Matrix ***
         for ( size_t cascadeIdx = 0; cascadeIdx < numCascades; ++cascadeIdx ) {
-            // Cascade-spezifische Größe basierend auf Split-Verhältnis
+            // Cascade-spezifische GrÃ¶ÃŸe basierend auf Split-VerhÃ¤ltnis
             float splitRatio = splits[cascadeIdx + 1] / splits[numCascades];
             float cascadeSize = farPlane * std::sqrt( splitRatio );
             cascadeSize = std::max( cascadeSize, 500.0f );
 
-            // Berechne View-Matrix für diese Cascade
+            // Berechne View-Matrix fÃ¼r diese Cascade
             XMMATRIX lightView = XMMatrixLookAtLH( p, lookAt, c_XM_Up );
-            
+
             // *** TEXEL SNAPPING ***
-            // Berechne die Größe eines Texels in World-Space
+           // Berechne die GrÃ¶ÃŸe eines Texels in World-Space
             float texelSize = cascadeSize / static_cast<float>(GetSizeX());
-            
+
             // Transformiere die Shadow-Kamera-Position in Light-Space
             XMVECTOR lightSpaceOrigin = XMVector3Transform( WorldShadowCP, lightView );
             XMFLOAT3 lightSpaceOriginF;
             XMStoreFloat3( &lightSpaceOriginF, lightSpaceOrigin );
-            
+
             // Snappe auf Texel-Grenzen
             lightSpaceOriginF.x = std::floor( lightSpaceOriginF.x / texelSize ) * texelSize;
             lightSpaceOriginF.y = std::floor( lightSpaceOriginF.y / texelSize ) * texelSize;
-            
+
             // Berechne den Offset und wende ihn auf die View-Matrix an
             XMVECTOR snappedOrigin = XMLoadFloat3( &lightSpaceOriginF );
             XMVECTOR originalOrigin = XMVector3Transform( WorldShadowCP, lightView );
             XMVECTOR snapOffset = snappedOrigin - originalOrigin;
-            
+
             // Erstelle Offset-Matrix
             XMFLOAT3 snapOffsetF;
             XMStoreFloat3( &snapOffsetF, snapOffset );
             XMMATRIX offsetMatrix = XMMatrixTranslation( snapOffsetF.x, snapOffsetF.y, 0.0f );
-            
+
             // Kombiniere View mit Offset
             XMMATRIX snappedLightView = XMMatrixMultiply( lightView, offsetMatrix );
 
@@ -344,14 +344,19 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
             // Render diese Cascade using the new CascadedShadowMap
             Engine::GAPI->SetCameraReplacementPtr( &cascadeCRs[cascadeIdx] );
 
-            // Get DSV from CascadedShadowMap
-            Microsoft::WRL::ComPtr<ID3D11DepthStencilView> cascadeDSV = GetCascadeDSV( static_cast<UINT>( cascadeIdx ) );
+            // Build render params
+            RenderShadowmapsParams renderParams = {};
+            XMStoreFloat3( &renderParams.CameraPosition, WorldShadowCP );
+            renderParams.Target = nullptr;
+            renderParams.CullFront = true;
+            renderParams.DontCull = false;
+            renderParams.DSVOverwrite = GetCascadeDSV( static_cast<UINT>(cascadeIdx) );
+            renderParams.DebugRTV = nullptr;
+            renderParams.CascadeIndex = static_cast<int>(cascadeIdx);
+            renderParams.CascadeSplits = splits;
+            renderParams.CascadeCameraReplacements = &cascadeCRs;
 
-            RenderShadowmaps( WorldShadowCP, nullptr, true, false,
-                cascadeDSV,
-                nullptr,
-                cascadeIdx,
-                splits);
+            RenderShadowmaps( renderParams );
 
             Engine::GAPI->SetCameraReplacementPtr( nullptr );
         }
@@ -577,8 +582,8 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
         scb.SQ_ShadowView[cascadeIdx] = cascadeCRs[cascadeIdx].ViewReplacement;
         scb.SQ_ShadowProj[cascadeIdx] = cascadeCRs[cascadeIdx].ProjectionReplacement;
     }
-    
-    scb.SQ_ShadowmapSize = static_cast<float>(this->GetSizeX());
+
+    scb.SQ_ShadowmapSize = static_cast<float>( this->GetSizeX() );
 
     // Get rain matrix
     scb.SQ_RainView = graphicsEngine->Effects->GetRainShadowmapCameraRepl().ViewReplacement;
@@ -645,21 +650,16 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
 
 
 /** Renders the shadowmaps for the sun */
-void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
-    RenderToDepthStencilBuffer* target,
-    bool cullFront, bool dontCull,
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsvOverwrite,
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> debugRTV,
-    int cascadeIndex,
-    const std::vector<float>& cascadeSplits) {
+void D3D11ShadowMap::RenderShadowmaps( const RenderShadowmapsParams& params ) {
 
     // We now assume that "target" always is something else than the world shadowmap
-    UINT targetSize = !target
+    UINT targetSize = !params.Target
         ? m_cascadedShadowMap->GetSize()
-        : target->GetSizeX();
+        : params.Target->GetSizeX();
 
-    if ( target && !dsvOverwrite.Get() ) dsvOverwrite = target->GetDepthStencilView().Get();
-    const bool isNotWorldShadowMap = target != nullptr;
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsvOverwrite = params.DSVOverwrite;
+    if ( params.Target && !dsvOverwrite.Get() ) dsvOverwrite = params.Target->GetDepthStencilView().Get();
+    const bool isNotWorldShadowMap = params.Target != nullptr;
 
     // todo: remove this dependency at some point
     auto graphicsEngine = (D3D11GraphicsEngine*)Engine::GraphicsEngine;
@@ -688,11 +688,11 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv;
     m_context->PSSetShaderResources( 3, 1, srv.GetAddressOf() );
 
-    if ( !debugRTV.Get() ) {
+    if ( !params.DebugRTV.Get() ) {
         m_context->OMSetRenderTargets( 0, nullptr, dsvOverwrite.Get() );
         Engine::GAPI->GetRendererState().BlendState.ColorWritesEnabled = false;
     } else {
-        m_context->OMSetRenderTargets( 1, debugRTV.GetAddressOf(), dsvOverwrite.Get() );
+        m_context->OMSetRenderTargets( 1, params.DebugRTV.GetAddressOf(), dsvOverwrite.Get() );
         Engine::GAPI->GetRendererState().BlendState.ColorWritesEnabled = true;
     }
     Engine::GAPI->GetRendererState().BlendState.SetDirty();
@@ -709,20 +709,59 @@ void XM_CALLCONV D3D11ShadowMap::RenderShadowmaps( FXMVECTOR cameraPosition,
         // Draw the world mesh without textures
         const auto oldRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius;
         const auto oldVobRadius = Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius;
-        if ( cascadeIndex >= 0 ) {
-            auto cascadeFar = cascadeSplits[cascadeIndex + 1];
-            Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius = std::min(
-                oldVobRadius, cascadeFar * 1.2f );
-        }
-        
-        Frustum f;
-        f.BuildOrthographic(
-            XMMatrixTranspose( Engine::GAPI->GetViewMatrixXM()),
-            XMMatrixTranspose( XMLoadFloat4x4( &Engine::GAPI->GetProjectionMatrix() ) ),
-            0,
-            0 );
 
-        graphicsEngine->DrawWorldAroundForWorldShadow( cameraPosition, 2, cullFront, dontCull, f );
+        // Build frustum from the light's view/projection matrices (cascade shadow map perspective)
+        // The view/projection matrices are already set via CameraReplacement before this call
+        // We use the light-space matrices to build the frustum for proper CSM culling
+        Frustum f = {};
+
+        // Calculate expansion values based on cascade size
+        // Shadow casters behind the camera (in light direction) need to be included
+        // Expand more for larger cascades to catch distant shadow casters
+        float expandBack = 0.0f;
+        float expandSides = 0.0f;
+        if ( Engine::GAPI->GetRendererState().RendererSettings.IsShadowFrustumCullingEnabled() ) {
+            const GothicRendererSettings::E_ShadowFrustumCulling cullingMode = Engine::GAPI->GetRendererState().RendererSettings.ShadowFrustumCullingMode;
+
+            // Get the cascade's view and projection matrices
+            // If CascadeCameraReplacements is provided, use it directly; otherwise fall back to current camera replacement
+            XMMATRIX lightView, lightProj;
+
+            if ( params.CascadeCameraReplacements
+                && params.CascadeIndex >= 0
+                && params.CascadeIndex < MAX_CSM_CASCADES
+                && params.CascadeSplits.size() > 1 ) {
+                // Use the provided cascade camera replacement (already transposed for GPU, so transpose back)
+
+                const auto cullingCascadeIndex = cullingMode == GothicRendererSettings::E_ShadowFrustumCulling::SHD_FRUSTUM_CULLING_CONSERVATIVE 
+                    ? params.CascadeSplits.size() > 2
+                        ? params.CascadeSplits.size() - 2 // second last cascade if we have more than 1
+                        : params.CascadeIndex // not more than 2 ? then use current as thats the last
+                    : params.CascadeIndex; // Use current cascade for aggressive mode
+                const CameraReplacement& cr = params.CascadeCameraReplacements->at( cullingCascadeIndex );
+                lightView = XMMatrixTranspose( XMLoadFloat4x4( &cr.ViewReplacement ) );
+                lightProj = XMMatrixTranspose( XMLoadFloat4x4( &cr.ProjectionReplacement ) );
+            } else {
+                // Fall back to current camera replacement (already transposed, so transpose back)
+                lightView = XMMatrixTranspose( Engine::GAPI->GetViewMatrixXM() );
+                lightProj = XMMatrixTranspose( XMLoadFloat4x4( &Engine::GAPI->GetProjectionMatrix() ) );
+            }
+
+            if ( params.CascadeIndex >= 0 && params.CascadeIndex < static_cast<int>( params.CascadeSplits.size() ) - 1 ) {
+                const float cascadeSize = params.CascadeSplits[params.CascadeIndex + 1];
+
+                // When SHD_FRUSTUM_CULLING_AGGRESSIVE is used, the lightView/proj matrices are from the current cascade
+                // else when CONSERVATIVE, they are from the (second-)last cascade
+
+                const int inverseCount = (params.CascadeSplits.size() - params.CascadeIndex);
+                expandBack = cascadeSize * (0.5f * inverseCount);
+                expandSides = cascadeSize * (0.1f * inverseCount);
+            }
+            f.BuildOrthographic( lightView, lightProj, expandBack, expandSides );
+        }
+
+        XMVECTOR cameraPosition = XMLoadFloat3( &params.CameraPosition );
+        graphicsEngine->DrawWorldAroundForWorldShadow( cameraPosition, 2, params.CullFront, params.DontCull, f );
 
         Engine::GAPI->GetRendererState().RendererSettings.OutdoorSmallVobDrawRadius = oldRadius;
         Engine::GAPI->GetRendererState().RendererSettings.OutdoorVobDrawRadius = oldVobRadius;

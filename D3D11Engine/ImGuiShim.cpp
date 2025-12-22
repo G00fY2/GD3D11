@@ -738,6 +738,20 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
                 Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows );
             }
 
+            ImGui::BeginDisabled( settings.NumShadowCascades <= 1 );
+            {
+                static std::vector<std::pair<const char*, GothicRendererSettings::E_ShadowFrustumCulling>> shadowFrustumCullingModes = {
+                    {"Disabled", GothicRendererSettings::E_ShadowFrustumCulling::SHD_FRUSTUM_CULLING_DISABLED},
+                    {"Conservative", GothicRendererSettings::E_ShadowFrustumCulling::SHD_FRUSTUM_CULLING_CONSERVATIVE},
+                    {"Aggressive", GothicRendererSettings::E_ShadowFrustumCulling::SHD_FRUSTUM_CULLING_AGGRESSIVE},
+                };
+                if ( ImComboBox( "Shadow Frustum Culling Mode", shadowFrustumCullingModes, &settings.ShadowFrustumCullingMode ) ) {
+                    ImGui::EndCombo();
+                }
+                ImGui::SetItemTooltip( "Improve performance by ignoring non-visible models" );
+                ImGui::EndDisabled();
+            }
+
             if ( ImGui::Checkbox( "Shadow filtering", &settings.EnableSoftShadows ) ) {
                 Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows );
             }

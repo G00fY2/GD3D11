@@ -4775,6 +4775,7 @@ XRESULT GothicAPI::SaveMenuSettings( const std::string& file ) {
     WritePrivateProfileStringA( "Shadows", "WorldShadowRangeScale", std::to_string( s.WorldShadowRangeScale ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "NumShadowCascades", std::to_string( s.NumShadowCascades ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "ShadowCascadePCFLimit", std::to_string( s.ShadowCascadePCFLimit ).c_str(), ini.c_str() );
+    WritePrivateProfileStringA( "Shadows", "ShadowFrustumCullingMode", std::to_string( static_cast<int>(s.ShadowFrustumCullingMode) ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "PointlightShadows", std::to_string( s.EnablePointlightShadows ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "EnableDynamicLighting", std::to_string( s.EnableDynamicLighting ? TRUE : FALSE ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "SmoothCameraUpdate", std::to_string( s.SmoothShadowCameraUpdate ? TRUE : FALSE ).c_str(), ini.c_str() );
@@ -4858,6 +4859,7 @@ XRESULT GothicAPI::LoadMenuSettings( const std::string& file ) {
         s.WorldShadowRangeScale = GetPrivateProfileFloatA( "Shadows", "WorldShadowRangeScale", defaultRendererSettings.WorldShadowRangeScale, ini );
         s.NumShadowCascades = GetPrivateProfileIntA( "Shadows", "NumShadowCascades", defaultRendererSettings.NumShadowCascades, ini.c_str() );
         s.ShadowCascadePCFLimit = GetPrivateProfileIntA( "Shadows", "ShadowCascadePCFLimit", defaultRendererSettings.ShadowCascadePCFLimit, ini.c_str() );
+        s.ShadowFrustumCullingMode = static_cast<GothicRendererSettings::E_ShadowFrustumCulling>(GetPrivateProfileIntA( "Shadows", "ShadowFrustumCullingMode", defaultRendererSettings.ShadowFrustumCullingMode, ini.c_str() ));
         s.EnableDynamicLighting = GetPrivateProfileBoolA( "Shadows", "EnableDynamicLighting", defaultRendererSettings.EnableDynamicLighting, ini );
         s.SmoothShadowCameraUpdate = GetPrivateProfileBoolA( "Shadows", "SmoothCameraUpdate", defaultRendererSettings.SmoothShadowCameraUpdate, ini );
         s.ShadowStrength = GetPrivateProfileFloatA( "Shadows", "ShadowStrength", defaultRendererSettings.ShadowStrength, ini );

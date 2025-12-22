@@ -4405,6 +4405,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAroundForWorldShadow( FXMVECTOR p
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawSkeletalMeshes ) {
         auto indorRadiusSq = Engine::GAPI->GetRendererState().RendererSettings.SkeletalMeshDrawRadius
             * Engine::GAPI->GetRendererState().RendererSettings.SkeletalMeshDrawRadius;
+
+        auto enableCulling = Engine::GAPI->GetRendererState().RendererSettings.IsShadowFrustumCullingEnabled();
+
         // Draw skeletal meshes
         for ( auto const& skeletalMeshVob : Engine::GAPI->GetSkeletalMeshVobs() ) {
             if ( !skeletalMeshVob->VisualInfo ) continue;
@@ -4414,10 +4417,25 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAroundForWorldShadow( FXMVECTOR p
                 continue;
             }
             
+            XMVECTOR vobPos = skeletalMeshVob->Vob->GetPositionWorldXM();
             float distSq;
-            XMStoreFloat( &distSq, XMVector3LengthSq( skeletalMeshVob->Vob->GetPositionWorldXM() - position ) );
-            if ( distSq > indorRadiusSq )
+            XMStoreFloat( &distSq, XMVector3LengthSq( vobPos - position ) );
+            if ( distSq > indorRadiusSq ) {
                 continue;  // Skip out of range
+            }
+
+            if ( enableCulling ) {
+                // Frustum culling using a bounding sphere
+                // Use the mesh size as radius, centered at the vob position
+                float radius = skeletalMeshVob->VisualInfo->MeshSize * 0.5f;
+                XMFLOAT3 center;
+                XMStoreFloat3( &center, vobPos );
+                BoundingSphere vobSphere( center, radius );
+
+                if ( !frustum.Intersects( vobSphere ) ) {
+                    continue;  // Skip if not visible in the shadow frustum
+                }
+            }
 
             Engine::GAPI->DrawSkeletalMeshVob( skeletalMeshVob, FLT_MAX );
         }
@@ -5207,7 +5225,19 @@ void XM_CALLCONV D3D11GraphicsEngine::RenderShadowmaps( FXMVECTOR cameraPosition
     bool cullFront, bool dontCull,
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsvOverwrite,
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> debugRTV ) {
-    ShadowMaps->RenderShadowmaps( cameraPosition, target, cullFront, dontCull, dsvOverwrite, debugRTV );
+
+    RenderShadowmapsParams renderParams = {};
+    XMStoreFloat3( &renderParams.CameraPosition, cameraPosition );
+    renderParams.Target = target;
+    renderParams.CullFront = cullFront;
+    renderParams.DontCull = dontCull;
+    renderParams.DSVOverwrite = dsvOverwrite;
+    renderParams.DebugRTV = debugRTV;
+    renderParams.CascadeIndex = -1;
+    renderParams.CascadeSplits = std::vector<float>();
+    renderParams.CascadeCameraReplacements = nullptr;
+
+    ShadowMaps->RenderShadowmaps( renderParams );
 }
 
 /** Draws a fullscreenquad, copying the given texture to the viewport */
