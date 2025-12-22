@@ -1120,6 +1120,9 @@
       <Filter>Engine\D3D11</Filter>
     </ClCompile>
     <ClCompile Include="D3D11ShadowMap.cpp" />
+    <ClCompile Include="Frustum.h">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">

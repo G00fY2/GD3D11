@@ -4,6 +4,7 @@
 #include <wrl/client.h>
 #include <memory>
 #include <vector>
+#include <array>
 #include <DirectXMath.h>
 #include "RenderToTextureBuffer.h"
 #include "D3D11CascadedShadowMapBuffer.h"
@@ -13,6 +14,7 @@
 #include "Engine.h"
 #include "GothicAPI.h"
 #include "GSky.h"
+#include "Frustum.h"
 
 struct RenderToDepthStencilBuffer;
 struct RenderToTextureBuffer;
@@ -33,6 +35,35 @@ enum PS_DS_AtmosphericScatteringSlots {
 };
 
 const int POINTLIGHT_SHADOWMAP_SIZE = 64;
+
+/** Parameters for rendering shadow maps */
+struct RenderShadowmapsParams {
+    // Camera position for shadow rendering
+    DirectX::XMFLOAT3 CameraPosition = {};
+    
+    // Optional target depth stencil buffer (nullptr = use world shadowmap)
+    RenderToDepthStencilBuffer* Target = nullptr;
+    
+    // Culling options
+    bool CullFront = true;
+    bool DontCull = false;
+    
+    // Optional DSV override
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DSVOverwrite = nullptr;
+    
+    // Optional debug RTV for visualization
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> DebugRTV = nullptr;
+    
+    // Cascade index (-1 = not a cascade render)
+    int CascadeIndex = -1;
+    
+    // Cascade split distances (size = numCascades + 1)
+    std::vector<float> CascadeSplits = {};
+    
+    // Optional array of camera replacements for all cascades
+    // Used to build frustums for culling without requiring CameraReplacement to be set externally
+    const std::array<CameraReplacement, MAX_CSM_CASCADES>* CascadeCameraReplacements = nullptr;
+};
 
 class D3D11ShadowMap {
 public:
@@ -74,12 +105,12 @@ public:
     //  lambda in [0,1] interpolates between logarithmic (1.0) and uniform (0.0) splits.
     static std::vector<float> ComputeCascadeSplits( float nearPlane, float farPlane, size_t numCascades, float lambda = 0.95f );
 
-    /** Renders the shadowmaps for the sun */
-    void XM_CALLCONV RenderShadowmaps( FXMVECTOR cameraPosition, RenderToDepthStencilBuffer* target = nullptr, bool cullFront = true, bool dontCull = false, Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsvOverwrite = nullptr, Microsoft::WRL::ComPtr<ID3D11RenderTargetView> debugRTV = nullptr, float cascadeFar = 0.0f );
+    /** Renders the shadowmaps for the sun using parameter struct */
+    void RenderShadowmaps( const RenderShadowmapsParams& params );
 
     XRESULT DrawLighting( std::vector<VobLightInfo*>& lights );
 
-    void XM_CALLCONV RenderShadowCube( FXMVECTOR position,
+    void XM_CALLCONV RenderShadowCube( DirectX::FXMVECTOR position,
         float range,
         const RenderToDepthStencilBuffer& targetCube,
         Microsoft::WRL::ComPtr<ID3D11DepthStencilView> face,

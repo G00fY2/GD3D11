@@ -726,6 +726,9 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
         ImGui::Checkbox( "Enable Shadows", &settings.EnableShadows );
         ImGui::BeginDisabled( !settings.EnableShadows );
         {
+            ImGui::Checkbox( "Fast Shadows", &settings.FastShadows );
+            ImGui::SetItemTooltip( "Renders only static world meshes" );
+
             if ( ImComboBoxC( "ShadowmapSize", shadowMapSizes, (int*)(&settings.ShadowMapSize), []() { Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows ); } ) ) {
                 ImGui::EndCombo();
             }
@@ -733,6 +736,20 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
             if ( ImGui::InputInt( "Shadow Cascade count", &settings.NumShadowCascades, 1, 1 ) ) {
                 settings.NumShadowCascades = std::clamp( settings.NumShadowCascades, 1, MAX_CSM_CASCADES );
                 Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows );
+            }
+
+            ImGui::BeginDisabled( settings.NumShadowCascades <= 1 );
+            {
+                static std::vector<std::pair<const char*, GothicRendererSettings::E_ShadowFrustumCulling>> shadowFrustumCullingModes = {
+                    {"Disabled", GothicRendererSettings::E_ShadowFrustumCulling::SHD_FRUSTUM_CULLING_DISABLED},
+                    {"Conservative", GothicRendererSettings::E_ShadowFrustumCulling::SHD_FRUSTUM_CULLING_CONSERVATIVE},
+                    {"Aggressive", GothicRendererSettings::E_ShadowFrustumCulling::SHD_FRUSTUM_CULLING_AGGRESSIVE},
+                };
+                if ( ImComboBox( "Shadow Frustum Culling Mode", shadowFrustumCullingModes, &settings.ShadowFrustumCullingMode ) ) {
+                    ImGui::EndCombo();
+                }
+                ImGui::SetItemTooltip( "Improve performance by ignoring non-visible models" );
+                ImGui::EndDisabled();
             }
 
             if ( ImGui::Checkbox( "Shadow filtering", &settings.EnableSoftShadows ) ) {

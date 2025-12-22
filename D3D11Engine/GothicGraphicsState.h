@@ -517,6 +517,11 @@ struct GothicRendererSettings {
         WIND_QUALITY_ADVANCED,
     };
 
+    enum E_ShadowFrustumCulling {
+        SHD_FRUSTUM_CULLING_DISABLED = 0,
+        SHD_FRUSTUM_CULLING_AGGRESSIVE = 1,
+        SHD_FRUSTUM_CULLING_CONSERVATIVE = 2,
+    };
 
     /** Sets the default values for this struct */
     void SetDefault() {
@@ -603,6 +608,7 @@ struct GothicRendererSettings {
         WorldShadowRangeScale = 1.0f;
         NumShadowCascades = 2; // looks OK and performance friendly
         ShadowCascadePCFLimit = 1;
+        ShadowFrustumCullingMode = E_ShadowFrustumCulling::SHD_FRUSTUM_CULLING_DISABLED;
 
         ShadowStrength = 0.40f;
         ShadowAOStrength = 0.50f;
@@ -712,6 +718,8 @@ struct GothicRendererSettings {
 
     void DisableEverything() {}
 
+    bool IsShadowFrustumCullingEnabled() { return ShadowFrustumCullingMode != SHD_FRUSTUM_CULLING_DISABLED && NumShadowCascades > 1; }
+
     /** Rendering options */
     int FpsLimit;
     bool DrawVOBs;
@@ -741,6 +749,7 @@ struct GothicRendererSettings {
     bool EnableSoftShadows;
     bool EnableShadows;
     int ShadowCascadePCFLimit;
+    E_ShadowFrustumCulling ShadowFrustumCullingMode;
     bool DrawShadowGeometry;
     bool VegetationAlphaToCoverage;
     bool DisableWatermark;

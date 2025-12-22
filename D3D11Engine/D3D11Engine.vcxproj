@@ -1132,6 +1132,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="DLLMain.cpp" />
     <ClCompile Include="EditorLinePrimitive.cpp" />
     <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="Frustum.h" />
     <ClCompile Include="GInventory.cpp" />
     <ClCompile Include="GMesh.cpp" />
     <ClCompile Include="GMeshSimple.cpp" />
