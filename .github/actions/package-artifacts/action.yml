@@ -26,14 +26,14 @@ runs:
         Xcopy "blobs\Meshes" "${{ env.RELEASE_DIR }}\GD3D11\Meshes\" /S /Y
         Xcopy "blobs\Textures" "${{ env.RELEASE_DIR }}\GD3D11\Textures\" /S /Y
         Xcopy "blobs\libs\*" "${{ env.RELEASE_DIR }}\" /S /Y
-        copy "blobs\bin\wine-d2d1.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\d2d1.dll
+        copy "blobs\bin\wine-d2d1.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\d2d1.dll"
         copy "Release\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g2a.dll"
         copy "Release_AVX\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g2a_avx.dll"
         copy "Release_AVX2\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g2a_avx2.dll"
         copy "Release_G1\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g1.dll"
         copy "Release_G1_AVX\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g1_avx.dll"
         copy "Release_G1_AVX2\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g1_avx2.dll"
-        copy "Launcher\ddraw.dll" "${{ env.RELEASE_DIR }}\"
+        copy "Launcher\ddraw.dll" "${{ env.RELEASE_DIR }}"
       shell: pwsh
 
     - name: Copy spacer_net release files
@@ -46,8 +46,8 @@ runs:
         Xcopy "blobs\Meshes" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Meshes\" /S /Y
         Xcopy "blobs\Textures" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Textures\" /S /Y
         Xcopy "blobs\libs\*" "${{ env.SPACER_RELEASE_DIR }}\" /S /Y
-        copy "blobs\bin\wine-d2d1.dll" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Bin\d2d1.dll
-        copy "Spacer_NET\ddraw.dll" "${{ env.RELEASE_DIR }}"
+        copy "blobs\bin\wine-d2d1.dll" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Bin\d2d1.dll"
+        copy "Spacer_NET\ddraw.dll" "${{ env.SPACER_RELEASE_DIR }}"
       shell: pwsh
 
     - name: Upload (nightly) release artifacts
