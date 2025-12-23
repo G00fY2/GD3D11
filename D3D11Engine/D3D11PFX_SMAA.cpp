@@ -51,7 +51,24 @@ void D3D11PFX_SMAA::RenderPostFX( const Microsoft::WRL::ComPtr<ID3D11ShaderResou
     engine->GetContext()->OMSetRenderTargets( 1, OldRTV.GetAddressOf(), nullptr );
     engine->GetContext()->PSSetShaderResources( 0, 1, TempRTV.GetShaderResView().GetAddressOf() );
 
-    FxRenderer->CopyTextureToRTV( TempRTV.GetShaderResView(), OldRTV );
+
+    if ( Engine::GAPI->GetRendererState().RendererSettings.SharpenFactor > 0.0f ) {
+        auto sharpenPS = engine->GetShaderManager().GetPShader( "PS_PFX_Sharpen" );
+        sharpenPS->Apply();
+
+        GammaCorrectConstantBuffer gcb;
+        gcb.G_Gamma = Engine::GAPI->GetGammaValue();
+        gcb.G_Brightness = Engine::GAPI->GetBrightnessValue();
+        gcb.G_TextureSize = engine->GetResolution();
+        gcb.G_SharpenStrength = Engine::GAPI->GetRendererState().RendererSettings.SharpenFactor;
+
+        sharpenPS->GetConstantBuffer()[0]->UpdateBuffer( &gcb );
+        sharpenPS->GetConstantBuffer()[0]->BindToPixelShader( 0 );
+
+        FxRenderer->CopyTextureToRTV( TempRTV.GetShaderResView(), OldRTV, INT2( 0, 0 ), true );
+    } else {
+        FxRenderer->CopyTextureToRTV( TempRTV.GetShaderResView(), OldRTV );
+    }
 
     engine->GetContext()->OMSetRenderTargets( 1, OldRTV.GetAddressOf(), OldDSV.Get() );
 

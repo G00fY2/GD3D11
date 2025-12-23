@@ -2544,15 +2544,20 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     Engine::GAPI->GetRendererState().RasterizerState.SetDirty();
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawSky ) {
+        auto _ = RecordGraphicsEvent( L"Draw Sky" );
         // Draw back of the sky if outdoor
         DrawSky();
     }
 
     // Draw world
-    Engine::GAPI->DrawWorldMeshNaive();
+    {
+        auto _ = RecordGraphicsEvent( L"Draw WorldMesh Naive" );
+        Engine::GAPI->DrawWorldMeshNaive();
+    }
 
     // Draw HBAO
     if ( Engine::GAPI->GetRendererState().RendererSettings.HbaoSettings.Enabled ) {
+        auto _ = RecordGraphicsEvent( L"Draw HBAO" );
         PfxRenderer->DrawHBAO( HDRBackBuffer->GetRenderTargetView() );
         GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
     }
@@ -5374,14 +5379,14 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
             // Show settings
             if ( hImgui->AdvancedSettingsVisible ) {
                 hImgui->AdvancedSettingsVisible = false;
-                hImgui->IsActive = false;
-            } else {
-                hImgui->SettingsVisible = !hImgui->SettingsVisible;
-                hImgui->IsActive = hImgui->SettingsVisible;
             }
+            hImgui->SettingsVisible = !hImgui->SettingsVisible;
+            auto oldIsActive = hImgui->IsActive;
+            hImgui->IsActive = hImgui->SettingsVisible || hImgui->AdvancedSettingsVisible;
 
-            // Free mouse
-            Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
+            if ( oldIsActive != hImgui->IsActive ) {
+                Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
+            }
         }
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_ToggleAdvancedSettings ) {
@@ -5389,14 +5394,14 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
             // Show settings
             if ( hImgui->SettingsVisible ) {
                 hImgui->SettingsVisible = false;
-                hImgui->IsActive = hImgui->SettingsVisible;
-            } else {
-                hImgui->AdvancedSettingsVisible = !hImgui->AdvancedSettingsVisible;
-                hImgui->IsActive = hImgui->AdvancedSettingsVisible;
             }
+            hImgui->AdvancedSettingsVisible = !hImgui->AdvancedSettingsVisible;
+            auto oldIsActive = hImgui->IsActive;
+            hImgui->IsActive = hImgui->SettingsVisible || hImgui->AdvancedSettingsVisible;
 
-            // Free mouse
-            Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
+            if ( oldIsActive != hImgui->IsActive ) {
+                Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
+            }
         }
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_ClosedSettings ) {
