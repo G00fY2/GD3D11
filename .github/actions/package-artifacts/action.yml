@@ -3,9 +3,8 @@ description: Packages the artifact
 
 inputs:
   include-spacer-net:
-    description: Defines if nightly or regular release
+    description: Defines if spacer_net artifact should be included (case sensitive String representation of Boolean)
     required: true
-    type: boolean
 
 runs:
   using: composite
@@ -37,7 +36,7 @@ runs:
       shell: pwsh
 
     - name: Copy spacer_net release files
-      if: ${{ inputs.include-spacer-net }}
+      if: ${{ inputs.include-spacer-net == 'true' }}
       working-directory: ${{ env.GITHUB_WORKSPACE }}
       run: |
         mkdir "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Bin" -Force
@@ -58,7 +57,7 @@ runs:
         compression-level: 1
 
     - name: Upload spacer_net artifacts
-      if: ${{ inputs.include-spacer-net }}
+      if: ${{ inputs.include-spacer-net == 'true' }}
       uses: actions/upload-artifact@v6
       with:
         name: ${{ env.SPACER_RELEASE_DIR }}
@@ -73,7 +72,7 @@ runs:
       shell: pwsh
 
     - name: Compress spacer_net distribution
-      if: ${{ inputs.include-spacer-net }}
+      if: ${{ inputs.include-spacer-net == 'true' }}
       working-directory: ${{ env.GITHUB_WORKSPACE }}
       run: |
         cd "${{ env.SPACER_RELEASE_DIR }}"

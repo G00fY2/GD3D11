@@ -6,15 +6,14 @@ inputs:
     description: GitHub token
     required: true
   nightly:
-    description: Defines if nightly or regular release
+    description: Defines if nightly or regular release (case sensitive String representation of Boolean)
     required: true
-    type: boolean
 
 runs:
   using: composite
   steps:
     - name: Delete old nightly
-      if: ${{ inputs.nightly }}
+      if: ${{ inputs.nightly == 'true' }}
       # always succeed to avoid failures when nightly release does not exist
       run: |
         gh release delete nightly --yes --cleanup-tag
@@ -24,7 +23,7 @@ runs:
       shell: pwsh
 
     - name: Create nightly release
-      if: ${{ inputs.nightly }}
+      if: ${{ inputs.nightly == 'true' }}
       uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
       with:
         allowUpdates: true
@@ -37,7 +36,7 @@ runs:
         token: ${{ inputs.token }}
 
     - name: Create regular release
-      if: ${{ ! inputs.nightly }}
+      if: ${{ inputs.nightly != 'true' }}
       uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
       with:
         allowUpdates: true

@@ -3,15 +3,14 @@ description: Sets up the environment vars required for packaging and releasing
 
 inputs:
   nightly:
-    description: Defines if nightly or regular release
+    description: Defines if nightly or regular release (case sensitive String representation of Boolean)
     required: true
-    type: boolean
 
 runs:
   using: composite
   steps:
     - name: Set nightly env vars
-      if: ${{ inputs.nightly }}
+      if: ${{ inputs.nightly == 'true' }}
       run: |
         $shortHash = $Env:GITHUB_SHA.Substring(0, 9)
         $dirName = "GD3D11-git-$shortHash"
@@ -23,7 +22,7 @@ runs:
       shell: pwsh
 
     - name: Set release env vars
-      if: ${{ ! inputs.nightly }}
+      if: ${{ inputs.nightly != 'true' }}
       run: |
         $tagName = $Env:GITHUB_REF -replace 'refs/tags/', ''
         $dirName = "GD3D11-${tagName}"
