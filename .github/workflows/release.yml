@@ -45,3 +45,4 @@ jobs:
         uses: ./.github/actions/deploy-artifacts
         with:
           nightly: false
+          token: ${{ secrets.GITHUB_TOKEN }}
