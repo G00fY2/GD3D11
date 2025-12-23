@@ -556,11 +556,17 @@ void ImGuiShim::RenderSettingsWindow()
 void RenderAdvancedColumn1( GothicRendererSettings& settings, GothicAPI* gapi ) {
     if ( ImGui::Begin( "Sky", nullptr, ImGuiWindowFlags_NoCollapse ) ) {
 
-        ImGui::Checkbox( "GodRays", &settings.EnableGodRays );
-        ImGui::DragFloat( "GodRayDecay", &settings.GodRayDecay, 0.01f );
-        ImGui::DragFloat( "GodRayWeight", &settings.GodRayWeight, 0.01f );
-        ImGui::ColorEdit3( "GodRayColorMod", &settings.GodRayColorMod.x );
-        ImGui::DragFloat( "GodRayDensity", &settings.GodRayDensity, 0.01f );
+        ImGui::SeparatorText( "GodRays" );
+        {
+            ImGui::PushID( "GodRaysSettings" );
+            ImGui::Checkbox( "GodRays", &settings.EnableGodRays );
+            ImGui::DragFloat( "GodRayDecay", &settings.GodRayDecay, 0.01f );
+            ImGui::DragFloat( "GodRayWeight", &settings.GodRayWeight, 0.01f );
+            ImGui::ColorEdit3( "GodRayColorMod", &settings.GodRayColorMod.x );
+            ImGui::DragFloat( "GodRayDensity", &settings.GodRayDensity, 0.01f );
+            ImGui::PopID();
+        }
+
         ImGui::SeparatorText( "SkySettings" );
         auto& atmosphereSettings = gapi->GetSky()->GetAtmoshpereSettings();
         ImGui::DragFloat( "G", &atmosphereSettings.G, 0.01f );
@@ -671,13 +677,6 @@ void RenderAdvancedColumn2( GothicRendererSettings& settings, GothicAPI* gapi ) 
             ImGui::EndCombo();
         }
         ImGui::EndDisabled();
-
-        ImGui::Checkbox( "SMAA", &settings.EnableSMAA );
-        ImGui::BeginDisabled( !settings.EnableSMAA );
-        {
-            ImGui::DragFloat( "Sharpen", &settings.SharpenFactor, 0.01f );
-            ImGui::EndDisabled();
-        }
 
         ImGui::Checkbox( "DynamicLighting", &settings.EnableDynamicLighting );
         ImGui::BeginDisabled( !settings.EnableDynamicLighting );
@@ -858,31 +857,50 @@ void RenderAdvancedColumn3( GothicRendererSettings& settings, GothicAPI* gapi ) 
 }
 
 void RenderAdvancedColumn4( GothicRendererSettings& settings, GothicAPI* gapi ) {
-    if ( ImGui::Begin( "HBAO+", nullptr, ImGuiWindowFlags_NoCollapse ) ) {
-        ImGui::Checkbox( "Enable HBAO+", &settings.HbaoSettings.Enabled );
-        ImGui::DragFloat( "Radius", &settings.HbaoSettings.Radius, 0.01f );
-        ImGui::DragFloat( "MetersToViewSpaceUnits", &settings.HbaoSettings.MetersToViewSpaceUnits, 0.01f );
-        if ( ImGui::DragFloat( "PowerExponent", &settings.HbaoSettings.PowerExponent, 0.01f ) ) {
-            settings.HbaoSettings.PowerExponent = std::clamp( settings.HbaoSettings.PowerExponent, 1.0f, 4.0f );
-        }
-        if ( ImGui::DragFloat( "Bias", &settings.HbaoSettings.Bias, 0.01f ) ) {
-            settings.HbaoSettings.Bias = std::clamp( settings.HbaoSettings.Bias, 0.0f, 0.5f );
-        }
-        ImGui::Checkbox( "Enable Blur", &settings.HbaoSettings.EnableBlur );
-        static std::vector<std::pair<const char*, int>> ssaoRadi = { {"2", 0}, {"4", 1} };
-        if ( ImComboBox( "SSAO radius", ssaoRadi, &settings.HbaoSettings.SsaoBlurRadius ) ) {
-            ImGui::EndCombo();
-        }
-        ImGui::DragFloat( "BlurSharpness", &settings.HbaoSettings.BlurSharpness, 0.01f );
-        static std::vector<std::pair<const char*, int>> blendMode = { {"Replace", 0}, {"Multiply", 1} };
-        if ( ImComboBox( "BlendMode", blendMode, &settings.HbaoSettings.BlendMode ) ) {
-            ImGui::EndCombo();
+    if ( ImGui::Begin( "Post Processing Effects", nullptr, ImGuiWindowFlags_NoCollapse ) ) {
+        ImGui::SeparatorText( "HBAO+ Settings" );
+        {
+            ImGui::PushID( "HBAOSettings" );
+            ImGui::Checkbox( "Enable HBAO+", &settings.HbaoSettings.Enabled );
+            ImGui::DragFloat( "Radius", &settings.HbaoSettings.Radius, 0.01f );
+            ImGui::DragFloat( "MetersToViewSpaceUnits", &settings.HbaoSettings.MetersToViewSpaceUnits, 0.01f );
+            if ( ImGui::DragFloat( "PowerExponent", &settings.HbaoSettings.PowerExponent, 0.01f ) ) {
+                settings.HbaoSettings.PowerExponent = std::clamp( settings.HbaoSettings.PowerExponent, 1.0f, 4.0f );
+            }
+            if ( ImGui::DragFloat( "Bias", &settings.HbaoSettings.Bias, 0.01f ) ) {
+                settings.HbaoSettings.Bias = std::clamp( settings.HbaoSettings.Bias, 0.0f, 0.5f );
+            }
+
+            ImGui::Checkbox( "Enable Blur", &settings.HbaoSettings.EnableBlur );
+            static std::vector<std::pair<const char*, int>> ssaoRadi = { {"2", 0}, {"4", 1} };
+            if ( ImComboBox( "SSAO radius", ssaoRadi, &settings.HbaoSettings.SsaoBlurRadius ) ) {
+                ImGui::EndCombo();
+            }
+            ImGui::DragFloat( "BlurSharpness", &settings.HbaoSettings.BlurSharpness, 0.01f );
+            static std::vector<std::pair<const char*, int>> blendMode = { {"Replace", 0}, {"Multiply", 1} };
+            if ( ImComboBox( "BlendMode", blendMode, &settings.HbaoSettings.BlendMode ) ) {
+                ImGui::EndCombo();
+            }
+
+            static std::vector<std::pair<const char*, int>> stepCount = { {"4", 0}, {"8", 1} };
+            if ( ImComboBox( "SSAO steps", stepCount, &settings.HbaoSettings.SsaoStepCount ) ) {
+                ImGui::EndCombo();
+            }
+            ImGui::PopID();
         }
 
-        static std::vector<std::pair<const char*, int>> stepCount = { {"4", 0}, {"8", 1} };
-        if ( ImComboBox( "SSAO steps", stepCount, &settings.HbaoSettings.SsaoStepCount ) ) {
-            ImGui::EndCombo();
+        ImGui::SeparatorText( "SMAA" );
+        {
+            ImGui::PushID( "SMAASettings" );
+            ImGui::Checkbox( "SMAA", &settings.EnableSMAA );
+            ImGui::BeginDisabled( !settings.EnableSMAA );
+            {
+                ImGui::DragFloat( "Sharpen", &settings.SharpenFactor, 0.01f, 0.0f, 2.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_AlwaysClamp );
+                ImGui::EndDisabled();
+            }
+            ImGui::PopID();
         }
+
     }
     ImGui::End();
 }
