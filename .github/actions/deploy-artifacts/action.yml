@@ -15,7 +15,10 @@ runs:
   steps:
     - name: Delete old nightly
       if: ${{ inputs.nightly }}
-      run: gh release delete nightly --yes --cleanup-tag
+      # always succeed to avoid failures when nightly release does not exist
+      run: |
+        gh release delete nightly --yes --cleanup-tag
+        exit 0
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
       shell: pwsh
