@@ -17,8 +17,9 @@ D3D11AGS::~D3D11AGS() {
 /** Initializes the api */
 bool D3D11AGS::InitAGS() {
     AGSGPUInfo gpuInfo;
-    if ( agsInitialize( AGS_CURRENT_VERSION, nullptr, &ExtensionContext, &gpuInfo ) ) {
+    if ( AGS_SUCCESS == agsInitialize( AGS_CURRENT_VERSION, nullptr, &ExtensionContext, &gpuInfo )) {
         IsInitialized = true;
+        return true;
     }
     return false;
 }
@@ -38,7 +39,8 @@ HRESULT D3D11AGS::CreateD3D11Device( IDXGIAdapter* pAdapter, D3D_DRIVER_TYPE Dri
     creationParams.SDKVersion = SDKVersion;
 
     AGSDX11ReturnedParams returnedParams = {};
-    AGSReturnCode result = agsDriverExtensionsDX11_CreateDevice( ExtensionContext, &creationParams, nullptr, &returnedParams );
+    AGSDX11ExtensionParams extensionParams = {};
+    AGSReturnCode result = agsDriverExtensionsDX11_CreateDevice( ExtensionContext, &creationParams, &extensionParams, &returnedParams );
     if ( result == AGS_SUCCESS ) {
         if ( ppDevice ) {
             *ppDevice = returnedParams.pDevice;

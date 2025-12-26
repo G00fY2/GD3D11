@@ -63,12 +63,6 @@ const XMFLOAT4 UNDERWATER_COLOR_MOD = XMFLOAT4( 0.5f, 0.7f, 1.0f, 1.0f );
 static const GUID IID_IDXGIVkInteropAdapter = { 0x3A6D8F2C, 0xB0E8, 0x4AB4, { 0xB4, 0xDC, 0x4F, 0xD2, 0x48, 0x91, 0xBF, 0xA5 } };
 static const GUID IID_IDXGIDeviceRenderDoc = { 0xa7aa6116, 0x9c8d, 0x4bba, { 0x90, 0x83, 0xb4, 0xd8, 0x16, 0xb7, 0x1b, 0x78 } };
 
-const float NUM_FRAME_SHADOW_UPDATES =
-2;  // Fraction of lights to update per frame
-const int NUM_MIN_FRAME_SHADOW_UPDATES =
-4;  // Minimum lights to update per frame
-const int MAX_IMPORTANT_LIGHT_UPDATES = 1;
-
 constexpr float inv255f = (1.f / 255.f);
 float vobAnimation_WindStrength = 1.0f;
 
@@ -455,12 +449,12 @@ XRESULT D3D11GraphicsEngine::Init() {
         nvapiDevice->RegisterDevice( Device11.Get() );
     } else if ( agsDevice ) {
         if ( agsDevice->IsDrawMultiIndexedInstancedIndirectAvailable() ) {
-            DrawMultiIndexedInstancedIndirect = IGDEXT_DrawMultiIndexedInstancedIndirect;
+            DrawMultiIndexedInstancedIndirect = AGS_DrawMultiIndexedInstancedIndirect;
         }
 
         if ( agsDevice->IsUAVOverlapAvailable() ) {
-            BeginUAVOverlap = IGDEXT_BeginUAVOverlap;
-            EndUAVOverlap = IGDEXT_EndUAVOverlap;
+            BeginUAVOverlap = AGS_BeginUAVOverlap;
+            EndUAVOverlap = AGS_EndUAVOverlap;
         }
     } else if ( adpDesc.VendorId == 0x8086 ) {
         // Intel extension is initialized late
@@ -2550,15 +2544,20 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     Engine::GAPI->GetRendererState().RasterizerState.SetDirty();
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawSky ) {
+        auto _ = RecordGraphicsEvent( L"Draw Sky" );
         // Draw back of the sky if outdoor
         DrawSky();
     }
 
     // Draw world
-    Engine::GAPI->DrawWorldMeshNaive();
+    {
+        auto _ = RecordGraphicsEvent( L"Draw WorldMesh Naive" );
+        Engine::GAPI->DrawWorldMeshNaive();
+    }
 
     // Draw HBAO
     if ( Engine::GAPI->GetRendererState().RendererSettings.HbaoSettings.Enabled ) {
+        auto _ = RecordGraphicsEvent( L"Draw HBAO" );
         PfxRenderer->DrawHBAO( HDRBackBuffer->GetRenderTargetView() );
         GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
     }
@@ -3531,6 +3530,7 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround(
 
     std::vector<WorldMeshSectionInfo*> drawnSections;
 
+    auto rangeSquared = range * range;
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawWorldMesh ) {
         // Bind wrapped mesh vertex buffers
         DrawVertexBufferIndexedUINT( Engine::GAPI->GetWrappedWorldMesh()->MeshVertexBuffer,
@@ -3644,9 +3644,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround(
 
                     // Check vob range
 
-                    float dist;
-                    XMStoreFloat( &dist, XMVector3Length( position - XMLoadFloat3( &it->LastRenderPosition ) ) );
-                    if ( dist > range ) {
+                    float distSq;
+                    XMStoreFloat( &distSq, XMVector3LengthSq( position - XMLoadFloat3( &it->LastRenderPosition ) ) );
+                    if ( distSq > rangeSquared ) {
                         continue;
                     }
 
@@ -3708,10 +3708,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround(
                 }
 
                 // Check vob range
-                float dist;
-                XMStoreFloat( &dist, XMVector3Length( position - it->Vob->GetPositionWorldXM() ) );
-
-                if ( dist > range ) {
+                float distSq;
+                XMStoreFloat( &distSq, XMVector3LengthSq( position - it->Vob->GetPositionWorldXM() ) );
+                if ( distSq > rangeSquared ) {
                     continue;
                 }
 
@@ -3757,13 +3756,12 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround(
                 }
 
                 // Check vob range
-                float dist;
-                XMStoreFloat( &dist, XMVector3Length( position - skeletalMeshVob->Vob->GetPositionWorldXM() ) );
-
-                if ( dist > range ) {
-                    // Not in range
+                float distSq;
+                XMStoreFloat( &distSq, XMVector3LengthSq( position - skeletalMeshVob->Vob->GetPositionWorldXM() ) );
+                if ( distSq > rangeSquared ) {
                     continue;
                 }
+
                 // Check for inside vob. Don't render inside-vobs when the light is
                 // outside and vice-versa.
                 if ( isOutdoor && skeletalMeshVob->Vob->IsIndoorVob() != indoor ) {
@@ -3844,6 +3842,8 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
     bool isOutdoor = (Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() == zBSP_MODE_OUTDOOR);
 
     std::vector<WorldMeshSectionInfo*> drawnSections;
+
+    auto rangeSquared = range * range;
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawWorldMesh ) {
         // Bind wrapped mesh vertex buffers
@@ -3958,9 +3958,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
 
                     // Check vob range
 
-                    float dist;
-                    XMStoreFloat( &dist, XMVector3Length( position - XMLoadFloat3( &it->LastRenderPosition ) ) );
-                    if ( dist > range ) {
+                    float distSq;
+                    XMStoreFloat( &distSq, XMVector3LengthSq( position - XMLoadFloat3( &it->LastRenderPosition ) ) );
+                    if ( distSq > rangeSquared ) {
                         continue;
                     }
 
@@ -4022,10 +4022,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
                 }
 
                 // Check vob range
-                float dist;
-                XMStoreFloat( &dist, XMVector3Length( position - it->Vob->GetPositionWorldXM() ) );
-
-                if ( dist > range ) {
+                float distSq;
+                XMStoreFloat( &distSq, XMVector3LengthSq( position - it->Vob->GetPositionWorldXM() ) );
+                if ( distSq > rangeSquared ) {
                     continue;
                 }
 
@@ -4071,11 +4070,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
                 }
 
                 // Check vob range
-                float dist;
-                XMStoreFloat( &dist, XMVector3Length( position - skeletalMeshVob->Vob->GetPositionWorldXM() ) );
-
-                if ( dist > range ) {
-                    // Not in range
+                float distSq;
+                XMStoreFloat( &distSq, XMVector3LengthSq( position - skeletalMeshVob->Vob->GetPositionWorldXM() ) );
+                if ( distSq > rangeSquared ) {
                     continue;
                 }
                 // Check for inside vob. Don't render inside-vobs when the light is
@@ -4091,9 +4088,10 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround_Layered(
 }
 
 /** Draws everything around the given position */
-void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround( FXMVECTOR position,
-    float sectionRange, float vobXZRange,
-    bool cullFront, bool dontCull ) {
+void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAroundForWorldShadow( FXMVECTOR position,
+    float sectionRange,
+    bool cullFront, bool dontCull,
+    const Frustum& frustum ) {
     // Setup renderstates
     Engine::GAPI->GetRendererState().RasterizerState.SetDefault();
     Engine::GAPI->GetRendererState().RasterizerState.CullMode =
@@ -4208,9 +4206,9 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround( FXMVECTOR position,
             }
         } else {
             // Collect all meshes first, then batch by alpha requirement
-            static thread_local std::vector<WorldMeshInfo*> opaqueMeshes;
+            static thread_local std::vector<D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS> opaqueDrawArgs;
             static thread_local std::vector<std::pair<zCTexture*, WorldMeshInfo*>> alphaMeshes;
-            opaqueMeshes.clear();
+            opaqueDrawArgs.clear();
             alphaMeshes.clear();
 
             for ( const WorldMeshSectionInfo* section : visibleSections ) {
@@ -4227,23 +4225,48 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround( FXMVECTOR position,
                             alphaMeshes.emplace_back( tex, meshPair.second );
                         }
                     } else {
-                        opaqueMeshes.push_back( meshPair.second );
+                        D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS args;
+                        args.IndexCountPerInstance = static_cast<UINT>(meshPair.second->Indices.size());
+                        args.InstanceCount = 1;
+                        args.StartIndexLocation = meshPair.second->BaseIndexLocation;
+                        args.BaseVertexLocation = 0;
+                        args.StartInstanceLocation = 0;
+                        opaqueDrawArgs.push_back( args );
                     }
+
+                    Engine::GAPI->GetRendererState().RendererInfo.FrameDrawnTriangles +=
+                        meshPair.second->Indices.size() / 3;
                 }
             }
 
-            // Draw all opaque meshes without pixel shader (depth only)
-            if ( !opaqueMeshes.empty() ) {
-                if ( !linearDepth )  // Only unbind when not rendering linear depth
-                {
-                    // Unbind PS
+            // Draw all opaque meshes without pixel shader (depth only) using MDI
+            if ( !opaqueDrawArgs.empty() ) {
+                if ( !linearDepth ) {
+                    // Unbind PS for depth-only rendering
                     Context->PSSetShader( nullptr, nullptr, 0 );
                 }
 
-                for ( WorldMeshInfo* mesh : opaqueMeshes ) {
-                    DrawVertexBufferIndexedUINT( nullptr, nullptr,
-                        mesh->Indices.size(), mesh->BaseIndexLocation );
+                // Initialize or resize the indirect buffer if needed
+                const size_t requiredSize = opaqueDrawArgs.size() * sizeof( D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS );
+
+                if ( !WorldMeshIndirectBuffer || WorldMeshIndirectBuffer->GetSizeInBytes() < requiredSize ) {
+                    WorldMeshIndirectBuffer.reset( new D3D11IndirectBuffer );
+                    WorldMeshIndirectBuffer->Init(
+                            opaqueDrawArgs.data(), requiredSize,
+                            D3D11IndirectBuffer::B_INDEXBUFFER, D3D11IndirectBuffer::U_DYNAMIC,
+                            D3D11IndirectBuffer::CA_WRITE );
+                } else {
+                    WorldMeshIndirectBuffer->UpdateBuffer( opaqueDrawArgs.data(), requiredSize );
                 }
+
+                // Execute multi-draw indirect call for all opaque meshes
+                // DrawMultiIndexedInstancedIndirect falls back to individual DrawIndexedInstancedIndirect 
+                // calls via Stub_DrawMultiIndexedInstancedIndirect if hardware doesn't support MDI
+                DrawMultiIndexedInstancedIndirect( Context.Get(),
+                    static_cast<unsigned int>(opaqueDrawArgs.size()),
+                    WorldMeshIndirectBuffer->GetIndirectBuffer().Get(),
+                    0,
+                    sizeof( D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS ) );
             }
 
             // Draw alpha-tested meshes with texture binding
@@ -4385,6 +4408,11 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround( FXMVECTOR position,
     }
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawSkeletalMeshes ) {
+        auto indorRadiusSq = Engine::GAPI->GetRendererState().RendererSettings.SkeletalMeshDrawRadius
+            * Engine::GAPI->GetRendererState().RendererSettings.SkeletalMeshDrawRadius;
+
+        auto enableCulling = Engine::GAPI->GetRendererState().RendererSettings.IsShadowFrustumCullingEnabled();
+
         // Draw skeletal meshes
         for ( auto const& skeletalMeshVob : Engine::GAPI->GetSkeletalMeshVobs() ) {
             if ( !skeletalMeshVob->VisualInfo ) continue;
@@ -4393,10 +4421,26 @@ void XM_CALLCONV D3D11GraphicsEngine::DrawWorldAround( FXMVECTOR position,
             if ( skeletalMeshVob->Vob->GetVisualAlpha() && skeletalMeshVob->Vob->GetVobTransparency() < 0.7f ) {
                 continue;
             }
-
-            float dist; XMStoreFloat( &dist, XMVector3Length( skeletalMeshVob->Vob->GetPositionWorldXM() - position ) );
-            if ( dist > Engine::GAPI->GetRendererState().RendererSettings.IndoorVobDrawRadius )
+            
+            XMVECTOR vobPos = skeletalMeshVob->Vob->GetPositionWorldXM();
+            float distSq;
+            XMStoreFloat( &distSq, XMVector3LengthSq( vobPos - position ) );
+            if ( distSq > indorRadiusSq ) {
                 continue;  // Skip out of range
+            }
+
+            if ( enableCulling ) {
+                // Frustum culling using a bounding sphere
+                // Use the mesh size as radius, centered at the vob position
+                float radius = skeletalMeshVob->VisualInfo->MeshSize * 0.5f;
+                XMFLOAT3 center;
+                XMStoreFloat3( &center, vobPos );
+                BoundingSphere vobSphere( center, radius );
+
+                if ( !frustum.Intersects( vobSphere ) ) {
+                    continue;  // Skip if not visible in the shadow frustum
+                }
+            }
 
             Engine::GAPI->DrawSkeletalMeshVob( skeletalMeshVob, FLT_MAX );
         }
@@ -5151,8 +5195,8 @@ XRESULT D3D11GraphicsEngine::OnKeyDown( unsigned int key ) {
 }
 
 /** Reloads shaders */
-XRESULT D3D11GraphicsEngine::ReloadShaders() {
-    XRESULT xr = ShaderManager->ReloadShaders();
+XRESULT D3D11GraphicsEngine::ReloadShaders( ShaderCategory categories ) {
+    XRESULT xr = ShaderManager->ReloadShaders( categories );
 
     return xr;
 }
@@ -5186,7 +5230,19 @@ void XM_CALLCONV D3D11GraphicsEngine::RenderShadowmaps( FXMVECTOR cameraPosition
     bool cullFront, bool dontCull,
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsvOverwrite,
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> debugRTV ) {
-    ShadowMaps->RenderShadowmaps( cameraPosition, target, cullFront, dontCull, dsvOverwrite, debugRTV );
+
+    RenderShadowmapsParams renderParams = {};
+    XMStoreFloat3( &renderParams.CameraPosition, cameraPosition );
+    renderParams.Target = target;
+    renderParams.CullFront = cullFront;
+    renderParams.DontCull = dontCull;
+    renderParams.DSVOverwrite = dsvOverwrite;
+    renderParams.DebugRTV = debugRTV;
+    renderParams.CascadeIndex = -1;
+    renderParams.CascadeSplits = std::vector<float>();
+    renderParams.CascadeCameraReplacements = nullptr;
+
+    ShadowMaps->RenderShadowmaps( renderParams );
 }
 
 /** Draws a fullscreenquad, copying the given texture to the viewport */
@@ -5323,14 +5379,14 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
             // Show settings
             if ( hImgui->AdvancedSettingsVisible ) {
                 hImgui->AdvancedSettingsVisible = false;
-                hImgui->IsActive = false;
-            } else {
-                hImgui->SettingsVisible = !hImgui->SettingsVisible;
-                hImgui->IsActive = hImgui->SettingsVisible;
             }
+            hImgui->SettingsVisible = !hImgui->SettingsVisible;
+            auto oldIsActive = hImgui->IsActive;
+            hImgui->IsActive = hImgui->SettingsVisible || hImgui->AdvancedSettingsVisible;
 
-            // Free mouse
-            Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
+            if ( oldIsActive != hImgui->IsActive ) {
+                Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
+            }
         }
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_ToggleAdvancedSettings ) {
@@ -5338,14 +5394,14 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
             // Show settings
             if ( hImgui->SettingsVisible ) {
                 hImgui->SettingsVisible = false;
-                hImgui->IsActive = hImgui->SettingsVisible;
-            } else {
-                hImgui->AdvancedSettingsVisible = !hImgui->AdvancedSettingsVisible;
-                hImgui->IsActive = hImgui->AdvancedSettingsVisible;
             }
+            hImgui->AdvancedSettingsVisible = !hImgui->AdvancedSettingsVisible;
+            auto oldIsActive = hImgui->IsActive;
+            hImgui->IsActive = hImgui->SettingsVisible || hImgui->AdvancedSettingsVisible;
 
-            // Free mouse
-            Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
+            if ( oldIsActive != hImgui->IsActive ) {
+                Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
+            }
         }
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_ClosedSettings ) {
@@ -5668,11 +5724,13 @@ void D3D11GraphicsEngine::DrawQuadMarks() {
     SetupVS_ExConstantBuffer();
 
     int alphaFunc = zMAT_ALPHA_FUNC_NONE;
+
+    auto vfxRadiusSq = Engine::GAPI->GetRendererState().RendererSettings.VisualFXDrawRadius * Engine::GAPI->GetRendererState().RendererSettings.VisualFXDrawRadius;
     for ( auto const& it : quadMarks ) {
         if ( !it.first->GetConnectedVob() ) continue;
 
-        float len; XMStoreFloat( &len, XMVector3Length( camPos - XMLoadFloat3( it.second.Position.toXMFLOAT3() ) ) );
-        if ( len > Engine::GAPI->GetRendererState().RendererSettings.VisualFXDrawRadius )
+        float distSq; XMStoreFloat( &distSq, XMVector3LengthSq( camPos - XMLoadFloat3( it.second.Position.toXMFLOAT3() ) ) );
+        if ( distSq > vfxRadiusSq )
             continue;
 
         zCMaterial* mat = it.first->GetMaterial();
@@ -5854,10 +5912,11 @@ void D3D11GraphicsEngine::DrawFrameParticleMeshes( std::unordered_map<zCVob*, Me
 
     FXMVECTOR camPos = Engine::GAPI->GetCameraPositionXM();
     int lastBlend = zRND_ALPHA_FUNC_NONE;
+    auto vfxRadiusSq = state.RendererSettings.VisualFXDrawRadius * state.RendererSettings.VisualFXDrawRadius;
     for ( auto const& it : progMeshes ) {
-        float dist;
-        XMStoreFloat( &dist, XMVector3Length( it.first->GetPositionWorldXM() - camPos ) );
-        if ( dist > state.RendererSettings.VisualFXDrawRadius )
+        float distSq;
+        XMStoreFloat( &distSq, XMVector3LengthSq( it.first->GetPositionWorldXM() - camPos ) );
+        if ( distSq > vfxRadiusSq )
             continue;
 
         if ( zCParticleFX* particle = reinterpret_cast<zCParticleFX*>(it.first->GetVisual()) ) {

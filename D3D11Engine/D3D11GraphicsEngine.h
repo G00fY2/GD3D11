@@ -3,6 +3,7 @@
 #include "fpslimiter.h"
 #include "GothicAPI.h"
 #include "D3D11ShadowMap.h"
+#include "D3D11ShaderManager.h"
 
 struct RenderToDepthStencilBuffer;
 
@@ -228,7 +229,8 @@ public:
     virtual void DrawVobSingle( VobInfo* vob, zCCamera& camera ) override;
 
     /** Draws everything around the given position */
-    void XM_CALLCONV DrawWorldAround( FXMVECTOR position, float sectionRange, float vobXZRange, bool cullFront = true, bool dontCull = false );
+    void XM_CALLCONV DrawWorldAroundForWorldShadow( FXMVECTOR position, float sectionRange, bool cullFront, bool dontCull,
+        const Frustum& frustum);
     void XM_CALLCONV DrawWorldAround( FXMVECTOR position,
         float range,
         bool cullFront = true,
@@ -299,7 +301,7 @@ public:
     virtual LRESULT OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
     /** Reloads shaders */
-    virtual XRESULT ReloadShaders();
+    virtual XRESULT ReloadShaders( ShaderCategory categories = ShaderCategory::All);
 
     /** Draws the given mesh infos as water */
     void DrawWaterSurfaces();

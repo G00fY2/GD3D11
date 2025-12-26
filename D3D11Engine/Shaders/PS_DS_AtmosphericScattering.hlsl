@@ -8,6 +8,14 @@
 #define MAX_CSM_CASCADES 3
 #endif
 
+#ifndef NUM_CSM_CASCADES
+#define NUM_CSM_CASCADES 3
+#endif
+
+#ifndef CSM_PCF_LIMIT
+#define CSM_PCF_LIMIT 3
+#endif
+
 cbuffer DS_ScreenQuadConstantBuffer : register(b0)
 {
     matrix SQ_InvProj; // Optimize out!
@@ -147,6 +155,8 @@ float SampleCascadeShadow(float3 wsPosition, int cascadeIndex, float vertLightin
     float shadow = 1.0f;
     
 #if SHD_FILTER_16TAP_PCF
+#if NUM_CSM_CASCADES <= 1
+    // Single cascade, always do PCF if enabled.
     float sum = 0;
     float x, y;
     
@@ -163,9 +173,49 @@ float SampleCascadeShadow(float3 wsPosition, int cascadeIndex, float vertLightin
     }
     shadow = sum / 16.0;
 #else
+    // multiple cascades, only do PCF for lower cascades
+    if (cascadeIndex < CSM_PCF_LIMIT) {
+        float sum = 0;
+        float x, y;
+    
+        [unroll] for (y = -1.5; y <= 1.5; y += 1.0)
+        {
+            [unroll] for (x = -1.5; x <= 1.5; x += 1.0)
+            {
+                float2 offset = TexOffset(x, y);
+                // Sample from Texture2DArray using cascade index as array slice
+                sum += TX_ShadowmapArray.SampleCmpLevelZero(SS_Comp, 
+                    float3(projectedTexCoords.xy + offset, (float)cascadeIndex), 
+                    vShadowSamplingPos.z - bias);
+            }
+        }
+        shadow = sum / 16.0;
+    } else {
+        // Efficient 4-tap PCF fallback for distant cascades (rotated poisson disk)
+        // Uses bilinear PCF hardware filtering for effective 8+ sample quality
+        static const float2 poissonDisk[4] = {
+            float2(-0.94201624f, -0.39906216f),
+            float2( 0.94558609f, -0.76890725f),
+            float2(-0.09418410f, -0.92938870f),
+            float2( 0.34495938f,  0.29387760f)
+        };
+        
+        float sum = 0;
+        float texelSize = 1.0f / SQ_ShadowmapSize;
+        
+        [unroll] for (int i = 0; i < 4; i++)
+        {
+            sum += TX_ShadowmapArray.SampleCmpLevelZero(SS_Comp,
+                float3(projectedTexCoords.xy + poissonDisk[i] * texelSize, (float)cascadeIndex),
+                vShadowSamplingPos.z - bias);
+        }
+        shadow = sum * 0.25;
+    }
+#endif
+#else
     // Sample from Texture2DArray using cascade index as array slice
-    shadow = TX_ShadowmapArray.SampleCmpLevelZero(SS_Comp, 
-        float3(projectedTexCoords.xy, (float)cascadeIndex), 
+    shadow = TX_ShadowmapArray.SampleCmpLevelZero(SS_Comp,
+        float3(projectedTexCoords.xy, (float) cascadeIndex),
         vShadowSamplingPos.z - bias);
 #endif
     
@@ -223,9 +273,9 @@ float ComputeShadowValue(float2 uv, float3 wsPosition, Texture2D shadowmap, Samp
 float ComputeCascadedShadowValue(float3 wsPosition, float viewSpaceZ, float vertLighting, float bias)
 {
     // Get cascade bounds info for all cascades
-    float4 cascadeInfo[MAX_CSM_CASCADES];
+    float4 cascadeInfo[NUM_CSM_CASCADES];
     [unroll]
-    for (int i = 0; i < MAX_CSM_CASCADES; i++)
+    for (int i = 0; i < NUM_CSM_CASCADES; i++)
     {
         cascadeInfo[i] = GetCascadeUVAndBounds(wsPosition, i);
     }
@@ -235,14 +285,14 @@ float ComputeCascadedShadowValue(float3 wsPosition, float viewSpaceZ, float vert
     // Determine which cascade to use based on projection bounds
     // Start with highest resolution cascade and fall back to lower ones
     [unroll]
-    for (int c = 0; c < MAX_CSM_CASCADES; c++)
+    for (int c = 0; c < NUM_CSM_CASCADES; c++)
     {
         if (cascadeInfo[c].z > 0.5f) // In bounds of this cascade
         {
             shadow = SampleCascadeShadow(wsPosition, c, vertLighting, bias);
             
             // Blend with next cascade near edges (if next cascade exists and has this pixel in bounds)
-            if (c < MAX_CSM_CASCADES - 1 && cascadeInfo[c].w > 0.0f && cascadeInfo[c + 1].z > 0.5f)
+            if (c < NUM_CSM_CASCADES - 1 && cascadeInfo[c].w > 0.0f && cascadeInfo[c + 1].z > 0.5f)
             {
                 float shadowNext = SampleCascadeShadow(wsPosition, c + 1, vertLighting, bias);
                 shadow = lerp(shadow, shadowNext, cascadeInfo[c].w);
@@ -266,10 +316,13 @@ void ApplyRainNormalDeformation(inout float3 vsNormal, float3 wsPosition, inout 
     float2 groundDir = normalize(float2(0.1f, 0.1f) + saturate(cross(wsNormal, float3(0.0f, 1.0f, 0.0f)).xz));
 	
     const float scale = 1000.0f;
-    float2 uv[4] = {wsPosition.zy / scale,
+    float2 uv[4] =
+    {
+        wsPosition.zy / scale,
 					wsPosition.xz / (scale * 2),
 					wsPosition.xz / (scale * 2),
-					wsPosition.xy / scale};
+					wsPosition.xy / scale
+    };
 	
     float groundSpeed = 0.1f * AC_RainFXWeight;
     float downSpeed = 0.2f * AC_RainFXWeight;
@@ -293,10 +346,13 @@ void ApplyRainNormalDeformation(inout float3 vsNormal, float3 wsPosition, inout 
     weights.xz *= 0.6f;
     weights.y *= 0.7f;
 		
-    float3 dist[3] = {normalize((TX_Distortion.Sample(SS_Linear, uv[0]).zyx * 2 - 1)),
+    float3 dist[3] =
+    {
+        normalize((TX_Distortion.Sample(SS_Linear, uv[0]).zyx * 2 - 1)),
 					  normalize((TX_Distortion.Sample(SS_Linear, uv[1]).xzy * 2 - 1)) * 0.5f +
 					  normalize((TX_Distortion.Sample(SS_Linear, uv[2]).xzy * 2 - 1)) * 0.5f,
-					  normalize((TX_Distortion.Sample(SS_Linear, uv[3]).xyz * 2 - 1))};
+					  normalize((TX_Distortion.Sample(SS_Linear, uv[3]).xyz * 2 - 1))
+    };
 		
     weights = pow(weights, 4.0f);
 		

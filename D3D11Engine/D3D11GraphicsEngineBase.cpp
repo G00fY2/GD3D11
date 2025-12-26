@@ -313,6 +313,19 @@ void D3D11GraphicsEngineBase::ConstructShaderMakroList( std::vector<D3D_SHADER_M
     m.Definition = s.EnableSoftShadows ? "1" : "0";
     list.push_back( m );
 
+    m.Name = "MAX_CSM_CASCADES";
+    m.Definition = TO_LITERAL( MAX_CSM_CASCADES );
+    list.push_back( m );
+
+    m.Name = "NUM_CSM_CASCADES";
+    static const char* staticNumbers[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15" };
+    m.Definition = staticNumbers[std::clamp<size_t>( s.NumShadowCascades, 1, MAX_CSM_CASCADES)];
+    list.push_back( m );
+
+    m.Name = "CSM_PCF_LIMIT";
+    m.Definition = staticNumbers[std::clamp<size_t>( s.ShadowCascadePCFLimit, 0, MAX_CSM_CASCADES )];
+    list.push_back( m );
+
     m.Name = "SHD_WIND";
 #ifdef BUILD_GOTHIC_2_6_fix
     m.Definition = s.WindQuality == GothicRendererSettings::EWindQuality::WIND_QUALITY_ADVANCED ? "1" : "0";

@@ -2471,7 +2471,7 @@ void GothicAPI::DrawSkeletalMeshVob( SkeletalVobInfo* vi, float distance, bool u
                 }
 
                 // Update animated textures
-                bool isMMS = std::string( mvi->Visual->GetFileExtension( 0 ) ) == ".MMS";
+                bool isMMS = strcmp( mvi->Visual->GetFileExtension( 0 ), ".MMS") == 0;
                 if ( updateState ) {
                     node->TexAniState.UpdateTexList();
                     if ( isMMS ) {
@@ -2514,16 +2514,29 @@ void GothicAPI::DrawSkeletalMeshVob( SkeletalVobInfo* vi, float distance, bool u
                 VShader->GetConstantBuffer()[1]->BindToVertexShader( 1 );
 
                 // Go through all materials registered here
-                for ( auto const& itm : mvi->Meshes ) {
-                    zCTexture* texture;
-                    if ( itm.first && (texture = itm.first->GetAniTexture()) != nullptr ) {
-                        if ( !g->BindTextureNRFX( texture, (g->GetRenderingStage() == DES_MAIN) ) )
-                            continue;
-                    }
 
-                    // Go through all meshes using that material
-                    for ( unsigned int m = 0; m < itm.second.size(); m++ ) {
-                        DrawMeshInfo( itm.first, itm.second[m] );
+                if ( g->GetRenderingStage() == DES_SHADOWMAP 
+                    || g->GetRenderingStage() == DES_SHADOWMAP_CUBE ) {
+                    for ( auto const& itm : mvi->Meshes ) {
+                        // no texture binding for shadowmap
+
+                        // Go through all meshes using that material
+                        for ( unsigned int m = 0; m < itm.second.size(); m++ ) {
+                            DrawMeshInfo( itm.first, itm.second[m] );
+                        }
+                    }
+                } else {
+                    for ( auto const& itm : mvi->Meshes ) {
+                        zCTexture* texture;
+                        if ( itm.first && (texture = itm.first->GetAniTexture()) != nullptr ) {
+                            if ( !g->BindTextureNRFX( texture, (g->GetRenderingStage() == DES_MAIN) ) )
+                                continue;
+                        }
+
+                        // Go through all meshes using that material
+                        for ( unsigned int m = 0; m < itm.second.size(); m++ ) {
+                            DrawMeshInfo( itm.first, itm.second[m] );
+                        }
                     }
                 }
             }
@@ -2680,7 +2693,7 @@ void GothicAPI::DrawSkeletalMeshVob_Layered( SkeletalVobInfo* vi, float distance
                 }
 
                 // Update animated textures
-                bool isMMS = std::string( mvi->Visual->GetFileExtension( 0 ) ) == ".MMS";
+                bool isMMS = strcmp( mvi->Visual->GetFileExtension( 0 ), ".MMS" ) == 0;
                 if ( updateState ) {
                     node->TexAniState.UpdateTexList();
                     if ( isMMS ) {
@@ -4761,6 +4774,8 @@ XRESULT GothicAPI::SaveMenuSettings( const std::string& file ) {
     WritePrivateProfileStringA( "Shadows", "ShadowMapSize", std::to_string( s.ShadowMapSize ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "WorldShadowRangeScale", std::to_string( s.WorldShadowRangeScale ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "NumShadowCascades", std::to_string( s.NumShadowCascades ).c_str(), ini.c_str() );
+    WritePrivateProfileStringA( "Shadows", "ShadowCascadePCFLimit", std::to_string( s.ShadowCascadePCFLimit ).c_str(), ini.c_str() );
+    WritePrivateProfileStringA( "Shadows", "ShadowFrustumCullingMode", std::to_string( static_cast<int>(s.ShadowFrustumCullingMode) ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "PointlightShadows", std::to_string( s.EnablePointlightShadows ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "EnableDynamicLighting", std::to_string( s.EnableDynamicLighting ? TRUE : FALSE ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "SmoothCameraUpdate", std::to_string( s.SmoothShadowCameraUpdate ? TRUE : FALSE ).c_str(), ini.c_str() );
@@ -4802,11 +4817,11 @@ XRESULT GothicAPI::LoadMenuSettings( const std::string& file ) {
         defaultRendererSettings.SetDefault();
 
         s.ChangeWindowPreset = GetPrivateProfileIntA( "General", "ChangeToMode", 0, ini.c_str() );
-        s.DrawFog = GetPrivateProfileBoolA( "General", "EnableFog", true, ini );
-        s.FogRange = GetPrivateProfileFloatA( "General", "FogRange", 0, ini.c_str() );
-        s.AtmosphericScattering = GetPrivateProfileBoolA( "General", "AtmosphericScattering", true, ini );
-        s.EnableHDR = GetPrivateProfileBoolA( "General", "EnableHDR", false, ini );
-        s.HDRToneMap = GothicRendererSettings::E_HDRToneMap( GetPrivateProfileIntA( "General", "HDRToneMap", 4, ini.c_str() ) );
+        s.DrawFog = GetPrivateProfileBoolA( "General", "EnableFog", defaultRendererSettings.DrawFog, ini );
+        s.FogRange = GetPrivateProfileFloatA( "General", "FogRange", defaultRendererSettings.FogRange, ini.c_str() );
+        s.AtmosphericScattering = GetPrivateProfileBoolA( "General", "AtmosphericScattering", defaultRendererSettings.AtmosphericScattering, ini );
+        s.EnableHDR = GetPrivateProfileBoolA( "General", "EnableHDR", defaultRendererSettings.EnableHDR, ini );
+        s.HDRToneMap = GothicRendererSettings::E_HDRToneMap( GetPrivateProfileIntA( "General", "HDRToneMap", defaultRendererSettings.HDRToneMap, ini.c_str() ) );
         s.EnableDebugLog = GetPrivateProfileBoolA( "General", "EnableDebugLog", defaultRendererSettings.EnableDebugLog, ini );
         s.EnableAutoupdates = GetPrivateProfileBoolA( "General", "EnableAutoupdates", defaultRendererSettings.EnableAutoupdates, ini );
         s.EnableGodRays = GetPrivateProfileBoolA( "General", "EnableGodRays", defaultRendererSettings.EnableGodRays, ini );
@@ -4841,8 +4856,10 @@ XRESULT GothicAPI::LoadMenuSettings( const std::string& file ) {
         s.EnableSoftShadows = GetPrivateProfileBoolA( "Shadows", "EnableSoftShadows", defaultRendererSettings.EnableSoftShadows, ini );
         s.ShadowMapSize = GetPrivateProfileIntA( "Shadows", "ShadowMapSize", defaultRendererSettings.ShadowMapSize, ini.c_str() );
         s.EnablePointlightShadows = GothicRendererSettings::EPointLightShadowMode( GetPrivateProfileIntA( "Shadows", "PointlightShadows", GothicRendererSettings::EPointLightShadowMode::PLS_STATIC_ONLY, ini.c_str() ) );
-        s.WorldShadowRangeScale = GetPrivateProfileFloatA( "Shadows", "WorldShadowRangeScale", 1.0f, ini );
-        s.NumShadowCascades = GetPrivateProfileIntA( "Shadows", "NumShadowCascades", 3, ini.c_str() );
+        s.WorldShadowRangeScale = GetPrivateProfileFloatA( "Shadows", "WorldShadowRangeScale", defaultRendererSettings.WorldShadowRangeScale, ini );
+        s.NumShadowCascades = GetPrivateProfileIntA( "Shadows", "NumShadowCascades", defaultRendererSettings.NumShadowCascades, ini.c_str() );
+        s.ShadowCascadePCFLimit = GetPrivateProfileIntA( "Shadows", "ShadowCascadePCFLimit", defaultRendererSettings.ShadowCascadePCFLimit, ini.c_str() );
+        s.ShadowFrustumCullingMode = static_cast<GothicRendererSettings::E_ShadowFrustumCulling>(GetPrivateProfileIntA( "Shadows", "ShadowFrustumCullingMode", defaultRendererSettings.ShadowFrustumCullingMode, ini.c_str() ));
         s.EnableDynamicLighting = GetPrivateProfileBoolA( "Shadows", "EnableDynamicLighting", defaultRendererSettings.EnableDynamicLighting, ini );
         s.SmoothShadowCameraUpdate = GetPrivateProfileBoolA( "Shadows", "SmoothCameraUpdate", defaultRendererSettings.SmoothShadowCameraUpdate, ini );
         s.ShadowStrength = GetPrivateProfileFloatA( "Shadows", "ShadowStrength", defaultRendererSettings.ShadowStrength, ini );

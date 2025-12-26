@@ -1,6 +1,7 @@
 #pragma once
 #include "WorldObjects.h"
 #include "GraphicsEventRecord.h"
+#include "ShaderCategory.h"
 
 class BaseLineRenderer;
 class BaseShadowedPointLight;
@@ -199,7 +200,7 @@ public:
     virtual XRESULT OnVobRemovedFromWorld( zCVob* vob ) { return XR_SUCCESS; }
 
     /** Reloads shaders */
-    virtual XRESULT ReloadShaders() { return XR_SUCCESS; }
+    virtual XRESULT ReloadShaders( ShaderCategory categories = ShaderCategory::All ) { return XR_SUCCESS; }
 
     /** Draws the water surfaces */
     virtual void DrawWaterSurfaces() {}
