@@ -1,4 +1,4 @@
-name: 'Package artifact'
+name: 'Package artifacts'
 
 inputs:
   nightly:
