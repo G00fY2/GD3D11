@@ -45,6 +45,7 @@ jobs:
         with:
           nightly: false
           include-spacer-net: true
+          artifact-name: "zip-files"
 
   deploy-nightly-release:
     #if: github.ref_name == 'master'
@@ -59,6 +60,5 @@ jobs:
         uses: ./.github/actions/deploy-artifacts
         with:
           nightly: true
-          release_dir: $RELEASE_DIR
-          spacer_release_dir: $SPACER_RELEASE_DIR
+          artifact-name: "zip-files"
           token: ${{ secrets.GITHUB_TOKEN }}
