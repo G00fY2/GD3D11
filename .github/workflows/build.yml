@@ -31,7 +31,7 @@ jobs:
         with:
           configuration: ${{ matrix.configuration }}
 
-  package-artifacts:
+  package-nightly-artifacts:
     if: github.ref_name == 'master'
     needs: build
     runs-on: windows-latest
