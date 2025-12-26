@@ -8,7 +8,7 @@ inputs:
     description: "Boolean string ('true'/'false')"
     required: true
   artifact-name:
-    description: "Name of the artifact that will be downloaded for deployment"
+    description: "Name of the artifact that contains files for deployment"
     required: true
 
 runs:

@@ -33,8 +33,8 @@ jobs:
         uses: ./.github/actions/package-artifacts
         with:
           nightly: false
+          artifact-name: "deployment-files"
           include-spacer-net: true
-          artifact-name: "zip-files"
 
   deploy-release:
     needs: package-artifacts
@@ -48,5 +48,5 @@ jobs:
         uses: ./.github/actions/deploy-artifacts
         with:
           nightly: false
-          artifact-name: "zip-files"
+          artifact-name: "deployment-files"
           token: ${{ secrets.GITHUB_TOKEN }}
