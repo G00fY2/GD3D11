@@ -49,7 +49,7 @@ jobs:
 
   deploy-nightly-release:
     if: github.ref_name == 'master'
-    needs: package-artifacts
+    needs: package-nightly-artifacts
     runs-on: windows-latest
 
     steps:
