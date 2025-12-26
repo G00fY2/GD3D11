@@ -4,9 +4,6 @@ inputs:
   nightly:
     description: "Boolean string ('true'/'false')"
     required: true
-  include-spacer-net:
-    description: "Defines if spacer_net artifact should be included"
-    required: true
   artifact-name:
     description: "Name of the artifact that will be uploaded"
     required: true
@@ -17,8 +14,8 @@ runs:
     - name: Download build artifacts
       uses: actions/download-artifact@v7
 
-    - name: Calculate path names
-      id: paths
+    - name: Calculate artifact path name
+      id: path
       shell: pwsh
       run: |
         if ("${{ inputs.nightly }}" -eq "true") {
@@ -31,52 +28,38 @@ runs:
         }
 
         "dir_name=$dirName" >> $env:GITHUB_OUTPUT
-        "spacer_dir=SpacerNET-$dirName" >> $env:GITHUB_OUTPUT
 
     - name: Prepare Release Structure
       shell: pwsh
       run: |
-        $relDir = "${{ steps.paths.outputs.dir_name }}"
-        $spacerDir = "${{ steps.paths.outputs.spacer_dir }}"
+        $relDir = "${{ steps.path.outputs.dir_name }}"
 
-        function Copy-Assets($dest) {
-          New-Item -Path "$dest/GD3D11/Bin" -ItemType Directory -Force
-          Copy-Item -Path "D3D11Engine/Shaders/*" -Destination "$dest/GD3D11/shaders/" -Recurse -Force
-          Copy-Item -Path "blobs/Fonts" -Destination "$dest/GD3D11/Fonts/" -Recurse -Force
-          Copy-Item -Path "blobs/Meshes" -Destination "$dest/GD3D11/Meshes/" -Recurse -Force
-          Copy-Item -Path "blobs/Textures" -Destination "$dest/GD3D11/Textures/" -Recurse -Force
-          Copy-Item -Path "blobs/libs/*" -Destination "$dest/" -Recurse -Force
-          Copy-Item -Path "blobs/bin/wine-d2d1.dll" -Destination "$dest/GD3D11/Bin/d2d1.dll" -Force
-        }
-
-        Copy-Assets $relDir
+        New-Item -Path "$relDir/GD3D11/Bin" -ItemType Directory -Force
+        Copy-Item -Path "D3D11Engine/Shaders/*" -Destination "$relDir/GD3D11/shaders/" -Recurse -Force
+        Copy-Item -Path "blobs/Fonts" -Destination "$relDir/GD3D11/Fonts/" -Recurse -Force
+        Copy-Item -Path "blobs/Meshes" -Destination "$relDir/GD3D11/Meshes/" -Recurse -Force
+        Copy-Item -Path "blobs/Textures" -Destination "$relDir/GD3D11/Textures/" -Recurse -Force
+        Copy-Item -Path "blobs/libs/*" -Destination "$relDir/" -Recurse -Force
+        Copy-Item -Path "blobs/bin/wine-d2d1.dll" -Destination "$relDir/GD3D11/Bin/d2d1.dll" -Force
 
         Copy-Item -Path "Release/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2a.dll"
         Copy-Item -Path "Release_AVX/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2a_avx.dll"
         Copy-Item -Path "Release_AVX2/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2a_avx2.dll"
         Copy-Item -Path "Release_G1/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1.dll"
+        Copy-Item -Path "Release_G1_12f/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1a.dll"
         Copy-Item -Path "Release_G1_AVX/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1_avx.dll"
         Copy-Item -Path "Release_G1_AVX2/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1_avx2.dll"
+        Copy-Item -Path "Spacer_NET/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2_spacer.dll"
+        Copy-Item -Path "Spacer_NET_G1/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1_spacer.dll"
         Copy-Item -Path "Launcher/ddraw.dll" -Destination "$relDir/"
 
-        if ("${{ inputs.include-spacer-net }}" -eq "true") {
-          Copy-Assets $spacerDir
-          Copy-Item -Path "Spacer_NET/ddraw.dll" -Destination "$spacerDir/"
-        }
-
-    - name: Create ZIPs
+    - name: Create final Zip
       shell: pwsh
       run: |
-        $relDir = "${{ steps.paths.outputs.dir_name }}"
-        $spacerDir = "${{ steps.paths.outputs.spacer_dir }}"
-
+        $relDir = "${{ steps.path.outputs.dir_name }}"
         7z a -tzip "$relDir.zip" "./$relDir/*"
 
-        if ("${{ inputs.include-spacer-net }}" -eq "true") {
-          7z a -tzip "$spacerDir.zip" "./$spacerDir/*"
-        }
-
-    - name: Upload Zip Artifacts
+    - name: Upload Zip artifact
       uses: actions/upload-artifact@v6
       with:
         name: ${{ inputs.artifact-name }}

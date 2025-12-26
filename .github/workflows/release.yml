@@ -10,14 +10,25 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        configuration: [ Release_AVX, Release_AVX2, Release_G1_AVX, Release_G1_AVX2, Release, Release_G1, Spacer_NET, Launcher ]
+        configuration: [
+          Launcher,
+          Release,          # g2.dll
+          Release_AVX,      # g2_avx.dll
+          Release_AVX2,     # g2_avx2.dll
+          Release_G1,       # g1.dll
+          Release_G1_12f,   # g1a.dll
+          Release_G1_AVX,   # g1_avx.dll
+          Release_G1_AVX2,  # g1_avx2.dll
+          Spacer_NET,       # g2_spacer.dll
+          Spacer_NET_G1,    # g1_spacer.dll
+        ]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
       - name: Build configuration
-        uses: ./.github/actions/build
+        uses: ./.github/actions/build-configuration
         with:
           configuration: ${{ matrix.configuration }}
 
@@ -33,8 +44,7 @@ jobs:
         uses: ./.github/actions/package-artifacts
         with:
           nightly: false
-          artifact-name: "deployment-files"
-          include-spacer-net: true
+          artifact-name: "deployment-artifact"
 
   deploy-release:
     needs: package-artifacts
@@ -48,5 +58,5 @@ jobs:
         uses: ./.github/actions/deploy-artifacts
         with:
           nightly: false
-          artifact-name: "deployment-files"
+          artifact-name: "deployment-artifact"
           token: ${{ secrets.GITHUB_TOKEN }}
