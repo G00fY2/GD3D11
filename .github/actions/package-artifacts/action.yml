@@ -70,10 +70,10 @@ runs:
         $relDir = "${{ steps.paths.outputs.dir_name }}"
         $spacerDir = "${{ steps.paths.outputs.spacer_dir }}"
 
-        Compress-Archive -Path "$relDir/*" -DestinationPath "$relDir.zip" -Force
+        7z a -tzip "$relDir.zip" "./$relDir/*"
 
         if ("${{ inputs.include-spacer-net }}" -eq "true") {
-          Compress-Archive -Path "$spacerDir/*" -DestinationPath "$spacerDir.zip" -Force
+          7z a -tzip "$spacerDir.zip" "./$spacerDir/*"
         }
 
     - name: Upload Zip Artifacts
