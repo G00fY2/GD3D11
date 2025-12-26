@@ -19,11 +19,12 @@ runs:
       shell: pwsh
       run: |
         if ("${{ inputs.nightly }}" -eq "true") {
-            $version = $env:GITHUB_SHA.Substring(0, 9)
-            $dirName = "GD3D11-git-$version"
+          $shortHash = $env:GITHUB_SHA.Substring(0, 9)
+          $dirName = "GD3D11-git-$shortHash"
         } else {
-            $version = $env:GITHUB_REF -replace 'refs/tags/', ''
-            $dirName = "GD3D11-$version"
+          $rawName = $env:GITHUB_REF -replace '^refs/(tags|heads)/', ''
+          $safeName = $rawName -replace '/', '-'
+          $dirName = "GD3D11-$safeName"
         }
 
         "dir_name=$dirName" >> $env:GITHUB_OUTPUT
@@ -36,13 +37,13 @@ runs:
         $spacerDir = "${{ steps.paths.outputs.spacer_dir }}"
 
         function Copy-Assets($dest) {
-            New-Item -Path "$dest/GD3D11/Bin" -ItemType Directory -Force
-            Copy-Item -Path "D3D11Engine/Shaders/*" -Destination "$dest/GD3D11/shaders/" -Recurse -Force
-            Copy-Item -Path "blobs/Fonts" -Destination "$dest/GD3D11/Fonts/" -Recurse -Force
-            Copy-Item -Path "blobs/Meshes" -Destination "$dest/GD3D11/Meshes/" -Recurse -Force
-            Copy-Item -Path "blobs/Textures" -Destination "$dest/GD3D11/Textures/" -Recurse -Force
-            Copy-Item -Path "blobs/libs/*" -Destination "$dest/" -Recurse -Force
-            Copy-Item -Path "blobs/bin/wine-d2d1.dll" -Destination "$dest/GD3D11/Bin/d2d1.dll" -Force
+          New-Item -Path "$dest/GD3D11/Bin" -ItemType Directory -Force
+          Copy-Item -Path "D3D11Engine/Shaders/*" -Destination "$dest/GD3D11/shaders/" -Recurse -Force
+          Copy-Item -Path "blobs/Fonts" -Destination "$dest/GD3D11/Fonts/" -Recurse -Force
+          Copy-Item -Path "blobs/Meshes" -Destination "$dest/GD3D11/Meshes/" -Recurse -Force
+          Copy-Item -Path "blobs/Textures" -Destination "$dest/GD3D11/Textures/" -Recurse -Force
+          Copy-Item -Path "blobs/libs/*" -Destination "$dest/" -Recurse -Force
+          Copy-Item -Path "blobs/bin/wine-d2d1.dll" -Destination "$dest/GD3D11/Bin/d2d1.dll" -Force
         }
 
         Copy-Assets $relDir
@@ -56,8 +57,8 @@ runs:
         Copy-Item -Path "Launcher/ddraw.dll" -Destination "$relDir/"
 
         if ("${{ inputs.include-spacer-net }}" -eq "true") {
-            Copy-Assets $spacerDir
-            Copy-Item -Path "Spacer_NET/ddraw.dll" -Destination "$spacerDir/"
+          Copy-Assets $spacerDir
+          Copy-Item -Path "Spacer_NET/ddraw.dll" -Destination "$spacerDir/"
         }
 
     - name: Create ZIPs
@@ -69,7 +70,7 @@ runs:
         Compress-Archive -Path "$relDir/*" -DestinationPath "$relDir.zip" -Force
 
         if ("${{ inputs.include-spacer-net }}" -eq "true") {
-            Compress-Archive -Path "$spacerDir/*" -DestinationPath "$spacerDir.zip" -Force
+          Compress-Archive -Path "$spacerDir/*" -DestinationPath "$spacerDir.zip" -Force
         }
 
     - name: Upload Zip Artifacts
