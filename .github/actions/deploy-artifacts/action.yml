@@ -1,12 +1,17 @@
-name: Deploy artifacts
-description: Deploy artifacts and create or replace a GitHub release
+name: 'Deploy artifacts'
 
 inputs:
   token:
-    description: GitHub token
+    description: "GitHub token"
     required: true
   nightly:
-    description: Defines if nightly or regular release (case sensitive String representation of Boolean)
+    description: "Boolean string ('true'/'false')"
+    required: true
+  release_dir:
+    description: "Path to the release directory"
+    required: true
+  spacer_release_dir:
+    description: "Path to the spacer_net release directory"
     required: true
 
 runs:
@@ -14,20 +19,18 @@ runs:
   steps:
     - name: Delete old nightly
       if: ${{ inputs.nightly == 'true' }}
-      # always succeed to avoid failures when nightly release does not exist
+      shell: bash
       run: |
-        gh release delete nightly --yes --cleanup-tag
-        exit 0
+        gh release delete nightly --yes --cleanup-tag || echo "No nightly release found to delete"
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
-      shell: pwsh
 
     - name: Create nightly release
       if: ${{ inputs.nightly == 'true' }}
       uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
       with:
         allowUpdates: true
-        artifacts: "${{ env.RELEASE_DIR }}.zip,${{ env.SPACER_RELEASE_DIR }}.zip"
+        artifacts: "${{ inputs.release_dir }}.zip,${{ inputs.spacer_release_dir }}.zip"
         generateReleaseNotes: true
         name: Nightly
         prerelease: true
@@ -40,6 +43,6 @@ runs:
       uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
       with:
         allowUpdates: true
-        artifacts: "${{ env.RELEASE_DIR }}.zip,${{ env.SPACER_RELEASE_DIR }}.zip"
+        artifacts: "${{ inputs.release_dir }}.zip,${{ inputs.spacer_release_dir }}.zip"
         generateReleaseNotes: true
         token: ${{ inputs.token }}

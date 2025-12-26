@@ -1,9 +1,14 @@
-name: Package artifact
-description: Packages the artifact
+name: 'Package artifact'
 
 inputs:
   include-spacer-net:
-    description: Defines if spacer_net artifact should be included (case sensitive String representation of Boolean)
+    description: "Defines if spacer_net artifact should be included (case sensitive String representation of Boolean)"
+    required: true
+  release_dir:
+    description: "Path to the release directory"
+    required: true
+  spacer_release_dir:
+    description: "Path to the spacer_net release directory"
     required: true
 
 runs:
@@ -12,69 +17,47 @@ runs:
     - name: Download build artifacts
       uses: actions/download-artifact@v7
 
-    - name: Display structure of downloaded files
-      run: ls -R
+    - name: Prepare Release Structure
       shell: pwsh
-
-    - name: Copy (nightly) release files
-      working-directory: ${{ env.GITHUB_WORKSPACE }}
       run: |
-        mkdir "${{ env.RELEASE_DIR }}\GD3D11\Bin" -Force
-        Xcopy "D3D11Engine\Shaders\*" "${{ env.RELEASE_DIR }}\GD3D11\shaders\" /S /Y
-        Xcopy "blobs\Fonts" "${{ env.RELEASE_DIR }}\GD3D11\Fonts\" /S /Y
-        Xcopy "blobs\Meshes" "${{ env.RELEASE_DIR }}\GD3D11\Meshes\" /S /Y
-        Xcopy "blobs\Textures" "${{ env.RELEASE_DIR }}\GD3D11\Textures\" /S /Y
-        Xcopy "blobs\libs\*" "${{ env.RELEASE_DIR }}\" /S /Y
-        copy "blobs\bin\wine-d2d1.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\d2d1.dll"
-        copy "Release\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g2a.dll"
-        copy "Release_AVX\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g2a_avx.dll"
-        copy "Release_AVX2\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g2a_avx2.dll"
-        copy "Release_G1\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g1.dll"
-        copy "Release_G1_AVX\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g1_avx.dll"
-        copy "Release_G1_AVX2\ddraw.dll" "${{ env.RELEASE_DIR }}\GD3D11\Bin\g1_avx2.dll"
-        copy "Launcher\ddraw.dll" "${{ env.RELEASE_DIR }}"
-      shell: pwsh
+        function Copy-Assets($dest) {
+            New-Item -Path "$dest/GD3D11/Bin" -ItemType Directory -Force
+            Copy-Item -Path "D3D11Engine/Shaders/*" -Destination "$dest/GD3D11/shaders/" -Recurse -Force
+            Copy-Item -Path "blobs/Fonts" -Destination "$dest/GD3D11/Fonts/" -Recurse -Force
+            Copy-Item -Path "blobs/Meshes" -Destination "$dest/GD3D11/Meshes/" -Recurse -Force
+            Copy-Item -Path "blobs/Textures" -Destination "$dest/GD3D11/Textures/" -Recurse -Force
+            Copy-Item -Path "blobs/libs/*" -Destination "$dest/" -Recurse -Force
+            Copy-Item -Path "blobs/bin/wine-d2d1.dll" -Destination "$dest/GD3D11/Bin/d2d1.dll" -Force
+        }
 
-    - name: Copy spacer_net release files
-      if: ${{ inputs.include-spacer-net == 'true' }}
-      working-directory: ${{ env.GITHUB_WORKSPACE }}
+        Copy-Assets "${{ inputs.release_dir }}"
+        
+        Copy-Item -Path "Release/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g2a.dll"
+        Copy-Item -Path "Release_AVX/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g2a_avx.dll"
+        Copy-Item -Path "Release_AVX2/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g2a_avx2.dll"
+        Copy-Item -Path "Release_G1/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g1.dll"
+        Copy-Item -Path "Release_G1_AVX/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g1_avx.dll"
+        Copy-Item -Path "Release_G1_AVX2/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g1_avx2.dll"
+        Copy-Item -Path "Launcher/ddraw.dll" -Destination "${{ inputs.release_dir }}/"
+
+        if ("${{ inputs.include-spacer-net }}" -eq "true") {
+            Copy-Assets "${{ inputs.spacer_release_dir }}"
+            Copy-Item -Path "Spacer_NET/ddraw.dll" -Destination "${{ inputs.spacer_release_dir }}/"
+        }
+
+    - name: Create ZIPs
+      shell: pwsh
       run: |
-        mkdir "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Bin" -Force
-        Xcopy "D3D11Engine\Shaders\*" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\shaders\" /S /Y
-        Xcopy "blobs\Fonts" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Fonts\" /S /Y
-        Xcopy "blobs\Meshes" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Meshes\" /S /Y
-        Xcopy "blobs\Textures" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Textures\" /S /Y
-        Xcopy "blobs\libs\*" "${{ env.SPACER_RELEASE_DIR }}\" /S /Y
-        copy "blobs\bin\wine-d2d1.dll" "${{ env.SPACER_RELEASE_DIR }}\GD3D11\Bin\d2d1.dll"
-        copy "Spacer_NET\ddraw.dll" "${{ env.SPACER_RELEASE_DIR }}"
-      shell: pwsh
+        Compress-Archive -Path "${{ inputs.release_dir }}/*" -DestinationPath "${{ inputs.release_dir }}.zip" -Force
 
-    - name: Upload (nightly) release artifacts
+        if ("${{ inputs.include-spacer-net }}" -eq "true") {
+            Compress-Archive -Path "${{ inputs.spacer_release_dir }}/*" -DestinationPath "${{ inputs.spacer_release_dir }}.zip" -Force
+        }
+
+    - name: Upload Zip Artifacts
       uses: actions/upload-artifact@v6
       with:
-        name: ${{ env.RELEASE_DIR }}
-        path: ${{ env.RELEASE_DIR }}
-        compression-level: 1
-
-    - name: Upload spacer_net artifacts
-      if: ${{ inputs.include-spacer-net == 'true' }}
-      uses: actions/upload-artifact@v6
-      with:
-        name: ${{ env.SPACER_RELEASE_DIR }}
-        path: ${{ env.SPACER_RELEASE_DIR }}
-        compression-level: 1
-
-    - name: Compress distribution
-      working-directory: ${{ env.GITHUB_WORKSPACE }}
-      run: |
-        cd "${{ env.RELEASE_DIR }}"
-        7z a -tzip "..\${{ env.RELEASE_DIR }}.zip" -r
-      shell: pwsh
-
-    - name: Compress spacer_net distribution
-      if: ${{ inputs.include-spacer-net == 'true' }}
-      working-directory: ${{ env.GITHUB_WORKSPACE }}
-      run: |
-        cd "${{ env.SPACER_RELEASE_DIR }}"
-        7z a -tzip "..\${{ env.SPACER_RELEASE_DIR }}.zip" -r
-      shell: pwsh
+        name: final-packages
+        path: "*.zip"
+        compression-level: 0
+        retention-days: 2

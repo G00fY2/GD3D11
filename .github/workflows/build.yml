@@ -30,12 +30,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Build target
-        uses: ./.github/actions/build-target
+      - name: Build configuration
+        uses: ./.github/actions/build
         with:
-          target: ${{ matrix.configuration }}
+          configuration: ${{ matrix.configuration }}
 
-  deploy-release:
+  deploy-nightly-release:
     if: github.ref_name == 'master'
     needs: build
     runs-on: windows-latest
@@ -44,8 +44,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Setup env vars
-        uses: ./.github/actions/setup-env-vars
+      - name: Calculate path names
+        uses: ./.github/actions/calc_path_names
         with:
           nightly: true
 
@@ -53,9 +53,13 @@ jobs:
         uses: ./.github/actions/package-artifacts
         with:
           include-spacer-net: false
+          release_dir: $RELEASE_DIR
+          spacer_release_dir: $SPACER_RELEASE_DIR
 
       - name: Create nightly release
         uses: ./.github/actions/deploy-artifacts
         with:
           nightly: true
+          release_dir: $RELEASE_DIR
+          spacer_release_dir: $SPACER_RELEASE_DIR
           token: ${{ secrets.GITHUB_TOKEN }}

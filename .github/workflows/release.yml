@@ -20,10 +20,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Build target
-        uses: ./.github/actions/build-target
+      - name: Build configuration
+        uses: ./.github/actions/build
         with:
-          target: ${{ matrix.configuration }}
+          configuration: ${{ matrix.configuration }}
 
   deploy-release:
     needs: build
@@ -33,8 +33,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Setup env vars
-        uses: ./.github/actions/setup-env-vars
+      - name: Calculate path names
+        uses: ./.github/actions/calc_path_names
         with:
           nightly: false
 
@@ -42,9 +42,13 @@ jobs:
         uses: ./.github/actions/package-artifacts
         with:
           include-spacer-net: true
+          release_dir: $RELEASE_DIR
+          spacer_release_dir: $SPACER_RELEASE_DIR
 
       - name: Create release
         uses: ./.github/actions/deploy-artifacts
         with:
           nightly: false
+          release_dir: $RELEASE_DIR
+          spacer_release_dir: $SPACER_RELEASE_DIR
           token: ${{ secrets.GITHUB_TOKEN }}

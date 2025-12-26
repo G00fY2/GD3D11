@@ -1,0 +1,40 @@
+name: 'Build'
+
+inputs:
+  configuration:
+    description: "The configuration that should be build"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore NuGet packages
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      shell: pwsh
+      run: nuget restore .
+
+    - name: Build (${{ inputs.configuration }})
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      shell: pwsh
+      run: |
+        $shortHash = $env:GITHUB_SHA.Substring(0, 9)
+        $version = "-git-$shortHash"
+        
+        $msbuildArgs = @(
+          ".",
+          "/p:Configuration=${{ inputs.configuration }}",
+          "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`""
+        )
+        
+        msbuild @msbuildArgs
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ inputs.configuration }}
+        path: ${{ inputs.configuration }}/ddraw.dll
+        compression-level: 1
+        retention-days: 2
