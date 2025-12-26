@@ -32,7 +32,7 @@ jobs:
           configuration: ${{ matrix.configuration }}
 
   package-artifacts:
-    if: github.ref_name == 'master'
+    #if: github.ref_name == 'master'
     needs: build
     runs-on: windows-latest
 
@@ -47,7 +47,7 @@ jobs:
           include-spacer-net: true
 
   deploy-nightly-release:
-    if: github.ref_name == 'master'
+    #if: github.ref_name == 'master'
     needs: package-artifacts
     runs-on: windows-latest
 
