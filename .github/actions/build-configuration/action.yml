@@ -21,11 +21,12 @@ runs:
       shell: pwsh
       run: |
         $shortHash = $env:GITHUB_SHA.Substring(0, 9)
-        $version = "-git-$shortHash"
+        $versionString = "-git-$shortHash"
         
         $msbuildArgs = @(
-          ".",
+          "D3D11Engine/D3D11Engine.vcxproj",
           "/p:Configuration=${{ inputs.configuration }}",
+          "/p:Platform=Win32",
           "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`""
         )
         
