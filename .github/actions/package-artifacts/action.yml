@@ -1,14 +1,11 @@
 name: 'Package artifact'
 
 inputs:
+  nightly:
+    description: "Boolean string ('true'/'false')"
+    required: true
   include-spacer-net:
-    description: "Defines if spacer_net artifact should be included (case sensitive String representation of Boolean)"
-    required: true
-  release_dir:
-    description: "Path to the release directory"
-    required: true
-  spacer_release_dir:
-    description: "Path to the spacer_net release directory"
+    description: "Defines if spacer_net artifact should be included"
     required: true
 
 runs:
@@ -17,9 +14,27 @@ runs:
     - name: Download build artifacts
       uses: actions/download-artifact@v7
 
+    - name: Calculate path names
+      id: paths
+      shell: pwsh
+      run: |
+        if ("${{ inputs.nightly }}" -eq "true") {
+            $version = $env:GITHUB_SHA.Substring(0, 9)
+            $dirName = "GD3D11-git-$version"
+        } else {
+            $version = $env:GITHUB_REF -replace 'refs/tags/', ''
+            $dirName = "GD3D11-$version"
+        }
+
+        "dir_name=$dirName" >> $env:GITHUB_OUTPUT
+        "spacer_dir=SpacerNET-$dirName" >> $env:GITHUB_OUTPUT
+
     - name: Prepare Release Structure
       shell: pwsh
       run: |
+        $relDir = "${{ steps.paths.outputs.dir_name }}"
+        $spacerDir = "${{ steps.paths.outputs.spacer_dir }}"
+
         function Copy-Assets($dest) {
             New-Item -Path "$dest/GD3D11/Bin" -ItemType Directory -Force
             Copy-Item -Path "D3D11Engine/Shaders/*" -Destination "$dest/GD3D11/shaders/" -Recurse -Force
@@ -30,28 +45,31 @@ runs:
             Copy-Item -Path "blobs/bin/wine-d2d1.dll" -Destination "$dest/GD3D11/Bin/d2d1.dll" -Force
         }
 
-        Copy-Assets "${{ inputs.release_dir }}"
-        
-        Copy-Item -Path "Release/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g2a.dll"
-        Copy-Item -Path "Release_AVX/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g2a_avx.dll"
-        Copy-Item -Path "Release_AVX2/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g2a_avx2.dll"
-        Copy-Item -Path "Release_G1/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g1.dll"
-        Copy-Item -Path "Release_G1_AVX/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g1_avx.dll"
-        Copy-Item -Path "Release_G1_AVX2/ddraw.dll" -Destination "${{ inputs.release_dir }}/GD3D11/Bin/g1_avx2.dll"
-        Copy-Item -Path "Launcher/ddraw.dll" -Destination "${{ inputs.release_dir }}/"
+        Copy-Assets $relDir
+
+        Copy-Item -Path "Release/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2a.dll"
+        Copy-Item -Path "Release_AVX/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2a_avx.dll"
+        Copy-Item -Path "Release_AVX2/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2a_avx2.dll"
+        Copy-Item -Path "Release_G1/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1.dll"
+        Copy-Item -Path "Release_G1_AVX/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1_avx.dll"
+        Copy-Item -Path "Release_G1_AVX2/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1_avx2.dll"
+        Copy-Item -Path "Launcher/ddraw.dll" -Destination "$relDir/"
 
         if ("${{ inputs.include-spacer-net }}" -eq "true") {
-            Copy-Assets "${{ inputs.spacer_release_dir }}"
-            Copy-Item -Path "Spacer_NET/ddraw.dll" -Destination "${{ inputs.spacer_release_dir }}/"
+            Copy-Assets $spacerDir
+            Copy-Item -Path "Spacer_NET/ddraw.dll" -Destination "$spacerDir/"
         }
 
     - name: Create ZIPs
       shell: pwsh
       run: |
-        Compress-Archive -Path "${{ inputs.release_dir }}/*" -DestinationPath "${{ inputs.release_dir }}.zip" -Force
+        $relDir = "${{ steps.paths.outputs.dir_name }}"
+        $spacerDir = "${{ steps.paths.outputs.spacer_dir }}"
+
+        Compress-Archive -Path "$relDir/*" -DestinationPath "$relDir.zip" -Force
 
         if ("${{ inputs.include-spacer-net }}" -eq "true") {
-            Compress-Archive -Path "${{ inputs.spacer_release_dir }}/*" -DestinationPath "${{ inputs.spacer_release_dir }}.zip" -Force
+            Compress-Archive -Path "$spacerDir/*" -DestinationPath "$spacerDir.zip" -Force
         }
 
     - name: Upload Zip Artifacts

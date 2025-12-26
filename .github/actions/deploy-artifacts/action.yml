@@ -7,16 +7,13 @@ inputs:
   nightly:
     description: "Boolean string ('true'/'false')"
     required: true
-  release_dir:
-    description: "Path to the release directory"
-    required: true
-  spacer_release_dir:
-    description: "Path to the spacer_net release directory"
-    required: true
 
 runs:
   using: composite
   steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v7
+
     - name: Delete old nightly
       if: ${{ inputs.nightly == 'true' }}
       shell: bash
@@ -30,7 +27,7 @@ runs:
       uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
       with:
         allowUpdates: true
-        artifacts: "${{ inputs.release_dir }}.zip,${{ inputs.spacer_release_dir }}.zip"
+        artifacts: "*.zip"
         generateReleaseNotes: true
         name: Nightly
         prerelease: true
@@ -43,6 +40,6 @@ runs:
       uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
       with:
         allowUpdates: true
-        artifacts: "${{ inputs.release_dir }}.zip,${{ inputs.spacer_release_dir }}.zip"
+        artifacts: "*.zip"
         generateReleaseNotes: true
         token: ${{ inputs.token }}

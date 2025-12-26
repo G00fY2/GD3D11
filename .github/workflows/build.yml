@@ -15,10 +15,6 @@ on:
 
   workflow_dispatch:
 
-defaults:
-  run:
-    shell: pwsh
-
 jobs:
   build:
     runs-on: windows-latest
@@ -35,7 +31,7 @@ jobs:
         with:
           configuration: ${{ matrix.configuration }}
 
-  deploy-nightly-release:
+  package-artifacts:
     if: github.ref_name == 'master'
     needs: build
     runs-on: windows-latest
@@ -44,17 +40,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Calculate path names
-        uses: ./.github/actions/calc_path_names
-        with:
-          nightly: true
-
-      - name: Package nightly artifact
+      - name: Package artifacts
         uses: ./.github/actions/package-artifacts
         with:
-          include-spacer-net: false
-          release_dir: $RELEASE_DIR
-          spacer_release_dir: $SPACER_RELEASE_DIR
+          nightly: false
+          include-spacer-net: true
+
+  deploy-nightly-release:
+    if: github.ref_name == 'master'
+    needs: package-artifacts
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
       - name: Create nightly release
         uses: ./.github/actions/deploy-artifacts

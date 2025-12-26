@@ -5,10 +5,6 @@ on:
     tags:
       - 'v*'
 
-defaults:
-  run:
-    shell: pwsh
-
 jobs:
   build:
     runs-on: windows-latest
@@ -25,7 +21,7 @@ jobs:
         with:
           configuration: ${{ matrix.configuration }}
 
-  deploy-release:
+  package-artifacts:
     needs: build
     runs-on: windows-latest
 
@@ -33,17 +29,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Calculate path names
-        uses: ./.github/actions/calc_path_names
-        with:
-          nightly: false
-
       - name: Package artifacts
         uses: ./.github/actions/package-artifacts
         with:
+          nightly: false
           include-spacer-net: true
-          release_dir: $RELEASE_DIR
-          spacer_release_dir: $SPACER_RELEASE_DIR
+
+  deploy-release:
+    needs: package-artifacts
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
       - name: Create release
         uses: ./.github/actions/deploy-artifacts
