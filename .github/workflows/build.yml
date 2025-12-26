@@ -30,7 +30,7 @@ jobs:
           Release_G1_AVX,   # g1_avx.dll
           Release_G1_AVX2,  # g1_avx2.dll
           Spacer_NET,       # g2_spacer.dll
-          Spacer_NET_G1,    # g1_spacer.dll
+          # Spacer_NET_G1,    # g1_spacer.dll
         ]
 
     steps:
