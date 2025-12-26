@@ -29,6 +29,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
       - name: Build target
         uses: ./.github/actions/build-target
         with:
@@ -42,6 +43,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
       - name: Setup env vars
         uses: ./.github/actions/setup-env-vars
         with:
