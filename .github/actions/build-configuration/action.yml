@@ -28,14 +28,16 @@ runs:
               ".",
               "/p:Configuration=${{ inputs.configuration }}",
               "/p:Platform=Win32",
-              "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`""
+              "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`"",
+              "/p:OutDir=${{ inputs.configuration }}\\"
           )
         } else {
           $msbuildArgs = @(
               "D3D11Engine/D3D11Engine.vcxproj",
               "/p:Configuration=${{ inputs.configuration }}",
               "/p:Platform=Win32",
-              "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`""
+              "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`"",
+              "/p:OutDir=${{ inputs.configuration }}\\"
           )
         }
 
