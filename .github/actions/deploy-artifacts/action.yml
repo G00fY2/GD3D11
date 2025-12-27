@@ -7,8 +7,8 @@ inputs:
   nightly:
     description: "Boolean string ('true'/'false')"
     required: true
-  artifact-name:
-    description: "Name of the artifact that contains files for deployment"
+  artifact-id:
+    description: "ID of the artifact that contains files for deployment"
     required: true
 
 runs:
@@ -17,8 +17,7 @@ runs:
     - name: Download build artifacts
       uses: actions/download-artifact@v7
       with:
-        name: ${{ inputs.artifact-name }}
-        path: ${{ inputs.artifact-name }}
+        artifact-ids: ${{ inputs.artifact-id }}
 
     - name: Delete old nightly
       if: ${{ inputs.nightly == 'true' }}
@@ -34,7 +33,7 @@ runs:
       with:
         allowUpdates: true
         artifactErrorsFailBuild: true
-        artifacts: "${{ inputs.artifact-name }}/*.zip"
+        artifacts: "*.zip"
         generateReleaseNotes: true
         name: Nightly
         prerelease: true
@@ -48,6 +47,6 @@ runs:
       with:
         allowUpdates: true
         artifactErrorsFailBuild: true
-        artifacts: "${{ inputs.artifact-name }}/*.zip"
+        artifacts: "*.zip"
         generateReleaseNotes: true
         token: ${{ inputs.token }}

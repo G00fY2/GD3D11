@@ -6,8 +6,8 @@ inputs:
     required: true
 
 outputs:
-  artifact-name:
-    description: "Name of the artifact that will be uploaded"
+  artifact-id:
+    description: "ID of the artifact that was uploaded"
 
 runs:
   using: composite
@@ -27,7 +27,6 @@ runs:
 
         "release-dir=$dirName" >> $env:GITHUB_OUTPUT
         "download-dir=downloaded-artifacts" >> $env:GITHUB_OUTPUT
-        "artifact-name=Deployment_Artifact" >> $env:GITHUB_OUTPUT
 
     - name: Download build artifacts
       uses: actions/download-artifact@v7
@@ -61,9 +60,10 @@ runs:
         7z a -tzip -mx=7 -mmt=on -mtc=on "$relDir.zip" "./$relDir/*"
 
     - name: Upload Zip artifact
+      id: artifact-upload
       uses: actions/upload-artifact@v6
       with:
-        name: ${{ steps.calc-path.outputs.artifact-name }}
+        name: "Deployment"
         path: "*.zip"
         compression-level: 0
         retention-days: 2

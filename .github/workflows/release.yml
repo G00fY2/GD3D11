@@ -68,7 +68,7 @@ jobs:
     runs-on: windows-latest
 
     outputs:
-      artifact-name: ${{ steps.package-artifacts.outputs.artifact-name }}
+      artifact-id: ${{ steps.package-artifacts.outputs.artifact-id }}
 
     steps:
       - name: Checkout repository
@@ -92,5 +92,5 @@ jobs:
         uses: ./.github/actions/deploy-artifacts
         with:
           nightly: false
-          artifact-name: ${{ needs.package-artifacts.outputs.artifact-name }}
+          artifact-id: ${{ needs.package-artifacts.outputs.artifact-id }}
           token: ${{ secrets.GITHUB_TOKEN }}
