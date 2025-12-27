@@ -97,8 +97,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout only composite actions
         uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github/actions
+          filter: blob:none
 
       - name: Create nightly release
         uses: ./.github/actions/deploy-artifacts
