@@ -45,11 +45,11 @@ jobs:
             output: g1_avx2.dll
 
           - configuration: Spacer_NET
-            project: Spacer_NET/Spacer_NET.vcxproj
+            project: D3D11Engine/D3D11Engine.vcxproj
             output: g2_spacer.dll
 
           - configuration: Spacer_NET_G1
-            project: Spacer_NET/Spacer_NET.vcxproj
+            project: D3D11Engine/D3D11Engine.vcxproj
             output: g1_spacer.dll
 
     steps:
