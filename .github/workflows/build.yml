@@ -76,7 +76,7 @@ jobs:
   package-nightly-artifacts:
     #if: github.ref_name == 'master'
     needs: build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     outputs:
       artifact-id: ${{ steps.package-artifacts.outputs.artifact-id }}
@@ -94,7 +94,7 @@ jobs:
   deploy-nightly-release:
     #if: github.ref_name == 'master'
     needs: package-nightly-artifacts
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository

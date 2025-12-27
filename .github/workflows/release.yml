@@ -65,7 +65,7 @@ jobs:
 
   package-artifacts:
     needs: build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     outputs:
       artifact-id: ${{ steps.package-artifacts.outputs.artifact-id }}
@@ -82,7 +82,7 @@ jobs:
 
   deploy-release:
     needs: package-artifacts
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository

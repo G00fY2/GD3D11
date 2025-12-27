@@ -58,7 +58,7 @@ runs:
       shell: pwsh
       run: |
         $relDir = "${{ steps.calc-path.outputs.release-dir }}"
-        7z a -tzip -mx=7 -mmt=on -mtc=on "$relDir.zip" "./$relDir/*"
+        7z a -tzip -mx=7 -mmt=on "$relDir.zip" "./$relDir/*"
 
     - name: Upload Zip artifact
       id: artifact-upload
