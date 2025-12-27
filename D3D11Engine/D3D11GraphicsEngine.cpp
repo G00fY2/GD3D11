@@ -66,6 +66,8 @@ static const GUID IID_IDXGIDeviceRenderDoc = { 0xa7aa6116, 0x9c8d, 0x4bba, { 0x9
 constexpr float inv255f = (1.f / 255.f);
 float vobAnimation_WindStrength = 1.0f;
 
+constexpr DXGI_FORMAT VERTEX_INDEX_DXGI_FORMAT = sizeof( VERTEX_INDEX ) == sizeof( unsigned short ) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+
 bool NativeSupport16BitTextures = false;
 bool FeatureLevel10Compatibility = false;
 bool FeatureRTArrayIndexFromAnyShader = false;
@@ -1529,14 +1531,8 @@ XRESULT D3D11GraphicsEngine::DrawVertexBufferIndexed( D3D11VertexBuffer* vb,
         UINT uStride = sizeof( ExVertexStruct );
         Context->IASetVertexBuffers( 0, 1, vb->GetVertexBuffer().GetAddressOf(), &uStride, &offset );
 
-        if ( sizeof( VERTEX_INDEX ) == sizeof( unsigned short ) ) {
-            Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-                DXGI_FORMAT_R16_UINT, 0 );
-        } else {
-            Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-                DXGI_FORMAT_R32_UINT, 0 );
-        }
-}
+        Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(), VERTEX_INDEX_DXGI_FORMAT, 0 );
+    }
 
     if ( numIndices ) {
         // Draw the mesh
@@ -1619,14 +1615,8 @@ XRESULT D3D11GraphicsEngine::DrawVertexBufferInstancedIndexed(
         UINT uStride = sizeof( ExVertexStruct );
         Context->IASetVertexBuffers( 0, 1, vb->GetVertexBuffer().GetAddressOf(), &uStride, &offset );
 
-        if ( sizeof( VERTEX_INDEX ) == sizeof( unsigned short ) ) {
-            Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-                DXGI_FORMAT_R16_UINT, 0 );
-        } else {
-            Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-                DXGI_FORMAT_R32_UINT, 0 );
-        }
-}
+        Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(), VERTEX_INDEX_DXGI_FORMAT, 0 );
+    }
 
     if ( numIndices ) {
         // Draw the mesh
@@ -2032,13 +2022,7 @@ XRESULT  D3D11GraphicsEngine::DrawSkeletalVertexNormals( SkeletalVobInfo* vi,
             UINT uStride = sizeof( ExSkelVertexStruct );
             GetContext()->IASetVertexBuffers( 0, 1, vb->GetVertexBuffer().GetAddressOf(), &uStride, &offset );
 
-            if ( sizeof( VERTEX_INDEX ) == sizeof( unsigned short ) ) {
-                GetContext()->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-                    DXGI_FORMAT_R16_UINT, 0 );
-            } else {
-                GetContext()->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-                    DXGI_FORMAT_R32_UINT, 0 );
-            }
+            Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(), VERTEX_INDEX_DXGI_FORMAT, 0 );
 
             // Draw the mesh
             GetContext()->DrawIndexed( numIndices, 0, 0 );
@@ -2132,13 +2116,7 @@ XRESULT D3D11GraphicsEngine::DrawSkeletalMesh( SkeletalVobInfo* vi,
             UINT uStride = sizeof( ExSkelVertexStruct );
             Context->IASetVertexBuffers( 0, 1, vb->GetVertexBuffer().GetAddressOf(), &uStride, &offset );
 
-            if ( sizeof( VERTEX_INDEX ) == sizeof( unsigned short ) ) {
-                Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-                    DXGI_FORMAT_R16_UINT, 0 );
-            } else {
-                Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-                    DXGI_FORMAT_R32_UINT, 0 );
-            }
+            Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(), VERTEX_INDEX_DXGI_FORMAT, 0 );
 
             // Draw the mesh
             Context->DrawIndexed( numIndices, 0, 0 );
@@ -2226,13 +2204,7 @@ XRESULT D3D11GraphicsEngine::DrawSkeletalMesh_Layered( SkeletalVobInfo* vi,
             UINT uStride = sizeof( ExSkelVertexStruct );
             Context->IASetVertexBuffers( 0, 1, vb->GetVertexBuffer().GetAddressOf(), &uStride, &offset );
 
-            if ( sizeof( VERTEX_INDEX ) == sizeof( unsigned short ) ) {
-                Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-                    DXGI_FORMAT_R16_UINT, 0 );
-            } else {
-                Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-                    DXGI_FORMAT_R32_UINT, 0 );
-            }
+            Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(), VERTEX_INDEX_DXGI_FORMAT, 0 );
 
             // Draw the mesh
             Context->DrawIndexedInstanced( numIndices, 6, 0, 0, 0 );
@@ -2305,13 +2277,7 @@ XRESULT D3D11GraphicsEngine::DrawInstanced(
     };
     Context->IASetVertexBuffers( 0, 2, buffers, uStride, offset );
 
-    if ( sizeof( VERTEX_INDEX ) == sizeof( unsigned short ) ) {
-        Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-            DXGI_FORMAT_R16_UINT, 0 );
-    } else {
-        Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-            DXGI_FORMAT_R32_UINT, 0 );
-    }
+    Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(), VERTEX_INDEX_DXGI_FORMAT, 0 );
 
     // Draw the batch
     Context->DrawIndexedInstanced( numIndices, numInstances, 0, 0, 0 );
@@ -2337,13 +2303,7 @@ XRESULT D3D11GraphicsEngine::DrawInstanced(
     };
     GetContext()->IASetVertexBuffers( 0, 2, buffers, uStride, offset );
 
-    if ( sizeof( VERTEX_INDEX ) == sizeof( unsigned short ) ) {
-        GetContext()->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-            DXGI_FORMAT_R16_UINT, 0 );
-    } else {
-        GetContext()->IASetIndexBuffer( ib->GetVertexBuffer().Get(),
-            DXGI_FORMAT_R32_UINT, 0 );
-    }
+    Context->IASetIndexBuffer( ib->GetVertexBuffer().Get(), VERTEX_INDEX_DXGI_FORMAT, 0 );
 
     unsigned int max =
         Engine::GAPI->GetRendererState().RendererSettings.MaxNumFaces * 3;
