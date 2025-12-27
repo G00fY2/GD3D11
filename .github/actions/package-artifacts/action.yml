@@ -66,5 +66,6 @@ runs:
       with:
         name: "Deployment"
         path: "*.zip"
+        if-no-files-found: error
         compression-level: 0
         retention-days: 2
