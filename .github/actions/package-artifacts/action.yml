@@ -8,7 +8,6 @@ inputs:
 outputs:
   artifact-name:
     description: "Name of the artifact that will be uploaded"
-    value: ${{ steps.calc-path.outputs.artifact-name }}
 
 runs:
   using: composite
