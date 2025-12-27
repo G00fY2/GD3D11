@@ -50,5 +50,5 @@ runs:
         name: ${{ inputs.configuration }}
         path: ${{ steps.build.outputs.artifact-file-path }}
         if-no-files-found: error
-        compression-level: 0
+        compression-level: 1
         retention-days: 2
