@@ -14,7 +14,8 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Download build artifacts
+    - name: Download build artifact
+      id: download-artifact
       uses: actions/download-artifact@v7
       with:
         artifact-ids: ${{ inputs.artifact-id }}
@@ -33,7 +34,7 @@ runs:
       with:
         allowUpdates: true
         artifactErrorsFailBuild: true
-        artifacts: "*.zip"
+        artifacts: "${{ steps.download-artifact.outputs.download-path }}/*.zip"
         generateReleaseNotes: true
         name: Nightly
         prerelease: true
@@ -47,6 +48,6 @@ runs:
       with:
         allowUpdates: true
         artifactErrorsFailBuild: true
-        artifacts: "*.zip"
+        artifacts: "${{ steps.download-artifact.outputs.download-path }}/*.zip"
         generateReleaseNotes: true
         token: ${{ inputs.token }}
