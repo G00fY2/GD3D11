@@ -7,7 +7,7 @@ inputs:
   project:
     description: "Path to the vcxproj file that should be built"
     required: true
-  output:
+  output-file:
     description: "Name of the build artifact"
     required: true
 
@@ -28,7 +28,7 @@ runs:
       run: |
         $shortHash = $env:GITHUB_SHA.Substring(0, 9)
         $versionString = "-git-$shortHash"
-        $outputName = [System.IO.Path]::GetFileNameWithoutExtension("${{ inputs.output }}")
+        $outputName = [System.IO.Path]::GetFileNameWithoutExtension("${{ inputs.output-file }}")
         $outputDir = "$env:GITHUB_WORKSPACE\outputs\"
 
         $msbuildArgs = @(

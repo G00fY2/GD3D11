@@ -24,43 +24,43 @@ jobs:
         include:
           - configuration: Launcher
             project: Launcher/Launcher.vcxproj
-            output: ddraw.dll
+            output-file: ddraw.dll
 
           - configuration: Release
             project: D3D11Engine/D3D11Engine.vcxproj
-            output: g2a.dll
+            output-file: g2a.dll
 
           - configuration: Release_AVX
             project: D3D11Engine/D3D11Engine.vcxproj
-            output: g2a_avx.dll
+            output-file: g2a_avx.dll
 
           - configuration: Release_AVX2
             project: D3D11Engine/D3D11Engine.vcxproj
-            output: g2a_avx2.dll
+            output-file: g2a_avx2.dll
 
           - configuration: Release_G1
             project: D3D11Engine/D3D11Engine.vcxproj
-            output: g1.dll
+            output-file: g1.dll
 
           - configuration: Release_G1_12f
             project: D3D11Engine/D3D11Engine.vcxproj
-            output: g1a.dll
+            output-file: g1a.dll
 
           - configuration: Release_G1_AVX
             project: D3D11Engine/D3D11Engine.vcxproj
-            output: g1_avx.dll
+            output-file: g1_avx.dll
 
           - configuration: Release_G1_AVX2
             project: D3D11Engine/D3D11Engine.vcxproj
-            output: g1_avx2.dll
+            output-file: g1_avx2.dll
 
           - configuration: Spacer_NET
             project: D3D11Engine/D3D11Engine.vcxproj
-            output: g2_spacer.dll
+            output-file: g2_spacer.dll
 
           - configuration: Spacer_NET_G1
             project: D3D11Engine/D3D11Engine.vcxproj
-            output: g1_spacer.dll
+            output-file: g1_spacer.dll
 
     steps:
       - name: Checkout repository
