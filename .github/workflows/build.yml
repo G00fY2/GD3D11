@@ -74,7 +74,7 @@ jobs:
           output-file: ${{ matrix.output-file }}
 
   package-nightly-artifacts:
-    #if: github.ref_name == 'master'
+    if: github.ref_name == 'master'
     needs: build
     runs-on: ubuntu-latest
 
@@ -92,7 +92,7 @@ jobs:
           nightly: true
 
   deploy-nightly-release:
-    #if: github.ref_name == 'master'
+    if: github.ref_name == 'master'
     needs: package-nightly-artifacts
     runs-on: ubuntu-latest
 
