@@ -336,4 +336,25 @@ namespace Toolbox {
         // We dont expect anyone to play for 49 Days straight!
         return static_cast<DWORD>( std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - s_startPoint).count() );
     }
+
+    bool IsWindowsVersionOrGreater( WORD wMajorVersion, WORD wMinorVersion, WORD wServicePackMajor ) {
+        OSVERSIONINFOEXW osvi = { sizeof( osvi ), 0, 0, 0, 0, {0}, 0, 0 };
+        DWORDLONG const dwlConditionMask = VerSetConditionMask(
+            VerSetConditionMask(
+                VerSetConditionMask(
+                    0, VER_MAJORVERSION, VER_GREATER_EQUAL ),
+                VER_MINORVERSION, VER_GREATER_EQUAL ),
+                   VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL );
+
+        osvi.dwMajorVersion = wMajorVersion;
+        osvi.dwMinorVersion = wMinorVersion;
+        osvi.wServicePackMajor = wServicePackMajor;
+
+        typedef int ( WINAPI* PFN_RtlVerifyVersionInfo )( LPOSVERSIONINFOEXW lpVersionInformation, DWORD dwTypeMask, DWORDLONG dwlConditionMask );
+        if ( HMODULE ntdllModule = GetModuleHandleA( "ntdll.dll" ) ) {
+            PFN_RtlVerifyVersionInfo RtlVerifyVersionInfo = (PFN_RtlVerifyVersionInfo)GetProcAddress( ntdllModule, "RtlVerifyVersionInfo" );
+            return RtlVerifyVersionInfo( &osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR, dwlConditionMask ) >= 0;
+        }
+        return VerifyVersionInfoW( &osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR, dwlConditionMask ) != FALSE;
+    }
 }

@@ -36,6 +36,9 @@ public:
     /** Returns the size of the texture in bytes */
     UINT GetSizeInBytes( int mip );
 
+    /** Returns if texture is 16bit type */
+    bool Is16BitTexture();
+
     /** Binds this texture to a pixelshader */
     XRESULT BindToPixelShader( int slot );
 

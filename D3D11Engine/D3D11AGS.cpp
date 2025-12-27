@@ -17,7 +17,7 @@ D3D11AGS::~D3D11AGS() {
 /** Initializes the api */
 bool D3D11AGS::InitAGS() {
     AGSGPUInfo gpuInfo;
-    if ( AGS_SUCCESS == agsInitialize( AGS_CURRENT_VERSION, nullptr, &ExtensionContext, &gpuInfo )) {
+    if ( agsInitialize( AGS_CURRENT_VERSION, nullptr, &ExtensionContext, &gpuInfo ) == AGS_SUCCESS ) {
         IsInitialized = true;
         return true;
     }

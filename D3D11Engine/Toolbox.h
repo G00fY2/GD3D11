@@ -182,4 +182,7 @@ namespace Toolbox {
 
     /** Returns the elapsed milliseconds since first execution of this method */
     DWORD timeSinceStartMs();
+
+    /** Check if windows version is greater than */
+    bool IsWindowsVersionOrGreater( WORD wMajorVersion, WORD wMinorVersion, WORD wServicePackMajor );
 }

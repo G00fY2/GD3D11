@@ -1541,9 +1541,9 @@ void WorldConverter::CacheMesh( const std::map<std::string, std::vector<std::pai
 void WorldConverter::UpdateQuadMarkInfo( QuadMarkInfo* info, zCQuadMark* mark, const float3& position ) {
     zCMesh* mesh = mark->GetQuadMesh();
 
-    zCMaterial* mat = mark->GetMaterial();
-    zCPolygon** polys = mesh->GetPolygons();
     int numPolys = mesh->GetNumPolygons();
+    zCPolygon** polys = mesh->GetPolygons();
+    zCMaterial* mat = (numPolys > 0 ? polys[0]->GetMaterial() : mark->GetMaterial());
 
     std::vector<ExVertexStruct> quadVertices;
     for ( int i = 0; i < numPolys; i++ ) {
