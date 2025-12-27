@@ -6,6 +6,24 @@
 #include <DDSTextureLoader.h>
 #include "RenderToTextureBuffer.h"
 #include "D3D11_Helpers.h"
+#include "TextureConversions.h"
+
+extern bool NativeSupport16BitTextures;
+static unsigned char* ConvertedData = nullptr;
+static size_t ConvertedDataSize = 0;
+
+unsigned char* ConvertTextureData( UINT TextureWidth, UINT TextureHeight, DXGI_FORMAT TextureFormat, unsigned char* data ) {
+    UINT realDataSize = TextureWidth * TextureHeight * 4;
+    ConvertedData = reinterpret_cast<unsigned char*>( malloc( realDataSize ) );
+    if ( TextureFormat == DXGI_FORMAT_B5G6R5_UNORM ) {
+        Convert565to8888( ConvertedData, data, realDataSize );
+    } else if ( TextureFormat == DXGI_FORMAT_B5G5R5A1_UNORM ) {
+        Convert1555to8888( ConvertedData, data, realDataSize );
+    } else {
+        Convert4444to8888( ConvertedData, data, realDataSize );
+    }
+    return ConvertedData;
+}
 
 D3D11Texture::D3D11Texture() {}
 
@@ -23,6 +41,9 @@ XRESULT D3D11Texture::Init( INT2 size, ETextureFormat format, UINT mipMapCount, 
     TextureFormat = static_cast<DXGI_FORMAT>(format);
     TextureSize = size;
     MipMapCount = mipMapCount;
+    if ( Is16BitTexture() && !NativeSupport16BitTextures ) {
+        format = ETextureFormat::TF_B8G8R8A8;
+    }
 
     CD3D11_TEXTURE2D_DESC textureDesc(
         static_cast<DXGI_FORMAT>(format),
@@ -77,6 +98,10 @@ XRESULT D3D11Texture::Init( const std::string& file ) {
 /** Updates the Texture-Object */
 XRESULT D3D11Texture::UpdateData( void* data, int mip ) {
     D3D11GraphicsEngineBase* engine = reinterpret_cast<D3D11GraphicsEngineBase*>(Engine::GraphicsEngine);
+    if ( ConvertedData ) {
+        free( ConvertedData );
+        ConvertedData = nullptr;
+    }
 
     UINT TextureWidth = (TextureSize.x >> mip);
     UINT TextureHeight = (TextureSize.y >> mip);
@@ -93,8 +118,13 @@ XRESULT D3D11Texture::UpdateData( void* data, int mip ) {
     stagingTextureDesc.Usage = D3D11_USAGE_STAGING;
 
     D3D11_SUBRESOURCE_DATA stagingTextureData;
-    stagingTextureData.pSysMem = data;
-    stagingTextureData.SysMemPitch = GetRowPitchBytes( mip );
+    if ( Is16BitTexture() && !NativeSupport16BitTextures ) {
+        stagingTextureData.pSysMem = ConvertTextureData( TextureWidth, TextureHeight, TextureFormat, reinterpret_cast<unsigned char*>( data ) );
+        stagingTextureData.SysMemPitch = GetRowPitchBytes( mip ) * 2;
+    } else {
+        stagingTextureData.pSysMem = data;
+        stagingTextureData.SysMemPitch = GetRowPitchBytes( mip );
+    }
     stagingTextureData.SysMemSlicePitch = 0;
 
     HRESULT result = engine->GetDevice()->CreateTexture2D( &stagingTextureDesc, &stagingTextureData, stagingTexture.ReleaseAndGetAddressOf() );
@@ -102,13 +132,16 @@ XRESULT D3D11Texture::UpdateData( void* data, int mip ) {
         return XR_FAILED;
 
     engine->GetContext()->CopySubresourceRegion( Texture.Get(), mip, 0, 0, 0, stagingTexture.Get(), 0, nullptr );
-
     return XR_SUCCESS;
 }
 
 /** Updates the Texture-Object using the deferred context (For loading in an other thread) */
 XRESULT D3D11Texture::UpdateDataDeferred( void* data, int mip ) {
     D3D11GraphicsEngineBase* engine = reinterpret_cast<D3D11GraphicsEngineBase*>(Engine::GraphicsEngine);
+    if ( ConvertedData ) {
+        free( ConvertedData );
+        ConvertedData = nullptr;
+    }
 
     UINT TextureWidth = (TextureSize.x >> mip);
     UINT TextureHeight = (TextureSize.y >> mip);
@@ -125,8 +158,13 @@ XRESULT D3D11Texture::UpdateDataDeferred( void* data, int mip ) {
     stagingTextureDesc.Usage = D3D11_USAGE_STAGING;
 
     D3D11_SUBRESOURCE_DATA stagingTextureData;
-    stagingTextureData.pSysMem = data;
-    stagingTextureData.SysMemPitch = GetRowPitchBytes( mip );
+    if ( Is16BitTexture() && !NativeSupport16BitTextures ) {
+        stagingTextureData.pSysMem = ConvertTextureData( TextureWidth, TextureHeight, TextureFormat, reinterpret_cast<unsigned char*>(data) );
+        stagingTextureData.SysMemPitch = GetRowPitchBytes( mip ) * 2;
+    } else {
+        stagingTextureData.pSysMem = data;
+        stagingTextureData.SysMemPitch = GetRowPitchBytes( mip );
+    }
     stagingTextureData.SysMemSlicePitch = 0;
 
     HRESULT result = engine->GetDevice()->CreateTexture2D( &stagingTextureDesc, &stagingTextureData, &stagingTexture );
@@ -173,6 +211,16 @@ UINT D3D11Texture::GetSizeInBytes( int mip ) {
     } else { // Use B8G8R8A8
         return px * py * 4;
     }
+}
+
+/** Returns if texture is 16bit type */
+bool D3D11Texture::Is16BitTexture() {
+    if ( TextureFormat == DXGI_FORMAT_B5G6R5_UNORM ||
+        TextureFormat == DXGI_FORMAT_B5G5R5A1_UNORM ||
+        TextureFormat == DXGI_FORMAT_B4G4R4A4_UNORM ) {
+        return true;
+    }
+    return false;
 }
 
 /** Binds this texture to a pixelshader */

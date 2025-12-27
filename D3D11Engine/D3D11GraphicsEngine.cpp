@@ -66,6 +66,7 @@ static const GUID IID_IDXGIDeviceRenderDoc = { 0xa7aa6116, 0x9c8d, 0x4bba, { 0x9
 constexpr float inv255f = (1.f / 255.f);
 float vobAnimation_WindStrength = 1.0f;
 
+bool NativeSupport16BitTextures = false;
 bool FeatureLevel10Compatibility = false;
 bool FeatureRTArrayIndexFromAnyShader = false;
 
@@ -478,6 +479,9 @@ XRESULT D3D11GraphicsEngine::Init() {
     Context11.As( &Context );
     Context.As( &m_UserDefinedAnnotation );
 
+    // Check for windows 10 - pretend 8 doesn't exist because I can't verify if they actually works on windows 8
+    // and you can't trust Microsoft feature level documentation
+    NativeSupport16BitTextures = Toolbox::IsWindowsVersionOrGreater( HIBYTE( _WIN32_WINNT_WIN10 ), LOBYTE( _WIN32_WINNT_WIN10 ), 0 );
     FeatureLevel10Compatibility = (maxFeatureLevel < D3D_FEATURE_LEVEL::D3D_FEATURE_LEVEL_11_0);
     FetchDisplayModeList();
 
@@ -5733,7 +5737,10 @@ void D3D11GraphicsEngine::DrawQuadMarks() {
         if ( distSq > vfxRadiusSq )
             continue;
 
-        zCMaterial* mat = it.first->GetMaterial();
+        zCMesh* mesh = it.first->GetQuadMesh();
+        int numPolys = mesh->GetNumPolygons();
+        zCPolygon** polys = mesh->GetPolygons();
+        zCMaterial* mat = (numPolys > 0 ? polys[0]->GetMaterial() : it.first->GetMaterial());
         if ( mat ) mat->BindTexture( 0 );
 
         if ( alphaFunc != mat->GetAlphaFunc() ) {
@@ -5796,7 +5803,10 @@ void D3D11GraphicsEngine::DrawMQuadMarks() {
 
     int alphaFunc = 0;
     for ( auto const& it : MulQuadMarks ) {
-        zCMaterial* mat = it.first->GetMaterial();
+        zCMesh* mesh = it.first->GetQuadMesh();
+        int numPolys = mesh->GetNumPolygons();
+        zCPolygon** polys = mesh->GetPolygons();
+        zCMaterial* mat = (numPolys > 0 ? polys[0]->GetMaterial() : it.first->GetMaterial());
         if ( mat ) mat->BindTexture( 0 );
 
         if ( alphaFunc != mat->GetAlphaFunc() ) {
