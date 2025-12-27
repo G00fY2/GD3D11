@@ -11,12 +11,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Download build artifacts
-      uses: actions/download-artifact@v7
-      with:
-        path: downloaded-artifacts
-        merge-multiple: true
-
     - name: Calculate artifact path name
       id: calc-path
       shell: pwsh
@@ -30,13 +24,20 @@ runs:
           $dirName = "GD3D11-$safeName"
         }
 
-        "dir_name=$dirName" >> $env:GITHUB_OUTPUT
+        "release_dir=$dirName" >> $env:GITHUB_OUTPUT
+        "download_dir=downloaded-artifacts" >> $env:GITHUB_OUTPUT
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v7
+      with:
+        path: ${{ steps.calc-path.outputs.download_dir }}
+        merge-multiple: true
 
     - name: Prepare Release Structure
       shell: pwsh
       run: |
-        $relDir = "${{ steps.calc-path.outputs.dir_name }}"
-        $artifactDir = "downloaded-artifacts"
+        $relDir = "${{ steps.calc-path.outputs.release_dir }}"
+        $artifactDir = ${{ steps.calc-path.outputs.download_dir }}
         $binDir = "$relDir/GD3D11/Bin"
 
         New-Item -Path $binDir -ItemType Directory -Force
@@ -54,7 +55,7 @@ runs:
     - name: Create final Zip
       shell: pwsh
       run: |
-        $relDir = "${{ steps.path.outputs.dir_name }}"
+        $relDir = "${{ steps.path.outputs.release_dir }}"
         7z a -tzip "$relDir.zip" "./$relDir/*"
 
     - name: Upload Zip artifact
