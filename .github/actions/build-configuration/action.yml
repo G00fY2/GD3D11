@@ -23,23 +23,11 @@ runs:
         $shortHash = $env:GITHUB_SHA.Substring(0, 9)
         $versionString = "-git-$shortHash"
 
-        if ("${{ inputs.configuration }}" -eq "Launcher") {
-          $msbuildArgs = @(
-              ".",
-              "/p:Configuration=${{ inputs.configuration }}",
-              "/p:Platform=Win32",
-              "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`"",
-              "/p:OutDir=${{ inputs.configuration }}\\"
-          )
-        } else {
-          $msbuildArgs = @(
-              "D3D11Engine/D3D11Engine.vcxproj",
-              "/p:Configuration=${{ inputs.configuration }}",
-              "/p:Platform=Win32",
-              "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`"",
-              "/p:OutDir=${{ inputs.configuration }}\\"
-          )
-        }
+        $msbuildArgs = @(
+          ".",
+          "/p:Configuration=${{ inputs.configuration }}",
+          "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`""
+        )
 
         msbuild @msbuildArgs
 
