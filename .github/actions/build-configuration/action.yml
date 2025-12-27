@@ -22,7 +22,7 @@ runs:
       shell: pwsh
       run: nuget restore .
 
-    - name: Build (${{ inputs.configuration }})
+    - name: Run MSBuild
       id: build
       shell: pwsh
       run: |
@@ -40,12 +40,12 @@ runs:
 
         msbuild @msbuildArgs
 
-        "$outputName=$outputName" >> $env:GITHUB_OUTPUT
+        "outputName=$outputName" >> $env:GITHUB_OUTPUT
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v6
       with:
         name: ${{ inputs.configuration }}
-        path: ${{ inputs.configuration }}/${{ steps.build.outputs.$outputName }}.dll
+        path: ${{ inputs.configuration }}/${{ steps.build.outputs.outputName }}.dll
         compression-level: 1
         retention-days: 2

@@ -17,6 +17,7 @@ on:
 
 jobs:
   build:
+    name: build (${{ matrix.configuration }})
     runs-on: windows-latest
     strategy:
       matrix:
