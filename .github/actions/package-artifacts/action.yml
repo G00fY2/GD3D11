@@ -37,7 +37,7 @@ runs:
       shell: pwsh
       run: |
         $relDir = "${{ steps.calc-path.outputs.release_dir }}"
-        $artifactDir = ${{ steps.calc-path.outputs.download_dir }}
+        $artifactDir = "${{ steps.calc-path.outputs.download_dir }}"
         $binDir = "$relDir/GD3D11/Bin"
 
         New-Item -Path $binDir -ItemType Directory -Force
@@ -55,7 +55,7 @@ runs:
     - name: Create final Zip
       shell: pwsh
       run: |
-        $relDir = "${{ steps.path.outputs.release_dir }}"
+        $relDir = "${{ steps.calc-path.outputs.release_dir }}"
         7z a -tzip "$relDir.zip" "./$relDir/*"
 
     - name: Upload Zip artifact

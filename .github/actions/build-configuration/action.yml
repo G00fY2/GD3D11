@@ -29,24 +29,26 @@ runs:
         $shortHash = $env:GITHUB_SHA.Substring(0, 9)
         $versionString = "-git-$shortHash"
         $outputName = [System.IO.Path]::GetFileNameWithoutExtension("${{ inputs.output }}")
+        $outputDir = "$env:GITHUB_WORKSPACE\outputs\"
 
         $msbuildArgs = @(
           "${{ inputs.project }}",
           "/p:Configuration=${{ inputs.configuration }}",
           "/p:Platform=Win32",
           "/p:TargetName=$outputName",
+          "/p:OutDir=$outputDir", 
           "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`""
         )
 
         msbuild @msbuildArgs
 
-        "outputFileName=$outputName.dll" >> $env:GITHUB_OUTPUT
+        "artifactFilePath=$outputDir$outputName.dll" >> $env:GITHUB_OUTPUT
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v6
       with:
         name: ${{ inputs.configuration }}
-        path: "**/${{ inputs.configuration }}/${{ steps.build.outputs.outputFileName }}"
+        path: ${{ steps.build.outputs.artifactFilePath }}
         if-no-files-found: error
-        compression-level: 1
+        compression-level: 0
         retention-days: 2
