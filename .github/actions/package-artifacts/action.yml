@@ -12,10 +12,14 @@ runs:
   using: composite
   steps:
     - name: Download build artifacts
+      id: download-artifacts
       uses: actions/download-artifact@v7
+      with:
+        path: downloaded-artifacts
+        merge-multiple: true
 
     - name: Calculate artifact path name
-      id: path
+      id: calc-path
       shell: pwsh
       run: |
         if ("${{ inputs.nightly }}" -eq "true") {
@@ -32,9 +36,12 @@ runs:
     - name: Prepare Release Structure
       shell: pwsh
       run: |
-        $relDir = "${{ steps.path.outputs.dir_name }}"
+        $relDir = "${{ steps.calc-path.outputs.dir_name }}"
+        $artifactDir = "${{ steps.download-artifacts.inputs.path }}"
+        $binDir = "$relDir/GD3D11/Bin"
 
-        New-Item -Path "$relDir/GD3D11/Bin" -ItemType Directory -Force
+        New-Item -Path $binDir -ItemType Directory -Force
+        
         Copy-Item -Path "D3D11Engine/Shaders/*" -Destination "$relDir/GD3D11/shaders/" -Recurse -Force
         Copy-Item -Path "blobs/Fonts" -Destination "$relDir/GD3D11/Fonts/" -Recurse -Force
         Copy-Item -Path "blobs/Meshes" -Destination "$relDir/GD3D11/Meshes/" -Recurse -Force
@@ -42,16 +49,8 @@ runs:
         Copy-Item -Path "blobs/libs/*" -Destination "$relDir/" -Recurse -Force
         Copy-Item -Path "blobs/bin/wine-d2d1.dll" -Destination "$relDir/GD3D11/Bin/d2d1.dll" -Force
 
-        Copy-Item -Path "Release/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2a.dll"
-        Copy-Item -Path "Release_AVX/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2a_avx.dll"
-        Copy-Item -Path "Release_AVX2/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2a_avx2.dll"
-        Copy-Item -Path "Release_G1/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1.dll"
-        Copy-Item -Path "Release_G1_12f/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1a.dll"
-        Copy-Item -Path "Release_G1_AVX/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1_avx.dll"
-        Copy-Item -Path "Release_G1_AVX2/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1_avx2.dll"
-        Copy-Item -Path "Spacer_NET/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g2_spacer.dll"
-        Copy-Item -Path "Spacer_NET_G1/ddraw.dll" -Destination "$relDir/GD3D11/Bin/g1_spacer.dll"
-        Copy-Item -Path "Launcher/ddraw.dll" -Destination "$relDir/"
+        Copy-Item -Path "$artifactDir/*" -Destination $binDir -Force
+        Move-Item -Path "$binDir/ddraw.dll" -Destination "$relDir/" -Force
 
     - name: Create final Zip
       shell: pwsh

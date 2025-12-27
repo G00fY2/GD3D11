@@ -2,7 +2,13 @@ name: 'Build'
 
 inputs:
   configuration:
-    description: "The configuration that should be build"
+    description: "MSBuild configuration to build (e.g. Release, Release_AVX, Spacer_NET)"
+    required: true
+  project:
+    description: "Path to the vcxproj file that should be built"
+    required: true
+  output:
+    description: "Name of the build artifact"
     required: true
 
 runs:
@@ -17,24 +23,29 @@ runs:
       run: nuget restore .
 
     - name: Build (${{ inputs.configuration }})
-      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      id: build
       shell: pwsh
       run: |
         $shortHash = $env:GITHUB_SHA.Substring(0, 9)
         $versionString = "-git-$shortHash"
+        $outputName = [System.IO.Path]::GetFileNameWithoutExtension("${{ inputs.output }}")
 
         $msbuildArgs = @(
-          ".",
+          "${{ inputs.project }}",
           "/p:Configuration=${{ inputs.configuration }}",
+          "/p:Platform=Win32",
+          "/p:TargetName=$outputName",
           "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`""
         )
 
         msbuild @msbuildArgs
 
+        "$outputName=$outputName" >> $env:GITHUB_OUTPUT
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v6
       with:
         name: ${{ inputs.configuration }}
-        path: ${{ inputs.configuration }}/ddraw.dll
+        path: ${{ inputs.configuration }}/${{ steps.build.outputs.$outputName }}.dll
         compression-level: 1
         retention-days: 2

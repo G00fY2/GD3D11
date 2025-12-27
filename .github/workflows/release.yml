@@ -10,18 +10,46 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        configuration: [
-          Launcher,
-          Release,          # g2.dll
-          Release_AVX,      # g2_avx.dll
-          Release_AVX2,     # g2_avx2.dll
-          Release_G1,       # g1.dll
-          Release_G1_12f,   # g1a.dll
-          Release_G1_AVX,   # g1_avx.dll
-          Release_G1_AVX2,  # g1_avx2.dll
-          Spacer_NET,       # g2_spacer.dll
-          # Spacer_NET_G1,    # g1_spacer.dll
-        ]
+        include:
+          - configuration: Launcher
+            project: Launcher/Launcher.vcxproj
+            output: ddraw.dll
+
+          - configuration: Release
+            project: D3D11Engine/D3D11Engine.vcxproj
+            output: g2a.dll
+
+          - configuration: Release_AVX
+            project: D3D11Engine/D3D11Engine.vcxproj
+            output: g2a_avx.dll
+
+          - configuration: Release_AVX2
+            project: D3D11Engine/D3D11Engine.vcxproj
+            output: g2a_avx2.dll
+
+          - configuration: Release_G1
+            project: D3D11Engine/D3D11Engine.vcxproj
+            output: g1.dll
+
+          - configuration: Release_G1_12f
+            project: D3D11Engine/D3D11Engine.vcxproj
+            output: g1a.dll
+
+          - configuration: Release_G1_AVX
+            project: D3D11Engine/D3D11Engine.vcxproj
+            output: g1_avx.dll
+
+          - configuration: Release_G1_AVX2
+            project: D3D11Engine/D3D11Engine.vcxproj
+            output: g1_avx2.dll
+
+          - configuration: Spacer_NET
+            project: Spacer_NET/Spacer_NET.vcxproj
+            output: g2_spacer.dll
+
+          - configuration: Spacer_NET_G1
+            project: Spacer_NET/Spacer_NET.vcxproj
+            output: g1_spacer.dll
 
     steps:
       - name: Checkout repository
@@ -31,6 +59,8 @@ jobs:
         uses: ./.github/actions/build-configuration
         with:
           configuration: ${{ matrix.configuration }}
+          project: ${{ matrix.project }}
+          output: ${{ matrix.output }}
 
   package-artifacts:
     needs: build
