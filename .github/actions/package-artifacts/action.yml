@@ -8,6 +8,7 @@ inputs:
 outputs:
   artifact-id:
     description: "ID of the artifact that was uploaded"
+    value: ${{ steps.artifact-upload.outputs.artifact-id }}
 
 runs:
   using: composite
