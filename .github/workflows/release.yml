@@ -61,7 +61,7 @@ jobs:
         with:
           configuration: ${{ matrix.configuration }}
           project: ${{ matrix.project }}
-          output: ${{ matrix.output }}
+          output-file: ${{ matrix.output-file }}
 
   package-artifacts:
     needs: build

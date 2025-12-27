@@ -71,7 +71,7 @@ jobs:
         with:
           configuration: ${{ matrix.configuration }}
           project: ${{ matrix.project }}
-          output: ${{ matrix.output }}
+          output-file: ${{ matrix.output-file }}
 
   package-nightly-artifacts:
     #if: github.ref_name == 'master'
