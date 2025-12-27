@@ -4,14 +4,16 @@ inputs:
   nightly:
     description: "Boolean string ('true'/'false')"
     required: true
+
+outputs:
   artifact-name:
     description: "Name of the artifact that will be uploaded"
-    required: true
+    value: ${{ steps.calc-path.outputs.artifact-name }}
 
 runs:
   using: composite
   steps:
-    - name: Calculate artifact path name
+    - name: Calculate artifact paths
       id: calc-path
       shell: pwsh
       run: |
@@ -24,20 +26,21 @@ runs:
           $dirName = "GD3D11-$safeName"
         }
 
-        "release_dir=$dirName" >> $env:GITHUB_OUTPUT
-        "download_dir=downloaded-artifacts" >> $env:GITHUB_OUTPUT
+        "release-dir=$dirName" >> $env:GITHUB_OUTPUT
+        "download-dir=downloaded-artifacts" >> $env:GITHUB_OUTPUT
+        "artifact-name=Deployment_Artifact" >> $env:GITHUB_OUTPUT
 
     - name: Download build artifacts
       uses: actions/download-artifact@v7
       with:
-        path: ${{ steps.calc-path.outputs.download_dir }}
+        path: ${{ steps.calc-path.outputs.download-dir }}
         merge-multiple: true
 
     - name: Prepare Release Structure
       shell: pwsh
       run: |
-        $relDir = "${{ steps.calc-path.outputs.release_dir }}"
-        $artifactDir = "${{ steps.calc-path.outputs.download_dir }}"
+        $relDir = "${{ steps.calc-path.outputs.release-dir }}"
+        $artifactDir = "${{ steps.calc-path.outputs.download-dir }}"
         $binDir = "$relDir/GD3D11/Bin"
 
         New-Item -Path $binDir -ItemType Directory -Force
@@ -55,13 +58,13 @@ runs:
     - name: Create final Zip
       shell: pwsh
       run: |
-        $relDir = "${{ steps.calc-path.outputs.release_dir }}"
-        7z a -tzip "$relDir.zip" "./$relDir/*"
+        $relDir = "${{ steps.calc-path.outputs.release-dir }}"
+        7z a -tzip -mx=7 -mmt=on -mtc=on "$relDir.zip" "./$relDir/*"
 
     - name: Upload Zip artifact
       uses: actions/upload-artifact@v6
       with:
-        name: ${{ inputs.artifact-name }}
+        name: ${{ steps.calc-path.outputs.artifact-name }}
         path: "*.zip"
         compression-level: 0
         retention-days: 2

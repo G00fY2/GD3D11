@@ -42,13 +42,13 @@ runs:
 
         msbuild @msbuildArgs
 
-        "artifactFilePath=$outputDir$outputName.dll" >> $env:GITHUB_OUTPUT
+        "artifact-file-path=$outputDir$outputName.dll" >> $env:GITHUB_OUTPUT
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v6
       with:
         name: ${{ inputs.configuration }}
-        path: ${{ steps.build.outputs.artifactFilePath }}
+        path: ${{ steps.build.outputs.artifact-file-path }}
         if-no-files-found: error
         compression-level: 0
         retention-days: 2

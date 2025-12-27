@@ -83,10 +83,10 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Package artifacts
+        id: package-artifacts
         uses: ./.github/actions/package-artifacts
         with:
           nightly: true
-          artifact-name: "deployment-artifact"
 
   deploy-nightly-release:
     #if: github.ref_name == 'master'
@@ -101,5 +101,5 @@ jobs:
         uses: ./.github/actions/deploy-artifacts
         with:
           nightly: true
-          artifact-name: "deployment-artifact"
+          artifact-name: ${{ steps.package-artifacts.outputs.artifact-name }}"
           token: ${{ secrets.GITHUB_TOKEN }}
