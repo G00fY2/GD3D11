@@ -1,10 +1,5 @@
 name: 'Package artifacts'
 
-inputs:
-  nightly:
-    description: "Boolean string ('true'/'false')"
-    required: true
-
 outputs:
   artifact-id:
     description: "ID of the artifact that was uploaded"
@@ -17,14 +12,10 @@ runs:
       id: calc-path
       shell: pwsh
       run: |
-        if ("${{ inputs.nightly }}" -eq "true") {
-          $shortHash = $env:GITHUB_SHA.Substring(0, 9)
-          $dirName = "GD3D11-git-$shortHash"
-        } else {
-          $rawName = $env:GITHUB_REF -replace '^refs/(tags|heads)/', ''
-          $safeName = $rawName -replace '/', '-'
-          $dirName = "GD3D11-$safeName"
-        }
+        $shortHash = $env:GITHUB_SHA.Substring(0, 9)
+        $tagOrGitShortHash = ($env:GITHUB_REF -replace 'refs/tags/', '')
+        if (-not $tagOrGitShortHash) { $tagOrGitShortHash = "git-$shortHash" }
+        $dirName = "GD3D11-$tagOrGitShortHash"
 
         "release-dir=$dirName" >> $env:GITHUB_OUTPUT
         "download-dir=downloaded-artifacts" >> $env:GITHUB_OUTPUT

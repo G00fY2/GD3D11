@@ -1,7 +1,9 @@
-name: Build
+name: Build and conditional release
 
 on:
   push:
+    tags:
+      - 'v*'
     branches:
       - '**'
     paths-ignore:
@@ -14,6 +16,10 @@ on:
       - '**/*.md'
 
   workflow_dispatch:
+
+env:
+  IS_RELEASE_TRIGGER: ${{ github.event_name == 'push' && (github.ref_name == 'master' || github.ref_type == 'tag') }}
+  IS_NIGHTLY_RELEASE: ${{ github.event_name == 'push' && github.ref_name == 'master' }}
 
 jobs:
   build:
@@ -73,8 +79,7 @@ jobs:
           project: ${{ matrix.project }}
           output-file: ${{ matrix.output-file }}
 
-  package-nightly-artifacts:
-    if: github.ref_name == 'master'
+  package-artifacts:
     needs: build
     runs-on: ubuntu-latest
 
@@ -88,12 +93,10 @@ jobs:
       - name: Package artifacts
         id: package-artifacts
         uses: ./.github/actions/package-artifacts
-        with:
-          nightly: true
 
-  deploy-nightly-release:
-    if: github.ref_name == 'master'
-    needs: package-nightly-artifacts
+  create-release:
+    if: env.IS_RELEASE_TRIGGER == 'true'
+    needs: package-artifacts
     runs-on: ubuntu-latest
 
     steps:
@@ -106,6 +109,6 @@ jobs:
       - name: Create nightly release
         uses: ./.github/actions/deploy-artifacts
         with:
-          nightly: true
-          artifact-id: ${{ needs.package-nightly-artifacts.outputs.artifact-id }}
+          nightly: ${{ env.IS_NIGHTLY_RELEASE }}
+          artifact-id: ${{ needs.package-artifacts.outputs.artifact-id }}
           token: ${{ secrets.GITHUB_TOKEN }}
