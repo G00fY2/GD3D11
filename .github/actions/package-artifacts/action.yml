@@ -12,9 +12,12 @@ runs:
       id: calc-path
       shell: pwsh
       run: |
-        $shortHash = $env:GITHUB_SHA.Substring(0, 9)
-        $tagOrGitShortHash = ($env:GITHUB_REF -replace 'refs/tags/', '')
-        if (-not $tagOrGitShortHash) { $tagOrGitShortHash = "git-$shortHash" }
+        if ($env:GITHUB_REF_TYPE -eq "tag") {
+          $tagOrGitShortHash = $env:GITHUB_REF_NAME
+        } else {
+          $shortHash = $env:GITHUB_SHA.Substring(0, 9)
+          $tagOrGitShortHash = "git-$shortHash"
+        }
         $dirName = "GD3D11-$tagOrGitShortHash"
 
         "release-dir=$dirName" >> $env:GITHUB_OUTPUT
