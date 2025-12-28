@@ -1,0 +1,53 @@
+name: 'Create release'
+
+inputs:
+  token:
+    description: "GitHub token"
+    required: true
+  nightly:
+    description: "Boolean string ('true'/'false')"
+    required: true
+  artifact-id:
+    description: "ID of the artifact that contains files for deployment"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download build artifact
+      id: download-artifact
+      uses: actions/download-artifact@v7
+      with:
+        artifact-ids: ${{ inputs.artifact-id }}
+
+    - name: Delete old nightly
+      if: ${{ inputs.nightly == 'true' }}
+      shell: bash
+      run: |
+        gh release delete nightly --yes --cleanup-tag || echo "No nightly release found to delete"
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+
+    - name: Create nightly release
+      if: ${{ inputs.nightly == 'true' }}
+      uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
+      with:
+        allowUpdates: true
+        artifactErrorsFailBuild: true
+        artifacts: "${{ steps.download-artifact.outputs.download-path }}/*.zip"
+        generateReleaseNotes: true
+        name: Nightly
+        prerelease: true
+        removeArtifacts: true
+        tag: nightly
+        token: ${{ inputs.token }}
+
+    - name: Create regular release
+      if: ${{ inputs.nightly != 'true' }}
+      uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
+      with:
+        allowUpdates: true
+        artifactErrorsFailBuild: true
+        artifacts: "${{ steps.download-artifact.outputs.download-path }}/*.zip"
+        generateReleaseNotes: true
+        token: ${{ inputs.token }}

@@ -1,0 +1,59 @@
+name: 'Build configuration'
+
+inputs:
+  configuration:
+    description: "MSBuild configuration to build (e.g. Release, Release_AVX, Spacer_NET)"
+    required: true
+  project:
+    description: "Path to the vcxproj file that should be built"
+    required: true
+  output-file:
+    description: "Name of the build artifact"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore NuGet packages
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      shell: pwsh
+      run: nuget restore .
+
+    - name: Run MSBuild
+      id: build
+      shell: pwsh
+      run: |
+        $shortHash = $env:GITHUB_SHA.Substring(0, 9)
+        if ($env:GITHUB_REF_TYPE -eq "tag") {
+          $tagOrGit = $env:GITHUB_REF_NAME
+        } else {
+          $tagOrGit = "git"
+        }
+        $versionString = "-$tagOrGit-$shortHash"
+        $outputName = [System.IO.Path]::GetFileNameWithoutExtension("${{ inputs.output-file }}")
+        $outputDir = "$env:GITHUB_WORKSPACE\outputs\"
+
+        $msbuildArgs = @(
+          "${{ inputs.project }}",
+          "/p:Configuration=${{ inputs.configuration }}",
+          "/p:Platform=Win32",
+          "/p:TargetName=$outputName",
+          "/p:OutDir=$outputDir", 
+          "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`""
+        )
+
+        msbuild @msbuildArgs
+
+        "artifact-file-path=$outputDir$outputName.dll" >> $env:GITHUB_OUTPUT
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ inputs.configuration }}
+        path: ${{ steps.build.outputs.artifact-file-path }}
+        if-no-files-found: error
+        compression-level: 1
+        retention-days: 2
