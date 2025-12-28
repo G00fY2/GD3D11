@@ -58,7 +58,7 @@ runs:
       id: artifact-upload
       uses: actions/upload-artifact@v6
       with:
-        name: "Deployment"
+        name: ${{ steps.calc-path.outputs.release-dir }}
         path: "*.zip"
         if-no-files-found: error
         compression-level: 0
