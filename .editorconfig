@@ -1,6 +1,12 @@
 # Visual Studio generated .editorconfig file with C++ settings.
 root = true
 
+[*.{yml,yaml}]
+end_of_line = crlf
+insert_final_newline = true
+indent_style = space
+indent_size = 2
+
 [*.{cpp,h,hpp}]
 end_of_line = crlf
 insert_final_newline = true

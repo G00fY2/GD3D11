@@ -1,0 +1,64 @@
+name: 'Package artifacts'
+
+outputs:
+  artifact-id:
+    description: "ID of the artifact that was uploaded"
+    value: ${{ steps.artifact-upload.outputs.artifact-id }}
+
+runs:
+  using: composite
+  steps:
+    - name: Calculate artifact paths
+      id: calc-path
+      shell: pwsh
+      run: |
+        if ($env:GITHUB_REF_TYPE -eq "tag") {
+          $tagOrGitShortHash = $env:GITHUB_REF_NAME
+        } else {
+          $shortHash = $env:GITHUB_SHA.Substring(0, 9)
+          $tagOrGitShortHash = "git-$shortHash"
+        }
+        $dirName = "GD3D11-$tagOrGitShortHash"
+
+        "release-dir=$dirName" >> $env:GITHUB_OUTPUT
+        "download-dir=downloaded-artifacts" >> $env:GITHUB_OUTPUT
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v7
+      with:
+        path: ${{ steps.calc-path.outputs.download-dir }}
+        merge-multiple: true
+
+    - name: Prepare Release Structure
+      shell: pwsh
+      run: |
+        $relDir = "${{ steps.calc-path.outputs.release-dir }}"
+        $artifactDir = "${{ steps.calc-path.outputs.download-dir }}"
+        $binDir = "$relDir/GD3D11/Bin"
+
+        New-Item -Path $binDir -ItemType Directory -Force
+        
+        Copy-Item -Path "D3D11Engine/Shaders/*" -Destination "$relDir/GD3D11/shaders/" -Recurse -Force
+        Copy-Item -Path "blobs/Fonts" -Destination "$relDir/GD3D11/Fonts/" -Recurse -Force
+        Copy-Item -Path "blobs/Meshes" -Destination "$relDir/GD3D11/Meshes/" -Recurse -Force
+        Copy-Item -Path "blobs/Textures" -Destination "$relDir/GD3D11/Textures/" -Recurse -Force
+        Copy-Item -Path "blobs/libs/*" -Destination "$relDir/" -Recurse -Force
+        Copy-Item -Path "blobs/bin/wine-d2d1.dll" -Destination "$relDir/GD3D11/Bin/d2d1.dll" -Force
+
+        Copy-Item -Path "$artifactDir/*" -Destination $binDir -Force
+        Move-Item -Path "$binDir/ddraw.dll" -Destination "$relDir/" -Force
+
+    - name: Create final Zip
+      shell: pwsh
+      run: |
+        $relDir = "${{ steps.calc-path.outputs.release-dir }}"
+        7z a -tzip -mx=7 -mmt=on "$relDir.zip" "./$relDir/*"
+
+    - name: Upload Zip artifact
+      id: artifact-upload
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ steps.calc-path.outputs.release-dir }}
+        path: "*.zip"
+        if-no-files-found: error
+        compression-level: 0
