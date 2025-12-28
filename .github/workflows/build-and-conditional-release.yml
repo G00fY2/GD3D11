@@ -102,8 +102,8 @@ jobs:
           sparse-checkout: .github/actions
           filter: blob:none
 
-      - name: Create nightly release
-        uses: ./.github/actions/deploy-artifacts
+      - name: Create release
+        uses: ./.github/actions/create-release
         with:
           nightly: ${{ github.ref_type != 'tag' }}
           artifact-id: ${{ needs.package-artifacts.outputs.artifact-id }}

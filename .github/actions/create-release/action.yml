@@ -1,4 +1,4 @@
-name: 'Deploy artifacts'
+name: 'Create release'
 
 inputs:
   token:
