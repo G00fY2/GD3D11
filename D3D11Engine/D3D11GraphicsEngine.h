@@ -300,6 +300,8 @@ public:
     /** Message-Callback for the main window */
     virtual LRESULT OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
+    static void UpdateShouldBlockGameInput();
+
     /** Reloads shaders */
     virtual XRESULT ReloadShaders( ShaderCategory categories = ShaderCategory::All);
 

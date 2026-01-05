@@ -5335,6 +5335,18 @@ LRESULT D3D11GraphicsEngine::OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam
     return 0;
 }
 
+void D3D11GraphicsEngine::UpdateShouldBlockGameInput( ) {
+    if ( auto hImgui = Engine::ImGuiHandle ) {
+        auto oldIsActive = hImgui->IsActive;
+        hImgui->IsActive = hImgui->SettingsVisible || hImgui->AdvancedSettingsVisible || hImgui->LibShowBlockingThisFrame;
+        hImgui->UpdateBlockGameInput();
+
+        if ( oldIsActive != hImgui->IsActive ) {
+            Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
+        }
+    }
+}
+
 /** Handles an UI-Event */
 void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
 
@@ -5345,12 +5357,7 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
                 hImgui->AdvancedSettingsVisible = false;
             }
             hImgui->SettingsVisible = !hImgui->SettingsVisible;
-            auto oldIsActive = hImgui->IsActive;
-            hImgui->IsActive = hImgui->SettingsVisible || hImgui->AdvancedSettingsVisible;
-
-            if ( oldIsActive != hImgui->IsActive ) {
-                Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
-            }
+            UpdateShouldBlockGameInput();
         }
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_ToggleAdvancedSettings ) {
@@ -5360,30 +5367,20 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
                 hImgui->SettingsVisible = false;
             }
             hImgui->AdvancedSettingsVisible = !hImgui->AdvancedSettingsVisible;
-            auto oldIsActive = hImgui->IsActive;
-            hImgui->IsActive = hImgui->SettingsVisible || hImgui->AdvancedSettingsVisible;
-
-            if ( oldIsActive != hImgui->IsActive ) {
-                Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
-            }
+            UpdateShouldBlockGameInput();
         }
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_ClosedSettings ) {
         // Settings can be closed in multiple ways
-        if ( auto hImgui = Engine::ImGuiHandle; hImgui->IsActive ) {
+        if ( auto hImgui = Engine::ImGuiHandle; hImgui->GetIsActive() ) {
             // Show settings
             hImgui->SettingsVisible = false;
             hImgui->AdvancedSettingsVisible = false;
-            hImgui->IsActive = false;
-
-            // re-enable input, this clears the key buffer!
-            Engine::GAPI->SetEnableGothicInput( true );
         }
         else if ( auto antBar = Engine::AntTweakBar; antBar->GetActive() ) {
             antBar->SetActive( false );
-            // re-enable input, this clears the key buffer!
-            Engine::GAPI->SetEnableGothicInput( true );
         }
+        UpdateShouldBlockGameInput();
 
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_OpenEditor ) {
@@ -5395,10 +5392,7 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
             Engine::GAPI->GetRendererState().RendererSettings.EnableEditorPanel =
                 true;
 
-            // Free mouse
-            if ( auto hImgui = Engine::ImGuiHandle ) {
-                Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
-            }
+            UpdateShouldBlockGameInput();
         }
     }
 }
@@ -5829,7 +5823,7 @@ void D3D11GraphicsEngine::DrawUnderwaterEffects() {
 /** Returns the settings window availability */
 bool D3D11GraphicsEngine::HasSettingsWindow()
 {
-    return ( Engine::ImGuiHandle && Engine::ImGuiHandle->IsActive );
+    return ( Engine::ImGuiHandle && Engine::ImGuiHandle->GetIsActive() );
 }
 
 /** Creates the main UI-View */

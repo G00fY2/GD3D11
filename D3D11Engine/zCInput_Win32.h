@@ -16,7 +16,7 @@ public:
     }
 
     static uint16_t __fastcall hooked_GetKey( zCInput_Win32* thisptr, void* pUnkn, int repeat, int delayed ) {
-        if ( Engine::ImGuiHandle && Engine::ImGuiHandle->IsActive ) {
+        if ( Engine::ImGuiHandle && Engine::ImGuiHandle->GetBlockGameInput() ) {
             // no input to gothic while settings is open
             return 0;
         }

@@ -3587,14 +3587,14 @@ LRESULT GothicAPI::OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
             break;
         }
         default:
-            if ( Engine::ImGuiHandle->IsActive ) {
+            if ( Engine::ImGuiHandle->GetIsActive() ) {
                 // do not delegate input further if settings is open
                 Engine::ImGuiHandle->OnWindowMessage( hWnd, msg, wParam, lParam );
                 return DefWindowProc( hWnd, msg, wParam, lParam );
             }
         break;
     case WM_KEYUP:
-        if ( Engine::ImGuiHandle->IsActive ) {
+        if ( Engine::ImGuiHandle->GetIsActive() ) {
             // do not delegate input further if settings is open
             Engine::ImGuiHandle->OnWindowMessage( hWnd, msg, wParam, lParam );
             return DefWindowProc( hWnd, msg, wParam, lParam );

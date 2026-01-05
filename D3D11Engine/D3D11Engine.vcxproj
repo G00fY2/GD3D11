@@ -861,6 +861,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="GMesh.h" />
     <ClInclude Include="GMeshSimple.h" />
     <ClInclude Include="GothicAPI.h" />
+    <ClInclude Include="GothicExternals.h" />
     <ClInclude Include="GothicGraphicsState.h" />
     <ClInclude Include="GothicMemoryLocations.h" />
     <ClInclude Include="BaseGraphicsEngine.h" />
@@ -1137,6 +1138,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="GMesh.cpp" />
     <ClCompile Include="GMeshSimple.cpp" />
     <ClCompile Include="GothicAPI.cpp" />
+    <ClCompile Include="GothicExternals.cpp" />
     <ClCompile Include="GSky.cpp" />
     <ClCompile Include="GSpriteCloud.cpp" />
     <ClCompile Include="GVegetationBox.cpp" />

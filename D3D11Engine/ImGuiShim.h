@@ -18,12 +18,14 @@ public:
 
     virtual void Init(HWND Window,const Microsoft::WRL::ComPtr<ID3D11Device1>& device,const Microsoft::WRL::ComPtr<ID3D11DeviceContext1>& context);
     virtual void RenderLoop();
-    virtual void OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
+    virtual LRESULT OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
     virtual void OnResize( INT2 newSize );
     bool Initiated = false;
     bool IsActive = false;
     bool SettingsVisible = false;
     bool AdvancedSettingsVisible = false;
+    bool LibShowBlockingThisFrame = false;
+    bool LibShowNonBlockingThisFrame = false;
     //bool DemoVisible = false;
     HWND OutputWindow = HWND( 0 );
     INT2 CurrentResolution = INT2( 800, 600 );
@@ -33,7 +35,33 @@ public:
     int ShadowQualityState = 0;
     int DynamicShadowState = 0;
     std::vector<std::string> Resolutions;
+
+    bool GetIsActive() {
+        return Initiated && (
+            SettingsVisible
+            || AdvancedSettingsVisible 
+            || LibShowBlockingThisFrame
+            || LibShowNonBlockingThisFrame
+        );
+    }
+
+    bool GetBlockGameInput() {
+        if ( !GetIsActive() ) {
+            return false;
+        }
+        if ( SettingsVisible
+            || AdvancedSettingsVisible
+            || LibShowBlockingThisFrame ) {
+            return true;
+        }
+        return false;
+    }
+    // helper function to prevent calling this too often if other places already called it.
+    void UpdateBlockGameInput() {
+        m_lastFrameBlockGameInput = GetBlockGameInput();
+    }
 private:
     void RenderSettingsWindow();
     void RenderAdvancedSettingsWindow();
+    bool m_lastFrameBlockGameInput = false;
 };

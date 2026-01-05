@@ -73,7 +73,7 @@ extern "C"
 
 #ifndef BUILD_SPACER
         // Call script-callback
-        zCPARSER_CALL_FUNC( *id, action );
+        zCParser::GetParser()->CallFunc( *id, action );
 #endif
 
         delete id;
