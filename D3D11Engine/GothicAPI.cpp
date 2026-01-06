@@ -1581,7 +1581,7 @@ bool GothicAPI::IsMaterialActive( zCMaterial* mat ) {
 
 /** Called when a vob moved */
 void GothicAPI::OnVobMoved( zCVob* vob ) {
-    auto checkMatrix = []( XMMATRIX& a, XMMATRIX& b ) -> bool {
+    static auto checkMatrix = []( FXMMATRIX a, CXMMATRIX b ) -> bool {
         const uint32_t mask = _mm_movemask_epi8( _mm_packs_epi16(
             _mm_packs_epi32 (
             _mm_castps_si128( _mm_cmpeq_ps( a.r[0], b.r[0] ) ),
