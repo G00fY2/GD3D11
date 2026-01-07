@@ -65,3 +65,4 @@ EXPORTS
     imgui_table_set_column_index        @2231
     imgui_get_content_region_avail_x    @2232
     imgui_table_setup_column            @2233
+	imgui_begin_overlay @2234
