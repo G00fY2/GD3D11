@@ -160,14 +160,15 @@ __declspec(naked) void Fakeimgui_pop_id() { _asm { jmp[ddraw.imgui_pop_id] } }
 __declspec(naked) void Fakeimgui_is_ready() { _asm { jmp[ddraw.imgui_is_ready] } }
 __declspec(naked) void Fakeimgui_set_next_window_pos() { _asm { jmp[ddraw.imgui_set_next_window_pos] } }
 __declspec(naked) void Fakeimgui_set_next_window_size() { _asm { jmp[ddraw.imgui_set_next_window_size] } }
-__declspec(naked) void Fakefakeimgui_set_next_window_bg_alpha() { _asm { jmp[ddraw.imgui_set_next_window_bg_alpha] } }
+__declspec(naked) void Fakeimgui_set_next_window_bg_alpha() { _asm { jmp[ddraw.imgui_set_next_window_bg_alpha] } }
 __declspec(naked) void Fakeimgui_set_next_window_collapsed() { _asm { jmp[ddraw.imgui_set_next_window_collapsed] } }
-__declspec(naked) void imgui_set_item_tooltip() { _asm { jmp[ddraw.imgui_set_item_tooltip] } }
-__declspec(naked) void Fakeimgui_columns() { _asm { jmp[ddraw.imgui_columns] } }
-__declspec(naked) void Fakeimgui_next_column() { _asm { jmp[ddraw.imgui_next_column] } }
-__declspec(naked) void Fakeimgui_set_column_width() { _asm { jmp[ddraw.imgui_set_column_width] } }
-__declspec(naked) void Fakeimgui_get_columns_count() { _asm { jmp[ddraw.imgui_get_columns_count] } }
+__declspec(naked) void Fakeimgui_set_item_tooltip() { _asm { jmp[ddraw.imgui_set_item_tooltip] } }
 __declspec(naked) void Fakeimgui_get_content_region_avail_x() { _asm { jmp[ddraw.imgui_get_content_region_avail_x] } }
+__declspec(naked) void Fakeimgui_begin_table() { _asm { jmp[ddraw.imgui_begin_table] } }
+__declspec(naked) void Fakeimgui_end_table() { _asm { jmp[ddraw.imgui_end_table] } }
+__declspec(naked) void Fakeimgui_table_next_column() { _asm { jmp[ddraw.imgui_table_next_column] } }
+__declspec(naked) void Fakeimgui_table_next_row() { _asm { jmp[ddraw.imgui_table_next_row] } }
+__declspec(naked) void Fakeimgui_table_set_column_index() { _asm { jmp[ddraw.imgui_table_set_column_index] } }
 __declspec(naked) void Fakeimgui_table_setup_column() { _asm { jmp[ddraw.imgui_table_setup_column] } }
 
 
