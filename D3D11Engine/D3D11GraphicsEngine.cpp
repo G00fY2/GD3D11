@@ -51,6 +51,7 @@
 #include <dxgi1_6.h>
 
 #include "ImGuiShim.h"
+#include "zCModel.h"
 
 namespace wrl = Microsoft::WRL;
 
@@ -1024,6 +1025,9 @@ XRESULT D3D11GraphicsEngine::OnResize( INT2 newSize ) {
     GBuffer0_Diffuse = std::make_unique<RenderToTextureBuffer>(
         GetDevice().Get(), Resolution.x, Resolution.y, DXGI_FORMAT_B8G8R8A8_UNORM );
 
+    VelocityBuffer = std::make_unique<RenderToTextureBuffer>( 
+        GetDevice().Get(), Resolution.x, Resolution.y, DXGI_FORMAT_R16G16_FLOAT );
+
     HDRBackBuffer = std::make_unique<RenderToTextureBuffer>( GetDevice().Get(), Resolution.x, Resolution.y,
         (Engine::GAPI->GetRendererState().RendererSettings.CompressBackBuffer ? DXGI_FORMAT_R11G11B10_FLOAT : DXGI_FORMAT_R16G16B16A16_FLOAT) );
 
@@ -1074,6 +1078,10 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame() {
             projF._31 += jitter.x * 2.0f;  // Jitter X
             projF._32 += jitter.y * 2.0f;  // Jitter Y
             Engine::GAPI->GetRendererState().TransformState.TransformProj =  projF;
+        }
+    } else {
+        if ( PfxRenderer && PfxRenderer->GetTAAEffect() ) {
+            PfxRenderer->GetTAAEffect()->OnDisabled();
         }
     }
 
@@ -1214,12 +1222,14 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame() {
 
 /** Called when the game ended it's frame */
 XRESULT D3D11GraphicsEngine::OnEndFrame() {
+    StoreVobPreviousTransforms(); // used for motion vectors
     Present();
 
     Engine::GAPI->GetRendererState().RendererInfo.Timing.StopTotal();
     if ( !Engine::GAPI->GetRendererState().RendererSettings.BinkVideoRunning && !Engine::GAPI->IsInSavingLoadingState() ) {
         m_FrameLimiter->Wait();
     }
+    RenderedVobs.clear();
     return XR_SUCCESS;
 }
 
@@ -1233,7 +1243,9 @@ XRESULT D3D11GraphicsEngine::Clear( const float4& color ) {
     context->ClearRenderTargetView( GBuffer1_Normals->GetRenderTargetView().Get(), reinterpret_cast<float*>(&float4( 0, 0, 0, 0 )) );
     context->ClearRenderTargetView( GBuffer2_SpecIntens_SpecPower->GetRenderTargetView().Get(), reinterpret_cast<float*>(&float4( 0, 0, 0, 0 )) );
     context->ClearRenderTargetView( HDRBackBuffer->GetRenderTargetView().Get(), reinterpret_cast<float*>(&float4( 0, 0, 0, 0 )) );
-
+    
+    // remove motion information
+    context->ClearRenderTargetView( VelocityBuffer->GetRenderTargetView().Get(), reinterpret_cast<float*>(&float4( 0, 0, 0, 0 )) );
     return XR_SUCCESS;
 }
 
@@ -2461,7 +2473,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     if ( FeatureLevel10Compatibility ) {
         // Disable here what we can't draw in feature level 10 compatibility
         Engine::GAPI->GetRendererState().RendererSettings.HbaoSettings.Enabled = false;
-        Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode = GothicRendererSettings::EAntiAliasingMode::AA_NONE;
+        Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode = GothicRendererSettings::E_AntiAliasingMode::AA_NONE;
     }
 
 #if BUILD_SPACER_NET
@@ -2626,40 +2638,46 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     LineRenderer->Flush();
     LineRenderer->FlushScreenSpace();
 
+    if ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode 
+        == GothicRendererSettings::AA_TAA ) {
+        // TAA before any HDR stuff
+        auto _ = RecordGraphicsEvent( L"RenderTAA" );
+        PfxRenderer->RenderTAA();
+        GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+    }
+
     if ( Engine::GAPI->GetRendererState().RendererSettings.EnableHDR ) {
         auto _ = RecordGraphicsEvent( L"RenderHDR" );
         PfxRenderer->RenderHDR();
     }
 
-    switch ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode ) {
-    case GothicRendererSettings::AA_SMAA:
-        if ( !FeatureLevel10Compatibility ) {
-            auto _ = RecordGraphicsEvent( L"RenderSMAA" );
-            PfxRenderer->RenderSMAA();
-            GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
-        }
-        break;
+    if ( Engine::GAPI->GetRendererState().RendererSettings.SharpenFactor > 0.0f ) {
 
-    case GothicRendererSettings::AA_TAA:
-        if ( !FeatureLevel10Compatibility ) {
-            auto _ = RecordGraphicsEvent( L"RenderTAA" );
-            PfxRenderer->RenderTAA();
-            GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
-        }
-        break;
+        switch ( Engine::GAPI->GetRendererState().RendererSettings.SharpeningMode ) {
+        case GothicRendererSettings::SHARPEN_SIMPLE:
+            if ( !FeatureLevel10Compatibility ) {
+                auto _ = RecordGraphicsEvent( L"ApplySimpleSharpen" );
+                PfxRenderer->RenderSimpleSharpen();
+                GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+            }
+            break;
 
-    case GothicRendererSettings::AA_FSR:
-        if ( !FeatureLevel10Compatibility ) {
-            auto _ = RecordGraphicsEvent( L"RenderFSR" );
-            PfxRenderer->RenderFSR();
-            GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+        case GothicRendererSettings::SHARPEN_CAS:
+            if ( !FeatureLevel10Compatibility ) {
+                auto _ = RecordGraphicsEvent( L"ApplyCAS" );
+                PfxRenderer->RenderCAS();
+                GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+            }
+            break;
         }
-        break;
+    }
 
-    case GothicRendererSettings::AA_NONE:
-    default:
-        // No anti-aliasing
-        break;
+    if ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode
+        == GothicRendererSettings::AA_SMAA ) {
+        // actually we could do TAA + SMAA
+        auto _ = RecordGraphicsEvent( L"RenderSMAA" );
+        PfxRenderer->RenderSMAA();
+        GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
     }
 
     PresentPending = true;
@@ -6472,4 +6490,34 @@ void D3D11GraphicsEngine::DrawString( const std::string& str, float x, float y, 
     graphicState.FF_Stages[1].ColorOp = copyColorOp2;
     graphicState.FF_Stages[0].ColorArg1 = copyColorArg1;
     graphicState.FF_Stages[0].ColorArg2 = copyColorArg2;
+}
+
+void D3D11GraphicsEngine::StorePrevViewProjMatrix() {
+    XMMATRIX view = Engine::GAPI->GetViewMatrixXM();
+    XMMATRIX proj = XMLoadFloat4x4( &Engine::GAPI->GetProjectionMatrix() );
+    XMMATRIX viewProj = XMMatrixMultiply( view, proj );
+    XMStoreFloat4x4( &m_PrevViewProjMatrix, XMMatrixTranspose( viewProj ) );
+}
+
+void D3D11GraphicsEngine::StoreVobPreviousTransforms() {
+    if ( !zCCamera::GetCamera() ) {
+        return; // only do this if we actually are in-game
+    }
+
+    // Store transforms for static vobs
+    for ( VobInfo* vob : RenderedVobs ) {
+        vob->StorePreviousTransform();
+    }
+
+    // Store transforms for skeletal meshes
+    for ( SkeletalVobInfo* skelVob : Engine::GAPI->GetAnimatedSkeletalMeshVobs() ) {
+        skelVob->Vob->GetWorldMatrix( &skelVob->PrevWorldMatrix );
+        zCModel* model = static_cast<zCModel*>(skelVob->Vob->GetVisual());
+        std::vector<XMFLOAT4X4> transforms;
+        model->GetBoneTransforms( &transforms );
+        skelVob->StorePreviousTransforms( transforms );
+    }
+
+    // Store view-projection matrix
+    StorePrevViewProjMatrix();
 }

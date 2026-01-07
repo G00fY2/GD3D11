@@ -66,8 +66,6 @@ void D3D11PFX_TAA::OnResize(const INT2& size) {
     DXGI_FORMAT format = engine->GetBackBufferFormat();
     m_HistoryBuffer = std::make_unique<RenderToTextureBuffer>(
         engine->GetDevice().Get(), size.x, size.y, format);
-    m_OutputBuffer = std::make_unique<RenderToTextureBuffer>(
-        engine->GetDevice().Get(), size.x, size.y, format);
     
     // Reset state on resize
     m_FirstFrame = true;
@@ -124,9 +122,9 @@ void D3D11PFX_TAA::RenderPostFX(
     // Store current viewproj for next frame
     XMStoreFloat4x4(&m_PrevViewProj, XMMatrixTranspose(viewProj));
 
-    // Copy the original image to our temp-buffer
-    FxRenderer->CopyTextureToRTV( engine->GetHDRBackBuffer().GetShaderResView(),
-    FxRenderer->GetTempBuffer().GetRenderTargetView(), engine->GetResolution() );
+    RenderToTextureBuffer& tempBuffer = FxRenderer->GetTempBuffer();
+
+    context->OMSetRenderTargets( 1, tempBuffer.GetRenderTargetView().GetAddressOf(), nullptr );
 
     // Bind shaders
     engine->GetShaderManager().GetVShader("VS_PFX")->Apply();
@@ -139,46 +137,25 @@ void D3D11PFX_TAA::RenderPostFX(
     // Slot 2: Depth buffer
     // Slot 3: Velocity buffer (optional)
     ID3D11ShaderResourceView* srvs[4] = {
-        FxRenderer->GetTempBuffer().GetShaderResView().Get(),
-        m_FirstFrame ? FxRenderer->GetTempBuffer().GetShaderResView().Get() : m_HistoryBuffer->GetShaderResView().Get(),
-        depthSRV.Get(),
+        currentFrameSRV.Get(),
+        m_FirstFrame ? currentFrameSRV.Get() : m_HistoryBuffer->GetShaderResView().Get(),
+        engine->GetDepthBuffer()->GetShaderResView().Get(),
         velocitySRV ? velocitySRV.Get() : nullptr
     };
     context->PSSetShaderResources(0, 4, srvs);
-    
-    // Render to output buffer
-    context->OMSetRenderTargets(1, m_OutputBuffer->GetRenderTargetView().GetAddressOf(), nullptr);
+
     FxRenderer->DrawFullScreenQuad();
     
     // Copy output to history for next frame
     context->CopyResource(m_HistoryBuffer->GetTexture().Get(), 
-                          m_OutputBuffer->GetTexture().Get());
+                          tempBuffer.GetTexture().Get());
 
-    if ( Engine::GAPI->GetRendererState().RendererSettings.SharpenFactor > 0.0f ) {
-        auto sharpenPS = engine->GetShaderManager().GetPShader( "PS_PFX_Sharpen" );
-        sharpenPS->Apply();
-
-        GammaCorrectConstantBuffer gcb;
-        gcb.G_Gamma = Engine::GAPI->GetGammaValue();
-        gcb.G_Brightness = Engine::GAPI->GetBrightnessValue();
-        gcb.G_TextureSize = engine->GetResolution();
-        gcb.G_SharpenStrength = Engine::GAPI->GetRendererState().RendererSettings.SharpenFactor;
-
-        sharpenPS->GetConstantBuffer()[0]->UpdateBuffer( &gcb );
-        sharpenPS->GetConstantBuffer()[0]->BindToPixelShader( 0 );
-
-        FxRenderer->CopyTextureToRTV( m_OutputBuffer->GetShaderResView(), oldRTV, INT2( 0, 0 ), true );
-    } else {
-        FxRenderer->CopyTextureToRTV( m_OutputBuffer->GetShaderResView(), oldRTV );
-    }
-    
-    //// Copy to original render target
-    //context->OMSetRenderTargets(1, oldRTV.GetAddressOf(), nullptr);
-    //FxRenderer->CopyTextureToRTV(m_OutputBuffer->GetShaderResView(), oldRTV);
-    
     // Cleanup
     ID3D11ShaderResourceView* nullSRVs[4] = { nullptr, nullptr, nullptr, nullptr };
-    context->PSSetShaderResources(0, 4, nullSRVs);
+    context->PSSetShaderResources( 0, 4, nullSRVs );
+
+    FxRenderer->CopyTextureToRTV( tempBuffer.GetShaderResView(), oldRTV );
+
     context->OMSetRenderTargets(1, oldRTV.GetAddressOf(), oldDSV.Get());
     
     m_FirstFrame = false;

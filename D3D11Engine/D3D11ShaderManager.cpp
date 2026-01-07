@@ -14,7 +14,6 @@
 
 #include "D3D11GraphicsEngineBase.h"
 #include <d3dcompiler.h>
-#include "D3D11PFX_FSR.h"
 #include "D3D11PFX_TAA.h"
 
 // Patch HLSL-Compiler for http://support.microsoft.com/kb/2448404
@@ -454,14 +453,9 @@ XRESULT D3D11ShaderManager::Init() {
     taaInfo.cBufferSizes.push_back( sizeof( TAAConstantBuffer ) );
     Shaders.push_back( taaInfo );
 
-    // FSR Shaders
-    ShaderInfo fsrEasuInfo( "PS_FSR_EASU", "PS_FSR_EASU.hlsl", "p", makros );
-    fsrEasuInfo.cBufferSizes.push_back( sizeof( FSR_EASUConstants ) );
-    Shaders.push_back( fsrEasuInfo );
-
-    ShaderInfo fsrRcasInfo( "PS_FSR_RCAS", "PS_FSR_RCAS.hlsl", "p", makros );
-    fsrRcasInfo.cBufferSizes.push_back( sizeof( FSR_RCASConstants ) );
-    Shaders.push_back( fsrRcasInfo );
+    ShaderInfo casInfo( "PS_PFX_CAS", "PS_PFX_CAS.hlsl", "p", makros );
+    casInfo.cBufferSizes.push_back( sizeof( CASConstantBuffer ) );
+    Shaders.push_back( casInfo );
 
     if ( !FeatureLevel10Compatibility ) {
         Shaders.push_back( ShaderInfo( "CS_AdvanceRain", "CS_AdvanceRain.hlsl", "c" ) );

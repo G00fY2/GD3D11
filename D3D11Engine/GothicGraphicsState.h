@@ -523,13 +523,19 @@ struct GothicRendererSettings {
         SHD_FRUSTUM_CULLING_CONSERVATIVE = 2,
     };
 
-    // In GothicRendererSettings struct, add:
-    enum EAntiAliasingMode {
+    enum E_AntiAliasingMode {
         AA_NONE = 0,
         AA_SMAA = 1,
         AA_TAA = 2,
         AA_FSR = 3,
         _AA_NUM_MODES
+    };
+
+    enum E_SharpeningMode {
+        SHARPEN_NONE = 0,
+        SHARPEN_SIMPLE = 1,
+        SHARPEN_CAS = 2,
+        _SHARPEN_NUM_MODES
     };
 
     /** Sets the default values for this struct */
@@ -607,7 +613,7 @@ struct GothicRendererSettings {
 #else
         EnableEditorPanel = false;
 #endif
-        AntiAliasingMode = EAntiAliasingMode::AA_SMAA;
+        AntiAliasingMode = E_AntiAliasingMode::AA_SMAA;
 
         TesselationFactor = 20.0f;
         TesselationRange = 8.0f;
@@ -650,6 +656,7 @@ struct GothicRendererSettings {
         FOVHoriz = 90.0f;
         FOVVert = 90.0f;
 
+        SharpeningMode = E_SharpeningMode::SHARPEN_CAS;
         SharpenFactor = 0.2f;
 
         RainRadiusRange = 5000.0f;
@@ -861,7 +868,8 @@ struct GothicRendererSettings {
     bool RunInSpacerNet;
     bool BinkVideoRunning;
     bool EnableWaterAnimation;
-    EAntiAliasingMode AntiAliasingMode;
+    E_AntiAliasingMode AntiAliasingMode;
+    E_SharpeningMode SharpeningMode;
 };
 
 struct GothicRendererTiming {

@@ -14,7 +14,8 @@
 #include "D3D11PFX_SMAA.h"
 #include "D3D11PFX_GodRays.h"
 #include "D3D11PFX_TAA.h"
-#include "D3D11PFX_FSR.h"
+#include "D3D11PFX_CAS.h"
+#include "D3D11PFX_SimpleSharpen.h"
 
 D3D11PfxRenderer::D3D11PfxRenderer() {
     FX_Blur = std::make_unique<D3D11PFX_Blur>( this );
@@ -26,14 +27,15 @@ D3D11PfxRenderer::D3D11PfxRenderer() {
     if ( !FeatureLevel10Compatibility ) {
         FX_SMAA = std::make_unique<D3D11PFX_SMAA>( this );
         FX_TAA = std::make_unique<D3D11PFX_TAA>( this );
-        FX_FSR = std::make_unique<D3D11PFX_FSR>( this );
 
         FX_TAA->Init();
-        FX_FSR->Init();
 
         NvHBAO = std::make_unique<D3D11NVHBAO>();
         NvHBAO->Init();
     }
+
+    PFX_CAS = std::make_unique<D3D11PFX_CAS>( this );
+    PFX_SimpleSharpen = std::make_unique<D3D11PFX_SimpleSharpen>( this );
 }
 
 D3D11PfxRenderer::~D3D11PfxRenderer() {
@@ -79,19 +81,26 @@ XRESULT D3D11PfxRenderer::RenderTAA() {
     FX_TAA->RenderPostFX(
         engine->GetHDRBackBuffer().GetShaderResView(),
         engine->GetDepthBuffer()->GetShaderResView(),
-        nullptr  // velocity buffer, optional
+        nullptr // TODO: implement motion vectors and populate VelocityBuffer engine->GetVelocityBuffer()->GetShaderResView()
     );
     return XR_SUCCESS;
 }
 
-/** Renders the FSR-Effect */
-XRESULT D3D11PfxRenderer::RenderFSR() {
+XRESULT D3D11PfxRenderer::RenderCAS() {
     auto* engine = reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine);
-    FX_FSR->RenderPostFX(
-        engine->GetHDRBackBuffer().GetShaderResView(),
-        engine->GetHDRBackBuffer().GetRenderTargetView()
-    );
-    return XR_SUCCESS;
+
+    PFX_CAS->SetSharpness( Engine::GAPI->GetRendererState().RendererSettings.SharpenFactor );
+    PFX_CAS->Apply( engine->GetHDRBackBuffer().GetShaderResView(),
+        engine->GetHDRBackBuffer().GetRenderTargetView() );
+    return XR_SUCCESS();
+}
+
+XRESULT D3D11PfxRenderer::RenderSimpleSharpen() {
+    auto* engine = reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine);
+
+    PFX_SimpleSharpen->Apply( engine->GetHDRBackBuffer().GetShaderResView(),
+        engine->GetHDRBackBuffer().GetRenderTargetView() );
+    return XR_SUCCESS();
 }
 
 /** Draws a fullscreenquad */
@@ -183,7 +192,6 @@ XRESULT D3D11PfxRenderer::OnResize( const INT2& newResolution ) {
     if ( !FeatureLevel10Compatibility ) {
         FX_SMAA->OnResize( newResolution );
         FX_TAA->OnResize( newResolution );
-        FX_FSR->OnResize( newResolution );
     }
 
     return XR_SUCCESS;

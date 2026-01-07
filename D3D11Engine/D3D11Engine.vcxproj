@@ -320,7 +320,7 @@
       </AssemblyDebug>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G2_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -369,7 +369,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G2_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -415,7 +415,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G2_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -466,7 +466,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       </AssemblyDebug>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G2_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -517,7 +517,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       </AssemblyDebug>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G2_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -557,7 +557,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       </AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G1_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -597,7 +597,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       </AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G1_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -638,7 +638,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <StripPrivateSymbols>$(OutDir)$(TargetName)-stripped.pdb</StripPrivateSymbols>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G1_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -679,7 +679,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <StripPrivateSymbols>$(OutDir)$(TargetName)-stripped.pdb</StripPrivateSymbols>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G1_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -714,7 +714,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       </AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G2_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -748,7 +748,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       </DelayLoadDLLs>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G2_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G2_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -782,7 +782,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G2_SYSTEM_PATH)\ddraw.pdb"</Command>
       </AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
-      <Command>copy "shaders\*.*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
+      <Command>copy "shaders\*" "$(G1_SYSTEM_PATH)\GD3D11\shaders\"
 copy "$(OutDir)$(TargetName)$(TargetExt)" "$(G1_SYSTEM_PATH)\ddraw.dll"
 copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <Outputs>xxx</Outputs>
@@ -827,10 +827,10 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="D3D11PFX_Blur.h" />
     <ClInclude Include="D3D11PFX_DistanceBlur.h" />
     <ClInclude Include="D3D11PFX_Effect.h" />
-    <ClInclude Include="D3D11PFX_FSR.h" />
     <ClInclude Include="D3D11PFX_GodRays.h" />
     <ClInclude Include="D3D11PFX_HDR.h" />
     <ClInclude Include="D3D11PFX_HeightFog.h" />
+    <ClInclude Include="D3D11PFX_SimpleSharpen.h" />
     <ClInclude Include="D3D11PFX_SMAA.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">false</ExcludedFromBuild>
@@ -1078,12 +1078,14 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D3D11OcclusionQuerry.cpp" />
     <ClCompile Include="D3D11PfxRenderer.cpp" />
     <ClCompile Include="D3D11PFX_Blur.cpp" />
+    <ClCompile Include="D3D11PFX_CAS.cpp" />
+    <ClCompile Include="D3D11PFX_CAS.h" />
     <ClCompile Include="D3D11PFX_DistanceBlur.cpp" />
     <ClCompile Include="D3D11PFX_Effect.cpp" />
-    <ClCompile Include="D3D11PFX_FSR.cpp" />
     <ClCompile Include="D3D11PFX_GodRays.cpp" />
     <ClCompile Include="D3D11PFX_HDR.cpp" />
     <ClCompile Include="D3D11PFX_HeightFog.cpp" />
+    <ClCompile Include="D3D11PFX_SimpleSharpen.cpp" />
     <ClCompile Include="D3D11PFX_SMAA.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">false</ExcludedFromBuild>
@@ -1255,6 +1257,11 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\PS_DS_AtmosphericScattering.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\PS_PFX_TAA.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

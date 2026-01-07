@@ -356,7 +356,15 @@ public:
 
     D3D11PfxRenderer* GetPfxRenderer() const { return PfxRenderer.get(); }
     D3D11Texture* GetDistortionTexture() const { return DistortionTexture.get(); }
+
+    RenderToTextureBuffer* GetVelocityBuffer() { return VelocityBuffer.get(); }
+
+    const XMFLOAT4X4& GetPrevViewProjMatrix() const { return m_PrevViewProjMatrix; }
+    void StorePrevViewProjMatrix();
 protected:
+
+    void StoreVobPreviousTransforms();
+
     std::unique_ptr<FpsLimiter> m_FrameLimiter;
     int m_LastFrameLimit;
 
@@ -459,4 +467,7 @@ private:
     int m_previousFpsLimit;
     bool m_isWindowActive;
     float unionCurrentCustomFontMultiplier;
+
+    std::unique_ptr<RenderToTextureBuffer> VelocityBuffer;
+    XMFLOAT4X4 m_PrevViewProjMatrix;
 };

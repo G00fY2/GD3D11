@@ -42,10 +42,11 @@ public:
     /** Draws this effect to the given buffer */
     XRESULT Render(RenderToTextureBuffer* fxbuffer) override { return XR_SUCCESS; }
 
+    void OnDisabled() { m_FirstFrame = true; }
+
 private:
     // History buffer (previous frame's AA'd result)
     std::unique_ptr<RenderToTextureBuffer> m_HistoryBuffer;
-    std::unique_ptr<RenderToTextureBuffer> m_OutputBuffer;
     
     // TAA constant buffer
     std::unique_ptr<D3D11ConstantBuffer> m_TAAConstantBuffer;

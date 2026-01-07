@@ -4894,11 +4894,11 @@ XRESULT GothicAPI::LoadMenuSettings( const std::string& file ) {
         s.HeroAffectsObjects = GetPrivateProfileBoolA( "Display", "HeroAffectsObjects", true, ini );
         
         if ( GetPrivateProfileBoolA( "SMAA", "Enabled", false, ini ) ) {
-            s.AntiAliasingMode = GothicRendererSettings::EAntiAliasingMode::AA_SMAA;
+            s.AntiAliasingMode = GothicRendererSettings::E_AntiAliasingMode::AA_SMAA;
         }
         
         s.SharpenFactor = GetPrivateProfileFloatA( "SMAA", "SharpenFactor", 0.30f, ini );
-        s.AntiAliasingMode = (GothicRendererSettings::EAntiAliasingMode)GetPrivateProfileIntA( "Display", "AntiAliasing", (int)defaultRendererSettings.AntiAliasingMode, ini.c_str() );
+        s.AntiAliasingMode = (GothicRendererSettings::E_AntiAliasingMode)GetPrivateProfileIntA( "Display", "AntiAliasing", (int)defaultRendererSettings.AntiAliasingMode, ini.c_str() );
 
         HBAOSettings defaultHBAOSettings;
         s.HbaoSettings.Enabled = GetPrivateProfileBoolA( "HBAO", "Enabled", defaultHBAOSettings.Enabled, ini );

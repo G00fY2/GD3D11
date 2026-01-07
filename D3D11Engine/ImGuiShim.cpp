@@ -349,10 +349,10 @@ void ImGuiShim::RenderSettingsWindow()
 
             ImGui::Checkbox( "HBAO+", &settings.HbaoSettings.Enabled );
             ImGui::Checkbox( "Godrays", &settings.EnableGodRays );
-            static std::vector<std::pair<const char*, GothicRendererSettings::EAntiAliasingMode>> antiAliasing = {
-                {"Disabled", GothicRendererSettings::EAntiAliasingMode::AA_NONE},
-                {"SMAA", GothicRendererSettings::EAntiAliasingMode::AA_SMAA},
-                {"TAA", GothicRendererSettings::EAntiAliasingMode::AA_TAA},
+            static std::vector<std::pair<const char*, GothicRendererSettings::E_AntiAliasingMode>> antiAliasing = {
+                {"Disabled", GothicRendererSettings::E_AntiAliasingMode::AA_NONE},
+                {"SMAA", GothicRendererSettings::E_AntiAliasingMode::AA_SMAA},
+                {"TAA", GothicRendererSettings::E_AntiAliasingMode::AA_TAA},
             };
             if ( ImComboBox( "Anti Aliasing", antiAliasing, &settings.AntiAliasingMode ) ) {
                 ImGui::EndCombo();
@@ -928,17 +928,31 @@ void RenderAdvancedColumn4( GothicRendererSettings& settings, GothicAPI* gapi ) 
         ImGui::SeparatorText( "Anti Aliasing" );
         {
             ImGui::PushID( "AntiAliasingSettings" );
-            static std::vector<std::pair<const char*, GothicRendererSettings::EAntiAliasingMode>> antiAliasing = {
-                {"Disabled", GothicRendererSettings::EAntiAliasingMode::AA_NONE},
-                {"SMAA", GothicRendererSettings::EAntiAliasingMode::AA_SMAA},
-                {"TAA", GothicRendererSettings::EAntiAliasingMode::AA_TAA},
+            static std::vector<std::pair<const char*, GothicRendererSettings::E_AntiAliasingMode>> antiAliasing = {
+                {"Disabled", GothicRendererSettings::E_AntiAliasingMode::AA_NONE},
+                {"SMAA", GothicRendererSettings::E_AntiAliasingMode::AA_SMAA},
+                {"TAA", GothicRendererSettings::E_AntiAliasingMode::AA_TAA},
             };
             if ( ImComboBox( "Anti Aliasing", antiAliasing, &settings.AntiAliasingMode ) ) {
                 ImGui::EndCombo();
             }
-            ImGui::BeginDisabled( !settings.AntiAliasingMode );
+            ImGui::PopID();
+        }
+
+        ImGui::SeparatorText( "Sharpening" );
+        {
+            ImGui::PushID( "SharpeningSettings" );
+            static std::vector<std::pair<const char*, GothicRendererSettings::E_SharpeningMode>> sharpenModes = {
+                {"Disabled", GothicRendererSettings::E_SharpeningMode::SHARPEN_NONE},
+                {"Simple", GothicRendererSettings::E_SharpeningMode::SHARPEN_SIMPLE},
+                {"CAS", GothicRendererSettings::E_SharpeningMode::SHARPEN_CAS},
+            };
+            if ( ImComboBox( "Mode", sharpenModes, &settings.SharpeningMode ) ) {
+                ImGui::EndCombo();
+            }
+            ImGui::BeginDisabled( !settings.SharpeningMode );
             {
-                ImGui::DragFloat( "Sharpen", &settings.SharpenFactor, 0.01f, 0.0f, 2.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_AlwaysClamp );
+                ImGui::DragFloat( "Factor", &settings.SharpenFactor, 0.01f, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_AlwaysClamp );
                 ImGui::EndDisabled();
             }
             ImGui::PopID();
