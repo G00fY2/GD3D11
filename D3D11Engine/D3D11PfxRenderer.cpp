@@ -14,7 +14,6 @@
 #include "D3D11PFX_SMAA.h"
 #include "D3D11PFX_GodRays.h"
 #include "D3D11PFX_TAA.h"
-#include "D3D11PFX_CAS.h"
 #include "D3D11PFX_SimpleSharpen.h"
 
 D3D11PfxRenderer::D3D11PfxRenderer() {

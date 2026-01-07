@@ -952,7 +952,7 @@ void RenderAdvancedColumn4( GothicRendererSettings& settings, GothicAPI* gapi ) 
             }
             ImGui::BeginDisabled( !settings.SharpeningMode );
             {
-                ImGui::DragFloat( "Factor", &settings.SharpenFactor, 0.01f, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_AlwaysClamp );
+                ImGui::DragFloat( "Factor", &settings.SharpenFactor, 0.001f, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_::ImGuiSliderFlags_AlwaysClamp );
                 ImGui::EndDisabled();
             }
             ImGui::PopID();

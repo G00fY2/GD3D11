@@ -12,7 +12,7 @@
 #include "Shaders/FidelityFX/cas/ffx_cas.h"
 
 D3D11PFX_CAS::D3D11PFX_CAS( D3D11PfxRenderer* renderer )
-    : Renderer( renderer ), Sharpness( 0.2f ) {
+    : Renderer( renderer ), Sharpness( 0.1f ) {
 }
 
 D3D11PFX_CAS::~D3D11PFX_CAS() {
