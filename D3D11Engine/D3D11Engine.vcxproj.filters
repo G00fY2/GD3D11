@@ -1186,5 +1186,6 @@
     <None Include="Shaders\PS_PFX_TAA.hlsl">
       <Filter>Engine\Shaders</Filter>
     </None>
+    <None Include="Shaders\PS_PFX_Velocity.hlsl" />
   </ItemGroup>
 </Project>

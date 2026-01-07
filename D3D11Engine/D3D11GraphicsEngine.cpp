@@ -1065,26 +1065,6 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame() {
         }
     }
 
-    // If TAA is enabled, advance jitter and apply to projection
-    if ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode ==
-        GothicRendererSettings::AA_TAA ) {
-        if ( PfxRenderer && PfxRenderer->GetTAAEffect() ) {
-            PfxRenderer->GetTAAEffect()->AdvanceJitter();
-            XMFLOAT2 jitter = PfxRenderer->GetTAAEffect()->GetJitterOffset();
-
-            // Apply jitter to projection matrix
-            // This modifies the projection to offset by sub-pixel amounts
-            XMFLOAT4X4 projF = Engine::GAPI->GetRendererState().TransformState.TransformProj;
-            projF._31 += jitter.x * 2.0f;  // Jitter X
-            projF._32 += jitter.y * 2.0f;  // Jitter Y
-            Engine::GAPI->GetRendererState().TransformState.TransformProj =  projF;
-        }
-    } else {
-        if ( PfxRenderer && PfxRenderer->GetTAAEffect() ) {
-            PfxRenderer->GetTAAEffect()->OnDisabled();
-        }
-    }
-
     static int oldToneMap = -1;
     if ( Engine::GAPI->GetRendererState().RendererSettings.HDRToneMap != oldToneMap ) {
         oldToneMap = Engine::GAPI->GetRendererState().RendererSettings.HDRToneMap;
@@ -2466,6 +2446,19 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
 
     // return XR_SUCCESS;
     if ( PresentPending ) return XR_SUCCESS;
+
+    // If TAA is enabled, advance jitter and apply to projection
+    if ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode ==
+        GothicRendererSettings::AA_TAA ) {
+        if ( PfxRenderer && PfxRenderer->GetTAAEffect() ) {
+            PfxRenderer->GetTAAEffect()->AdvanceJitter();
+        }
+    } else {
+        if ( PfxRenderer && PfxRenderer->GetTAAEffect() ) {
+            PfxRenderer->GetTAAEffect()->OnDisabled();
+        }
+    }
+
     if ( !Engine::GAPI->IsGamePaused() ) {
         ApplyWindProps( g_windBuffer );
     }

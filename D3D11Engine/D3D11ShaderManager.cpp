@@ -453,6 +453,11 @@ XRESULT D3D11ShaderManager::Init() {
     taaInfo.cBufferSizes.push_back( sizeof( TAAConstantBuffer ) );
     Shaders.push_back( taaInfo );
 
+    // Velocity Buffer Shader
+    ShaderInfo velocityInfo( "PS_PFX_Velocity", "PS_PFX_Velocity.hlsl", "p", makros );
+    velocityInfo.cBufferSizes.push_back( sizeof( VelocityBufferConstantBuffer ) );
+    Shaders.push_back( velocityInfo );
+
     ShaderInfo casInfo( "PS_PFX_CAS", "PS_PFX_CAS.hlsl", "p", makros );
     casInfo.cBufferSizes.push_back( sizeof( CASConstantBuffer ) );
     Shaders.push_back( casInfo );

@@ -78,10 +78,15 @@ XRESULT D3D11PfxRenderer::RenderSMAA() {
 /** Renders the TAA-Effect */
 XRESULT D3D11PfxRenderer::RenderTAA() {
     auto* engine = reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine);
+    
+    // First, generate the velocity buffer from depth
+    FX_TAA->RenderVelocityBuffer(engine->GetDepthBuffer()->GetShaderResView());
+    
+    // Then render TAA using the velocity buffer
     FX_TAA->RenderPostFX(
         engine->GetHDRBackBuffer().GetShaderResView(),
         engine->GetDepthBuffer()->GetShaderResView(),
-        nullptr // TODO: implement motion vectors and populate VelocityBuffer engine->GetVelocityBuffer()->GetShaderResView()
+        FX_TAA->GetVelocityBufferSRV()
     );
     return XR_SUCCESS;
 }
