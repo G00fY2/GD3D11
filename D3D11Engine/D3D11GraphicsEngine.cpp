@@ -1060,6 +1060,23 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame() {
             m_FrameLimiter->Reset();
         }
     }
+
+    // If TAA is enabled, advance jitter and apply to projection
+    if ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode ==
+        GothicRendererSettings::AA_TAA ) {
+        if ( PfxRenderer && PfxRenderer->GetTAAEffect() ) {
+            PfxRenderer->GetTAAEffect()->AdvanceJitter();
+            XMFLOAT2 jitter = PfxRenderer->GetTAAEffect()->GetJitterOffset();
+
+            // Apply jitter to projection matrix
+            // This modifies the projection to offset by sub-pixel amounts
+            XMFLOAT4X4 projF = Engine::GAPI->GetRendererState().TransformState.TransformProj;
+            projF._31 += jitter.x * 2.0f;  // Jitter X
+            projF._32 += jitter.y * 2.0f;  // Jitter Y
+            Engine::GAPI->GetRendererState().TransformState.TransformProj =  projF;
+        }
+    }
+
     static int oldToneMap = -1;
     if ( Engine::GAPI->GetRendererState().RendererSettings.HDRToneMap != oldToneMap ) {
         oldToneMap = Engine::GAPI->GetRendererState().RendererSettings.HDRToneMap;
@@ -2444,7 +2461,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     if ( FeatureLevel10Compatibility ) {
         // Disable here what we can't draw in feature level 10 compatibility
         Engine::GAPI->GetRendererState().RendererSettings.HbaoSettings.Enabled = false;
-        Engine::GAPI->GetRendererState().RendererSettings.EnableSMAA = false;
+        Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode = GothicRendererSettings::EAntiAliasingMode::AA_NONE;
     }
 
 #if BUILD_SPACER_NET
@@ -2614,10 +2631,35 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
         PfxRenderer->RenderHDR();
     }
 
-    if ( Engine::GAPI->GetRendererState().RendererSettings.EnableSMAA ) {
-        auto _ = RecordGraphicsEvent( L"RenderSMAA" );
-        PfxRenderer->RenderSMAA();
-        GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+    switch ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode ) {
+    case GothicRendererSettings::AA_SMAA:
+        if ( !FeatureLevel10Compatibility ) {
+            auto _ = RecordGraphicsEvent( L"RenderSMAA" );
+            PfxRenderer->RenderSMAA();
+            GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+        }
+        break;
+
+    case GothicRendererSettings::AA_TAA:
+        if ( !FeatureLevel10Compatibility ) {
+            auto _ = RecordGraphicsEvent( L"RenderTAA" );
+            PfxRenderer->RenderTAA();
+            GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+        }
+        break;
+
+    case GothicRendererSettings::AA_FSR:
+        if ( !FeatureLevel10Compatibility ) {
+            auto _ = RecordGraphicsEvent( L"RenderFSR" );
+            PfxRenderer->RenderFSR();
+            GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+        }
+        break;
+
+    case GothicRendererSettings::AA_NONE:
+    default:
+        // No anti-aliasing
+        break;
     }
 
     PresentPending = true;

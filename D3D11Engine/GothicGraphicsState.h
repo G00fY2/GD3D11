@@ -523,6 +523,15 @@ struct GothicRendererSettings {
         SHD_FRUSTUM_CULLING_CONSERVATIVE = 2,
     };
 
+    // In GothicRendererSettings struct, add:
+    enum EAntiAliasingMode {
+        AA_NONE = 0,
+        AA_SMAA = 1,
+        AA_TAA = 2,
+        AA_FSR = 3,
+        _AA_NUM_MODES
+    };
+
     /** Sets the default values for this struct */
     void SetDefault() {
         SectionDrawRadius = 4;
@@ -598,7 +607,7 @@ struct GothicRendererSettings {
 #else
         EnableEditorPanel = false;
 #endif
-        EnableSMAA = true;
+        AntiAliasingMode = EAntiAliasingMode::AA_SMAA;
 
         TesselationFactor = 20.0f;
         TesselationRange = 8.0f;
@@ -738,7 +747,6 @@ struct GothicRendererSettings {
     bool EnableHDR;
     E_HDRToneMap HDRToneMap;
     bool EnableVSync;
-    bool EnableSMAA;
     bool FastShadows;
     bool ReplaceSunDirection;
     bool AtmosphericScattering;
@@ -853,6 +861,7 @@ struct GothicRendererSettings {
     bool RunInSpacerNet;
     bool BinkVideoRunning;
     bool EnableWaterAnimation;
+    EAntiAliasingMode AntiAliasingMode;
 };
 
 struct GothicRendererTiming {

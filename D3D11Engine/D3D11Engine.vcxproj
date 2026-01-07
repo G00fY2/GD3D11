@@ -827,6 +827,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="D3D11PFX_Blur.h" />
     <ClInclude Include="D3D11PFX_DistanceBlur.h" />
     <ClInclude Include="D3D11PFX_Effect.h" />
+    <ClInclude Include="D3D11PFX_FSR.h" />
     <ClInclude Include="D3D11PFX_GodRays.h" />
     <ClInclude Include="D3D11PFX_HDR.h" />
     <ClInclude Include="D3D11PFX_HeightFog.h" />
@@ -835,6 +836,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="D3D11PFX_TAA.h" />
     <ClInclude Include="D3D11PipelineStates.h" />
     <ClInclude Include="D3D11PointLight.h" />
     <ClInclude Include="D3D11PShader.h" />
@@ -988,6 +990,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="SV_ProgressBar.h" />
     <ClInclude Include="SV_Slider.h" />
     <ClInclude Include="SV_TabControl.h" />
+    <ClInclude Include="TAAConstantBuffer.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="VersionCheck.h" />
     <ClInclude Include="WidgetContainer.h" />
@@ -1077,6 +1080,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D3D11PFX_Blur.cpp" />
     <ClCompile Include="D3D11PFX_DistanceBlur.cpp" />
     <ClCompile Include="D3D11PFX_Effect.cpp" />
+    <ClCompile Include="D3D11PFX_FSR.cpp" />
     <ClCompile Include="D3D11PFX_GodRays.cpp" />
     <ClCompile Include="D3D11PFX_HDR.cpp" />
     <ClCompile Include="D3D11PFX_HeightFog.cpp" />
@@ -1085,6 +1089,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_Spacer|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_NoOpt_G1|Win32'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="D3D11PFX_TAA.cpp" />
     <ClCompile Include="D3D11PointLight.cpp" />
     <ClCompile Include="D3D11PShader.cpp" />
     <ClCompile Include="D3D11ShaderManager.cpp" />

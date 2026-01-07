@@ -349,7 +349,15 @@ void ImGuiShim::RenderSettingsWindow()
 
             ImGui::Checkbox( "HBAO+", &settings.HbaoSettings.Enabled );
             ImGui::Checkbox( "Godrays", &settings.EnableGodRays );
-            ImGui::Checkbox( "SMAA", &settings.EnableSMAA );
+            static std::vector<std::pair<const char*, GothicRendererSettings::EAntiAliasingMode>> antiAliasing = {
+                {"Disabled", GothicRendererSettings::EAntiAliasingMode::AA_NONE},
+                {"SMAA", GothicRendererSettings::EAntiAliasingMode::AA_SMAA},
+                {"TAA", GothicRendererSettings::EAntiAliasingMode::AA_TAA},
+            };
+            if ( ImComboBox( "Anti Aliasing", antiAliasing, &settings.AntiAliasingMode ) ) {
+                ImGui::EndCombo();
+            }
+            
             ImGui::Checkbox( "HDR", &settings.EnableHDR );
             if ( ImGui::Checkbox( "Shadows", &settings.EnableShadows ) ) {
                 Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows );
@@ -917,11 +925,18 @@ void RenderAdvancedColumn4( GothicRendererSettings& settings, GothicAPI* gapi ) 
             ImGui::PopID();
         }
 
-        ImGui::SeparatorText( "SMAA" );
+        ImGui::SeparatorText( "Anti Aliasing" );
         {
-            ImGui::PushID( "SMAASettings" );
-            ImGui::Checkbox( "SMAA", &settings.EnableSMAA );
-            ImGui::BeginDisabled( !settings.EnableSMAA );
+            ImGui::PushID( "AntiAliasingSettings" );
+            static std::vector<std::pair<const char*, GothicRendererSettings::EAntiAliasingMode>> antiAliasing = {
+                {"Disabled", GothicRendererSettings::EAntiAliasingMode::AA_NONE},
+                {"SMAA", GothicRendererSettings::EAntiAliasingMode::AA_SMAA},
+                {"TAA", GothicRendererSettings::EAntiAliasingMode::AA_TAA},
+            };
+            if ( ImComboBox( "Anti Aliasing", antiAliasing, &settings.AntiAliasingMode ) ) {
+                ImGui::EndCombo();
+            }
+            ImGui::BeginDisabled( !settings.AntiAliasingMode );
             {
                 ImGui::DragFloat( "Sharpen", &settings.SharpenFactor, 0.01f, 0.0f, 2.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_AlwaysClamp );
                 ImGui::EndDisabled();

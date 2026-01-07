@@ -13,6 +13,8 @@
 #include "D3D11NVHBAO.h"
 #include "D3D11PFX_SMAA.h"
 #include "D3D11PFX_GodRays.h"
+#include "D3D11PFX_TAA.h"
+#include "D3D11PFX_FSR.h"
 
 D3D11PfxRenderer::D3D11PfxRenderer() {
     FX_Blur = std::make_unique<D3D11PFX_Blur>( this );
@@ -23,6 +25,11 @@ D3D11PfxRenderer::D3D11PfxRenderer() {
 
     if ( !FeatureLevel10Compatibility ) {
         FX_SMAA = std::make_unique<D3D11PFX_SMAA>( this );
+        FX_TAA = std::make_unique<D3D11PFX_TAA>( this );
+        FX_FSR = std::make_unique<D3D11PFX_FSR>( this );
+
+        FX_TAA->Init();
+        FX_FSR->Init();
 
         NvHBAO = std::make_unique<D3D11NVHBAO>();
         NvHBAO->Init();
@@ -63,6 +70,27 @@ XRESULT D3D11PfxRenderer::RenderHDR() {
 /** Renders the SMAA-Effect */
 XRESULT D3D11PfxRenderer::RenderSMAA() {
     FX_SMAA->RenderPostFX( reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine)->GetHDRBackBuffer().GetShaderResView() );
+    return XR_SUCCESS;
+}
+
+/** Renders the TAA-Effect */
+XRESULT D3D11PfxRenderer::RenderTAA() {
+    auto* engine = reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine);
+    FX_TAA->RenderPostFX(
+        engine->GetHDRBackBuffer().GetShaderResView(),
+        engine->GetDepthBuffer()->GetShaderResView(),
+        nullptr  // velocity buffer, optional
+    );
+    return XR_SUCCESS;
+}
+
+/** Renders the FSR-Effect */
+XRESULT D3D11PfxRenderer::RenderFSR() {
+    auto* engine = reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine);
+    FX_FSR->RenderPostFX(
+        engine->GetHDRBackBuffer().GetShaderResView(),
+        engine->GetHDRBackBuffer().GetRenderTargetView()
+    );
     return XR_SUCCESS;
 }
 
@@ -154,6 +182,8 @@ XRESULT D3D11PfxRenderer::OnResize( const INT2& newResolution ) {
 
     if ( !FeatureLevel10Compatibility ) {
         FX_SMAA->OnResize( newResolution );
+        FX_TAA->OnResize( newResolution );
+        FX_FSR->OnResize( newResolution );
     }
 
     return XR_SUCCESS;
