@@ -82,6 +82,9 @@
     <Filter Include="Librarys\ImGuizmo">
       <UniqueIdentifier>{cd93a51d-0cd2-425d-be4f-d00292503999}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Shaders">
+      <UniqueIdentifier>{7b924380-794f-4471-9819-06c3fca71231}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -816,6 +819,14 @@
     <ClInclude Include="ShaderCategory.h">
       <Filter>Engine</Filter>
     </ClInclude>
+    <ClInclude Include="GothicExternals.h" />
+    <ClInclude Include="TAAConstantBuffer.h" />
+    <ClInclude Include="D3D11PFX_TAA.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D11PFX_SimpleSharpen.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1123,6 +1134,19 @@
     <ClCompile Include="Frustum.h">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="GothicExternals.cpp" />
+    <ClCompile Include="D3D11PFX_CAS.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PFX_CAS.cpp">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PFX_TAA.cpp">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D11PFX_SimpleSharpen.cpp">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ddraw.def">
@@ -1159,5 +1183,9 @@
     <None Include="Shaders\PS_DS_AtmosphericScattering.hlsl">
       <Filter>Engine\D3D11</Filter>
     </None>
+    <None Include="Shaders\PS_PFX_TAA.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </None>
+    <None Include="Shaders\PS_PFX_Velocity.hlsl" />
   </ItemGroup>
 </Project>

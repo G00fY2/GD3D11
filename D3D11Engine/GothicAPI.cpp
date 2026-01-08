@@ -1581,7 +1581,7 @@ bool GothicAPI::IsMaterialActive( zCMaterial* mat ) {
 
 /** Called when a vob moved */
 void GothicAPI::OnVobMoved( zCVob* vob ) {
-    auto checkMatrix = []( XMMATRIX& a, XMMATRIX& b ) -> bool {
+    static auto checkMatrix = []( FXMMATRIX a, CXMMATRIX b ) -> bool {
         const uint32_t mask = _mm_movemask_epi8( _mm_packs_epi16(
             _mm_packs_epi32 (
             _mm_castps_si128( _mm_cmpeq_ps( a.r[0], b.r[0] ) ),
@@ -3587,14 +3587,14 @@ LRESULT GothicAPI::OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
             break;
         }
         default:
-            if ( Engine::ImGuiHandle->IsActive ) {
+            if ( Engine::ImGuiHandle->GetIsActive() ) {
                 // do not delegate input further if settings is open
                 Engine::ImGuiHandle->OnWindowMessage( hWnd, msg, wParam, lParam );
                 return DefWindowProc( hWnd, msg, wParam, lParam );
             }
         break;
     case WM_KEYUP:
-        if ( Engine::ImGuiHandle->IsActive ) {
+        if ( Engine::ImGuiHandle->GetIsActive() ) {
             // do not delegate input further if settings is open
             Engine::ImGuiHandle->OnWindowMessage( hWnd, msg, wParam, lParam );
             return DefWindowProc( hWnd, msg, wParam, lParam );
@@ -4783,7 +4783,9 @@ XRESULT GothicAPI::SaveMenuSettings( const std::string& file ) {
     WritePrivateProfileStringA( "Shadows", "ShadowAOStrength", std::to_string( s.ShadowAOStrength ).c_str(), ini.c_str() );
     WritePrivateProfileStringA( "Shadows", "WorldAOStrength", std::to_string( s.WorldAOStrength ).c_str(), ini.c_str() );
 
-    WritePrivateProfileStringA( "SMAA", "Enabled", std::to_string( s.EnableSMAA ? TRUE : FALSE ).c_str(), ini.c_str() );
+    // WritePrivateProfileStringA( "SMAA", "Enabled", std::to_string( s.EnableSMAA ? TRUE : FALSE ).c_str(), ini.c_str() );
+    WritePrivateProfileStringA( "General", "AntiAliasing", std::to_string( (int)s.AntiAliasingMode ).c_str(), ini.c_str() );
+
     WritePrivateProfileStringA( "SMAA", "SharpenFactor", std::to_string( s.SharpenFactor ).c_str(), ini.c_str() );
 
     WritePrivateProfileStringA( "HBAO", "Enabled", std::to_string( s.HbaoSettings.Enabled ? TRUE : FALSE ).c_str(), ini.c_str() );
@@ -4891,8 +4893,12 @@ XRESULT GothicAPI::LoadMenuSettings( const std::string& file ) {
         s.EnableWaterAnimation = GetPrivateProfileBoolA( "Display", "WaterWaveAnimation", true, ini );
         s.HeroAffectsObjects = GetPrivateProfileBoolA( "Display", "HeroAffectsObjects", true, ini );
         
-        s.EnableSMAA = GetPrivateProfileBoolA( "SMAA", "Enabled", false, ini );
+        if ( GetPrivateProfileBoolA( "SMAA", "Enabled", false, ini ) ) {
+            s.AntiAliasingMode = GothicRendererSettings::E_AntiAliasingMode::AA_SMAA;
+        }
+        
         s.SharpenFactor = GetPrivateProfileFloatA( "SMAA", "SharpenFactor", 0.30f, ini );
+        s.AntiAliasingMode = (GothicRendererSettings::E_AntiAliasingMode)GetPrivateProfileIntA( "General", "AntiAliasing", (int)defaultRendererSettings.AntiAliasingMode, ini.c_str() );
 
         HBAOSettings defaultHBAOSettings;
         s.HbaoSettings.Enabled = GetPrivateProfileBoolA( "HBAO", "Enabled", defaultHBAOSettings.Enabled, ini );

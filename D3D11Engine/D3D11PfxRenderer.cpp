@@ -13,6 +13,8 @@
 #include "D3D11NVHBAO.h"
 #include "D3D11PFX_SMAA.h"
 #include "D3D11PFX_GodRays.h"
+#include "D3D11PFX_TAA.h"
+#include "D3D11PFX_SimpleSharpen.h"
 
 D3D11PfxRenderer::D3D11PfxRenderer() {
     FX_Blur = std::make_unique<D3D11PFX_Blur>( this );
@@ -23,10 +25,16 @@ D3D11PfxRenderer::D3D11PfxRenderer() {
 
     if ( !FeatureLevel10Compatibility ) {
         FX_SMAA = std::make_unique<D3D11PFX_SMAA>( this );
+        FX_TAA = std::make_unique<D3D11PFX_TAA>( this );
+
+        FX_TAA->Init();
 
         NvHBAO = std::make_unique<D3D11NVHBAO>();
         NvHBAO->Init();
     }
+
+    PFX_CAS = std::make_unique<D3D11PFX_CAS>( this );
+    PFX_SimpleSharpen = std::make_unique<D3D11PFX_SimpleSharpen>( this );
 }
 
 D3D11PfxRenderer::~D3D11PfxRenderer() {
@@ -64,6 +72,39 @@ XRESULT D3D11PfxRenderer::RenderHDR() {
 XRESULT D3D11PfxRenderer::RenderSMAA() {
     FX_SMAA->RenderPostFX( reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine)->GetHDRBackBuffer().GetShaderResView() );
     return XR_SUCCESS;
+}
+
+/** Renders the TAA-Effect */
+XRESULT D3D11PfxRenderer::RenderTAA() {
+    auto* engine = reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine);
+    
+    // First, generate the velocity buffer from depth
+    FX_TAA->RenderVelocityBuffer(engine->GetDepthBuffer()->GetShaderResView());
+    
+    // Then render TAA using the velocity buffer
+    FX_TAA->RenderPostFX(
+        engine->GetHDRBackBuffer().GetShaderResView(),
+        engine->GetDepthBuffer()->GetShaderResView(),
+        FX_TAA->GetVelocityBufferSRV()
+    );
+    return XR_SUCCESS;
+}
+
+XRESULT D3D11PfxRenderer::RenderCAS() {
+    auto* engine = reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine);
+
+    PFX_CAS->SetSharpness( Engine::GAPI->GetRendererState().RendererSettings.SharpenFactor );
+    PFX_CAS->Apply( engine->GetHDRBackBuffer().GetShaderResView(),
+        engine->GetHDRBackBuffer().GetRenderTargetView() );
+    return XR_SUCCESS();
+}
+
+XRESULT D3D11PfxRenderer::RenderSimpleSharpen() {
+    auto* engine = reinterpret_cast<D3D11GraphicsEngine*>(Engine::GraphicsEngine);
+
+    PFX_SimpleSharpen->Apply( engine->GetHDRBackBuffer().GetShaderResView(),
+        engine->GetHDRBackBuffer().GetRenderTargetView() );
+    return XR_SUCCESS();
 }
 
 /** Draws a fullscreenquad */
@@ -154,6 +195,7 @@ XRESULT D3D11PfxRenderer::OnResize( const INT2& newResolution ) {
 
     if ( !FeatureLevel10Compatibility ) {
         FX_SMAA->OnResize( newResolution );
+        FX_TAA->OnResize( newResolution );
     }
 
     return XR_SUCCESS;

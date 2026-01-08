@@ -3,6 +3,8 @@
 #include <VersionHelpers.h>
 #include <ShellScalingAPI.h>
 
+#include "zCParser.h"
+
 #if defined(BUILD_GOTHIC_1_08k) && !defined(BUILD_1_12F)
 extern bool haveWindAnimations;
 #endif
@@ -110,13 +112,30 @@ void ImGuiShim::RenderLoop()
         CurrentResolution = NewResolution;
     }
 
-    if ( !IsActive ) {
-        return;
-    }
-
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
+    
+    ImGui::GetIO().MouseDrawCursor = INT2( ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y ) != Engine::GraphicsEngine->GetResolution();
+    
+    static int beginFrameFn = zCParser::GetParser()->GetIndex("GDX_IMGUI_BEGINFRAME" );
+    static int endFrameFn = zCParser::GetParser()->GetIndex( "GDX_IMGUI_ENDFRAME" );
+
+    static int retryFindFuncs = 0;
+    if ( retryFindFuncs > 120 ) {
+        if ( beginFrameFn == -1 ) { beginFrameFn = zCParser::GetParser()->GetIndex( "GDX_IMGUI_BEGINFRAME" ); }
+        if ( endFrameFn == -1 ) { endFrameFn = zCParser::GetParser()->GetIndex( "GDX_IMGUI_ENDFRAME" ); }
+        retryFindFuncs = 0;
+    }
+
+    LibShowBlockingThisFrame = false;
+    LibShowNonBlockingThisFrame = false;
+    if (beginFrameFn != -1) {
+        zCParser::GetParser()->CallFunc(beginFrameFn);
+    } else {
+        retryFindFuncs++;
+    }
+
     if ( SettingsVisible ) {
         RenderSettingsWindow();
     }
@@ -126,16 +145,25 @@ void ImGuiShim::RenderLoop()
     //if ( DemoVisible )
     //    ImGui::ShowDemoWindow();
 
-    ImGui::GetIO().MouseDrawCursor = INT2( ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y ) != Engine::GraphicsEngine->GetResolution();
+    if ( GetBlockGameInput() != m_lastFrameBlockGameInput ) {
+        m_lastFrameBlockGameInput = GetBlockGameInput();
+        D3D11GraphicsEngine::UpdateShouldBlockGameInput();
+    }
+
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData( ImGui::GetDrawData() );
+    
+    if (endFrameFn != -1) {
+        zCParser::GetParser()->CallFunc(endFrameFn);
+    };
 }
 
 
-void ImGuiShim::OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
+LRESULT ImGuiShim::OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
-    if ( Initiated && IsActive )
-        ImGui_ImplWin32_WndProcHandler( hWnd, msg, wParam, lParam );
+    if ( Initiated )
+        return ImGui_ImplWin32_WndProcHandler( hWnd, msg, wParam, lParam );
+    return 0;
 }
 
 void ImGuiShim::OnResize( INT2 newSize )
@@ -321,7 +349,15 @@ void ImGuiShim::RenderSettingsWindow()
 
             ImGui::Checkbox( "HBAO+", &settings.HbaoSettings.Enabled );
             ImGui::Checkbox( "Godrays", &settings.EnableGodRays );
-            ImGui::Checkbox( "SMAA", &settings.EnableSMAA );
+            static std::vector<std::pair<const char*, GothicRendererSettings::E_AntiAliasingMode>> antiAliasing = {
+                {"Disabled", GothicRendererSettings::E_AntiAliasingMode::AA_NONE},
+                {"SMAA", GothicRendererSettings::E_AntiAliasingMode::AA_SMAA},
+                {"TAA", GothicRendererSettings::E_AntiAliasingMode::AA_TAA},
+            };
+            if ( ImComboBox( "Anti Aliasing", antiAliasing, &settings.AntiAliasingMode ) ) {
+                ImGui::EndCombo();
+            }
+            
             ImGui::Checkbox( "HDR", &settings.EnableHDR );
             if ( ImGui::Checkbox( "Shadows", &settings.EnableShadows ) ) {
                 Engine::GraphicsEngine->ReloadShaders( ShaderCategory::LightsAndShadows );
@@ -889,13 +925,34 @@ void RenderAdvancedColumn4( GothicRendererSettings& settings, GothicAPI* gapi ) 
             ImGui::PopID();
         }
 
-        ImGui::SeparatorText( "SMAA" );
+        ImGui::SeparatorText( "Anti Aliasing" );
         {
-            ImGui::PushID( "SMAASettings" );
-            ImGui::Checkbox( "SMAA", &settings.EnableSMAA );
-            ImGui::BeginDisabled( !settings.EnableSMAA );
+            ImGui::PushID( "AntiAliasingSettings" );
+            static std::vector<std::pair<const char*, GothicRendererSettings::E_AntiAliasingMode>> antiAliasing = {
+                {"Disabled", GothicRendererSettings::E_AntiAliasingMode::AA_NONE},
+                {"SMAA", GothicRendererSettings::E_AntiAliasingMode::AA_SMAA},
+                {"TAA", GothicRendererSettings::E_AntiAliasingMode::AA_TAA},
+            };
+            if ( ImComboBox( "Anti Aliasing", antiAliasing, &settings.AntiAliasingMode ) ) {
+                ImGui::EndCombo();
+            }
+            ImGui::PopID();
+        }
+
+        ImGui::SeparatorText( "Sharpening" );
+        {
+            ImGui::PushID( "SharpeningSettings" );
+            static std::vector<std::pair<const char*, GothicRendererSettings::E_SharpeningMode>> sharpenModes = {
+                {"Disabled", GothicRendererSettings::E_SharpeningMode::SHARPEN_NONE},
+                {"Simple", GothicRendererSettings::E_SharpeningMode::SHARPEN_SIMPLE},
+                {"CAS", GothicRendererSettings::E_SharpeningMode::SHARPEN_CAS},
+            };
+            if ( ImComboBox( "Mode", sharpenModes, &settings.SharpeningMode ) ) {
+                ImGui::EndCombo();
+            }
+            ImGui::BeginDisabled( !settings.SharpeningMode );
             {
-                ImGui::DragFloat( "Sharpen", &settings.SharpenFactor, 0.01f, 0.0f, 2.0f, "%.2f", ImGuiSliderFlags_::ImGuiSliderFlags_AlwaysClamp );
+                ImGui::DragFloat( "Factor", &settings.SharpenFactor, 0.001f, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_::ImGuiSliderFlags_AlwaysClamp );
                 ImGui::EndDisabled();
             }
             ImGui::PopID();

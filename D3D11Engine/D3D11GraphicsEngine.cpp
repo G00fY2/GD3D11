@@ -51,6 +51,7 @@
 #include <dxgi1_6.h>
 
 #include "ImGuiShim.h"
+#include "zCModel.h"
 
 namespace wrl = Microsoft::WRL;
 
@@ -1024,6 +1025,9 @@ XRESULT D3D11GraphicsEngine::OnResize( INT2 newSize ) {
     GBuffer0_Diffuse = std::make_unique<RenderToTextureBuffer>(
         GetDevice().Get(), Resolution.x, Resolution.y, DXGI_FORMAT_B8G8R8A8_UNORM );
 
+    VelocityBuffer = std::make_unique<RenderToTextureBuffer>( 
+        GetDevice().Get(), Resolution.x, Resolution.y, DXGI_FORMAT_R16G16_FLOAT );
+
     HDRBackBuffer = std::make_unique<RenderToTextureBuffer>( GetDevice().Get(), Resolution.x, Resolution.y,
         (Engine::GAPI->GetRendererState().RendererSettings.CompressBackBuffer ? DXGI_FORMAT_R11G11B10_FLOAT : DXGI_FORMAT_R16G16B16A16_FLOAT) );
 
@@ -1060,6 +1064,7 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame() {
             m_FrameLimiter->Reset();
         }
     }
+
     static int oldToneMap = -1;
     if ( Engine::GAPI->GetRendererState().RendererSettings.HDRToneMap != oldToneMap ) {
         oldToneMap = Engine::GAPI->GetRendererState().RendererSettings.HDRToneMap;
@@ -1197,12 +1202,14 @@ XRESULT D3D11GraphicsEngine::OnBeginFrame() {
 
 /** Called when the game ended it's frame */
 XRESULT D3D11GraphicsEngine::OnEndFrame() {
+    StoreVobPreviousTransforms(); // used for motion vectors
     Present();
 
     Engine::GAPI->GetRendererState().RendererInfo.Timing.StopTotal();
     if ( !Engine::GAPI->GetRendererState().RendererSettings.BinkVideoRunning && !Engine::GAPI->IsInSavingLoadingState() ) {
         m_FrameLimiter->Wait();
     }
+    RenderedVobs.clear();
     return XR_SUCCESS;
 }
 
@@ -1216,7 +1223,9 @@ XRESULT D3D11GraphicsEngine::Clear( const float4& color ) {
     context->ClearRenderTargetView( GBuffer1_Normals->GetRenderTargetView().Get(), reinterpret_cast<float*>(&float4( 0, 0, 0, 0 )) );
     context->ClearRenderTargetView( GBuffer2_SpecIntens_SpecPower->GetRenderTargetView().Get(), reinterpret_cast<float*>(&float4( 0, 0, 0, 0 )) );
     context->ClearRenderTargetView( HDRBackBuffer->GetRenderTargetView().Get(), reinterpret_cast<float*>(&float4( 0, 0, 0, 0 )) );
-
+    
+    // remove motion information
+    context->ClearRenderTargetView( VelocityBuffer->GetRenderTargetView().Get(), reinterpret_cast<float*>(&float4( 0, 0, 0, 0 )) );
     return XR_SUCCESS;
 }
 
@@ -2437,6 +2446,19 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
 
     // return XR_SUCCESS;
     if ( PresentPending ) return XR_SUCCESS;
+
+    // If TAA is enabled, advance jitter and apply to projection
+    if ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode ==
+        GothicRendererSettings::AA_TAA ) {
+        if ( PfxRenderer && PfxRenderer->GetTAAEffect() ) {
+            PfxRenderer->GetTAAEffect()->AdvanceJitter();
+        }
+    } else {
+        if ( PfxRenderer && PfxRenderer->GetTAAEffect() ) {
+            PfxRenderer->GetTAAEffect()->OnDisabled();
+        }
+    }
+
     if ( !Engine::GAPI->IsGamePaused() ) {
         ApplyWindProps( g_windBuffer );
     }
@@ -2444,7 +2466,7 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     if ( FeatureLevel10Compatibility ) {
         // Disable here what we can't draw in feature level 10 compatibility
         Engine::GAPI->GetRendererState().RendererSettings.HbaoSettings.Enabled = false;
-        Engine::GAPI->GetRendererState().RendererSettings.EnableSMAA = false;
+        Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode = GothicRendererSettings::E_AntiAliasingMode::AA_NONE;
     }
 
 #if BUILD_SPACER_NET
@@ -2529,18 +2551,28 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     // PfxRenderer->RenderDistanceBlur();
 
     // Draw water surfaces of current frame
-    DrawWaterSurfaces();
+    {
+        auto _ = RecordGraphicsEvent( L"DrawWaterSurfaces" );
+        DrawWaterSurfaces();
+    }
 
     // Draw light-shafts
-    DrawMeshInfoListAlphablended( FrameTransparencyMeshes );
+    {
+        auto _ = RecordGraphicsEvent( L"Draw light-shafts" );
+        DrawMeshInfoListAlphablended( FrameTransparencyMeshes );
+    }
 
     //draw forest / door portals
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawG1ForestPortals ) {
+        auto _ = RecordGraphicsEvent( L"DrawForestPortals" );
         DrawMeshInfoListAlphablended( FrameTransparencyMeshesPortal );
     }
 
     //draw waterfall foam
-    DrawMeshInfoListAlphablended( FrameTransparencyMeshesWaterfall );
+    {
+        auto _ = RecordGraphicsEvent( L"Draw Waterfall Foam" );
+        DrawMeshInfoListAlphablended( FrameTransparencyMeshesWaterfall );
+    }
 
     // Draw ghosts
     {
@@ -2554,14 +2586,19 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawFog &&
         Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() ==
-        zBSP_MODE_OUTDOOR )
+        zBSP_MODE_OUTDOOR ) {
+
+        auto _ = RecordGraphicsEvent( L"RenderHeightfog" );
         PfxRenderer->RenderHeightfog();
+    }
 
     // Draw rain
     if ( Engine::GAPI->GetRainFXWeight() > 0.0f ) {
         if ( FeatureLevel10Compatibility || Engine::GAPI->GetRendererState().RendererSettings.DrawRainThroughTransformFeedback ) {
+            auto _ = RecordGraphicsEvent( L"DrawRain" );
             Effects->DrawRain();
         } else {
+            auto _ = RecordGraphicsEvent( L"DrawRain_CS" );
             Effects->DrawRain_CS();
         }
     }
@@ -2590,11 +2627,17 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     // clear it!
     if ( Engine::GAPI->GetRendererState().RendererSettings.EnableGodRays &&
         Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() ==
-        zBSP_MODE_OUTDOOR )
+        zBSP_MODE_OUTDOOR ) {
+
+        auto _ = RecordGraphicsEvent( L"RenderGodRays" );
         PfxRenderer->RenderGodRays();
+    }
 
     // DrawParticleEffects();
-    Engine::GAPI->DrawParticlesSimple();
+    {
+        auto _ = RecordGraphicsEvent( L"DrawParticlesSimple" );
+        Engine::GAPI->DrawParticlesSimple();
+    }
 
 #if (defined BUILD_GOTHIC_2_6_fix || defined BUILD_GOTHIC_1_08k)
     // Calc weapon/effect trail mesh data
@@ -2602,19 +2645,56 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     // Calc lightning flashes mesh data
     Engine::GAPI->CalcFlashMeshes();
     // Draw those
-    DrawPolyStrips();
+    {
+        auto _ = RecordGraphicsEvent( L"DrawPolyStrips" );
+        DrawPolyStrips();
+    }
 #endif
 
     // Draw debug lines
-    LineRenderer->Flush();
-    LineRenderer->FlushScreenSpace();
+    {
+        auto _ = RecordGraphicsEvent( L"Draw Debug Lines" );
+        LineRenderer->Flush();
+        LineRenderer->FlushScreenSpace();
+    }
+
+    if ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode 
+        == GothicRendererSettings::AA_TAA ) {
+        // TAA before any HDR stuff
+        auto _ = RecordGraphicsEvent( L"RenderTAA" );
+        PfxRenderer->RenderTAA();
+        GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+    }
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.EnableHDR ) {
         auto _ = RecordGraphicsEvent( L"RenderHDR" );
         PfxRenderer->RenderHDR();
     }
 
-    if ( Engine::GAPI->GetRendererState().RendererSettings.EnableSMAA ) {
+    if ( Engine::GAPI->GetRendererState().RendererSettings.SharpenFactor > 0.0f ) {
+
+        switch ( Engine::GAPI->GetRendererState().RendererSettings.SharpeningMode ) {
+        case GothicRendererSettings::SHARPEN_SIMPLE:
+            if ( !FeatureLevel10Compatibility ) {
+                auto _ = RecordGraphicsEvent( L"ApplySimpleSharpen" );
+                PfxRenderer->RenderSimpleSharpen();
+                GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+            }
+            break;
+
+        case GothicRendererSettings::SHARPEN_CAS:
+            if ( !FeatureLevel10Compatibility ) {
+                auto _ = RecordGraphicsEvent( L"ApplyCAS" );
+                PfxRenderer->RenderCAS();
+                GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
+            }
+            break;
+        }
+    }
+
+    if ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode
+        == GothicRendererSettings::AA_SMAA ) {
+        // actually we could do TAA + SMAA
         auto _ = RecordGraphicsEvent( L"RenderSMAA" );
         PfxRenderer->RenderSMAA();
         GetContext()->PSSetSamplers( 0, 1, DefaultSamplerState.GetAddressOf() );
@@ -5335,6 +5415,18 @@ LRESULT D3D11GraphicsEngine::OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam
     return 0;
 }
 
+void D3D11GraphicsEngine::UpdateShouldBlockGameInput( ) {
+    if ( auto hImgui = Engine::ImGuiHandle ) {
+        auto oldIsActive = hImgui->IsActive;
+        hImgui->IsActive = hImgui->SettingsVisible || hImgui->AdvancedSettingsVisible || hImgui->LibShowBlockingThisFrame;
+        hImgui->UpdateBlockGameInput();
+
+        if ( oldIsActive != hImgui->IsActive ) {
+            Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
+        }
+    }
+}
+
 /** Handles an UI-Event */
 void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
 
@@ -5345,12 +5437,7 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
                 hImgui->AdvancedSettingsVisible = false;
             }
             hImgui->SettingsVisible = !hImgui->SettingsVisible;
-            auto oldIsActive = hImgui->IsActive;
-            hImgui->IsActive = hImgui->SettingsVisible || hImgui->AdvancedSettingsVisible;
-
-            if ( oldIsActive != hImgui->IsActive ) {
-                Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
-            }
+            UpdateShouldBlockGameInput();
         }
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_ToggleAdvancedSettings ) {
@@ -5360,30 +5447,20 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
                 hImgui->SettingsVisible = false;
             }
             hImgui->AdvancedSettingsVisible = !hImgui->AdvancedSettingsVisible;
-            auto oldIsActive = hImgui->IsActive;
-            hImgui->IsActive = hImgui->SettingsVisible || hImgui->AdvancedSettingsVisible;
-
-            if ( oldIsActive != hImgui->IsActive ) {
-                Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
-            }
+            UpdateShouldBlockGameInput();
         }
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_ClosedSettings ) {
         // Settings can be closed in multiple ways
-        if ( auto hImgui = Engine::ImGuiHandle; hImgui->IsActive ) {
+        if ( auto hImgui = Engine::ImGuiHandle; hImgui->GetIsActive() ) {
             // Show settings
             hImgui->SettingsVisible = false;
             hImgui->AdvancedSettingsVisible = false;
-            hImgui->IsActive = false;
-
-            // re-enable input, this clears the key buffer!
-            Engine::GAPI->SetEnableGothicInput( true );
         }
         else if ( auto antBar = Engine::AntTweakBar; antBar->GetActive() ) {
             antBar->SetActive( false );
-            // re-enable input, this clears the key buffer!
-            Engine::GAPI->SetEnableGothicInput( true );
         }
+        UpdateShouldBlockGameInput();
 
         UpdateClipCursor( OutputWindow );
     } else if ( uiEvent == UI_OpenEditor ) {
@@ -5395,10 +5472,7 @@ void D3D11GraphicsEngine::OnUIEvent( EUIEvent uiEvent ) {
             Engine::GAPI->GetRendererState().RendererSettings.EnableEditorPanel =
                 true;
 
-            // Free mouse
-            if ( auto hImgui = Engine::ImGuiHandle ) {
-                Engine::GAPI->SetEnableGothicInput( !hImgui->IsActive );
-            }
+            UpdateShouldBlockGameInput();
         }
     }
 }
@@ -5829,7 +5903,7 @@ void D3D11GraphicsEngine::DrawUnderwaterEffects() {
 /** Returns the settings window availability */
 bool D3D11GraphicsEngine::HasSettingsWindow()
 {
-    return ( Engine::ImGuiHandle && Engine::ImGuiHandle->IsActive );
+    return ( Engine::ImGuiHandle && Engine::ImGuiHandle->GetIsActive() );
 }
 
 /** Creates the main UI-View */
@@ -6436,4 +6510,34 @@ void D3D11GraphicsEngine::DrawString( const std::string& str, float x, float y, 
     graphicState.FF_Stages[1].ColorOp = copyColorOp2;
     graphicState.FF_Stages[0].ColorArg1 = copyColorArg1;
     graphicState.FF_Stages[0].ColorArg2 = copyColorArg2;
+}
+
+void D3D11GraphicsEngine::StorePrevViewProjMatrix() {
+    XMMATRIX view = Engine::GAPI->GetViewMatrixXM();
+    XMMATRIX proj = XMLoadFloat4x4( &Engine::GAPI->GetProjectionMatrix() );
+    XMMATRIX viewProj = XMMatrixMultiply( view, proj );
+    XMStoreFloat4x4( &m_PrevViewProjMatrix, XMMatrixTranspose( viewProj ) );
+}
+
+void D3D11GraphicsEngine::StoreVobPreviousTransforms() {
+    if ( !zCCamera::GetCamera() ) {
+        return; // only do this if we actually are in-game
+    }
+
+    // Store transforms for static vobs
+    for ( VobInfo* vob : RenderedVobs ) {
+        vob->StorePreviousTransform();
+    }
+
+    // Store transforms for skeletal meshes
+    for ( SkeletalVobInfo* skelVob : Engine::GAPI->GetAnimatedSkeletalMeshVobs() ) {
+        skelVob->Vob->GetWorldMatrix( &skelVob->PrevWorldMatrix );
+        zCModel* model = static_cast<zCModel*>(skelVob->Vob->GetVisual());
+        std::vector<XMFLOAT4X4> transforms;
+        model->GetBoneTransforms( &transforms );
+        skelVob->StorePreviousTransforms( transforms );
+    }
+
+    // Store view-projection matrix
+    StorePrevViewProjMatrix();
 }

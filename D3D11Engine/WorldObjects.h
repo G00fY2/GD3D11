@@ -295,6 +295,14 @@ struct VobInfo : public BaseVobInfo {
 
     /** Color the underlaying polygon has */
     DWORD GroundColor;
+
+    void StorePreviousTransform() {
+        PrevWorldMatrix = WorldMatrix;
+        HasValidPrevMatrix = true;
+    }
+
+    XMFLOAT4X4 PrevWorldMatrix;
+    bool HasValidPrevMatrix;
 };
 
 class zCVobLight;
@@ -362,6 +370,11 @@ struct SkeletalVobInfo : public BaseVobInfo {
     /** Updates the vobs constantbuffer */
     void UpdateVobConstantBuffer();
 
+    void StorePreviousTransforms( const std::vector<XMFLOAT4X4>& currentTransforms ) {
+        PrevBoneTransforms = currentTransforms;
+        HasValidPrevTransforms = true;
+    }
+
     /** Constantbuffer which holds this vobs world matrix */
     D3D11ConstantBuffer* VobConstantBuffer;
 
@@ -379,6 +392,10 @@ struct SkeletalVobInfo : public BaseVobInfo {
 
     /** BSP-Node this is stored in */
     std::vector<BspInfo*> ParentBSPNodes;
+
+    std::vector<XMFLOAT4X4> PrevBoneTransforms;
+    XMFLOAT4X4 PrevWorldMatrix;
+    bool HasValidPrevTransforms;
 };
 
 struct SectionInstanceCache {

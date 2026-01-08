@@ -38,7 +38,7 @@ runs:
 
         New-Item -Path $binDir -ItemType Directory -Force
         
-        Copy-Item -Path "D3D11Engine/Shaders/*" -Destination "$relDir/GD3D11/shaders/" -Recurse -Force
+        Copy-Item -Path "D3D11Engine/Shaders" -Destination "$relDir/GD3D11/shaders/" -Recurse -Force
         Copy-Item -Path "blobs/Fonts" -Destination "$relDir/GD3D11/Fonts/" -Recurse -Force
         Copy-Item -Path "blobs/Meshes" -Destination "$relDir/GD3D11/Meshes/" -Recurse -Force
         Copy-Item -Path "blobs/Textures" -Destination "$relDir/GD3D11/Textures/" -Recurse -Force

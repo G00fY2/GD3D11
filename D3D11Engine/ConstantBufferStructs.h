@@ -2,6 +2,9 @@
 #include "pch.h"
 #include <DirectXMath.h>
 
+#define FFX_CPU
+#include "Shaders/FidelityFX/ffx_core.h"
+
 /** Actual instance data for a vob */
 struct VobInstanceInfo {
     XMFLOAT4X4 world;
@@ -301,5 +304,10 @@ struct AtmosphereConstantBuffer {
 
     float3 AC_SpherePosition;
     float AC_RainFXWeight;
+};
+
+struct CASConstantBuffer {
+    FfxUInt32x4 const0;  // CasSetup output
+    FfxUInt32x4 const1;  // CasSetup output
 };
 #pragma pack (pop)

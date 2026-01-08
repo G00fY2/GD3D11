@@ -1,5 +1,8 @@
 #pragma once
 #include "pch.h"
+#include "D3D11PFX_TAA.h"
+#include "D3D11PFX_CAS.h"
+
 
 struct RenderToTextureBuffer;
 class D3D11PFX_Blur;
@@ -9,6 +12,8 @@ class D3D11PFX_HDR;
 class D3D11PFX_SMAA;
 class D3D11PFX_GodRays;
 class D3D11NVHBAO;
+class D3D11PFX_SimpleSharpen;
+
 class D3D11PfxRenderer {
 public:
     D3D11PfxRenderer();
@@ -32,6 +37,10 @@ public:
     /** Renders the SMAA-Effect */
     XRESULT RenderSMAA();
 
+    XRESULT RenderTAA();
+    XRESULT RenderCAS();
+    XRESULT RenderSimpleSharpen();
+
     /** Renders the godrays-Effect */
     XRESULT RenderGodRays();
 
@@ -52,6 +61,8 @@ public:
     RenderToTextureBuffer& GetTempBufferDS4_1() { return *TempBufferDS4_1; }
     RenderToTextureBuffer& GetTempBufferDS4_2() { return *TempBufferDS4_2; }
 
+    D3D11PFX_TAA* GetTAAEffect() { return FX_TAA.get(); }
+    D3D11PFX_CAS* GetCAS() { return PFX_CAS.get(); }
 private:
     /** Temporary buffer in the same size/format as the backbuffer */
     std::unique_ptr<RenderToTextureBuffer> TempBuffer;
@@ -70,5 +81,10 @@ private:
 
     /** Nivida HBAO+ */
     std::unique_ptr<D3D11NVHBAO> NvHBAO;
+
+    std::unique_ptr<D3D11PFX_TAA> FX_TAA;
+
+    std::unique_ptr<D3D11PFX_CAS> PFX_CAS;
+    std::unique_ptr<D3D11PFX_SimpleSharpen> PFX_SimpleSharpen;
 };
 

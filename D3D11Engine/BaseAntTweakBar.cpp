@@ -111,7 +111,7 @@ XRESULT BaseAntTweakBar::Init() {
     TwType hdrToneMapType = TwDefineEnum( "HDR_TONEMAP", hdrToneMapValues, 6 );
     TwAddVarRW( Bar_General, "HDR ToneMap", hdrToneMapType, &Engine::GAPI->GetRendererState().RendererSettings.HDRToneMap, nullptr );
 
-    TwAddVarRW( Bar_General, "SMAA", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState().RendererSettings.EnableSMAA, nullptr );
+    // TwAddVarRW( Bar_General, "SMAA", TW_TYPE_BOOLCPP, &Engine::GAPI->GetRendererState().RendererSettings.EnableSMAA, nullptr );
     TwAddVarRW( Bar_General, "Sharpen", TW_TYPE_FLOAT, &Engine::GAPI->GetRendererState().RendererSettings.SharpenFactor, nullptr );
     TwDefine( " General/Sharpen  step=0.01 min=0" );
 

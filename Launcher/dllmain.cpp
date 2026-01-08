@@ -20,6 +20,8 @@ std::map<int, std::string> dllBinFiles = {
 
 struct ddraw_dll {
     HMODULE dll = NULL;
+    FARPROC	IsUsingBGRATextures;
+    FARPROC	DirectDrawCreateEx;
     FARPROC	AcquireDDThreadLock;
     FARPROC	CheckFullscreen;
     FARPROC	CompleteCreateSysmemSurface;
@@ -30,7 +32,6 @@ struct ddraw_dll {
     FARPROC	DSoundHelp;
     FARPROC	DirectDrawCreate;
     FARPROC	DirectDrawCreateClipper;
-    FARPROC	DirectDrawCreateEx;
     FARPROC	DirectDrawEnumerateA;
     FARPROC	DirectDrawEnumerateExA;
     FARPROC	DirectDrawEnumerateExW;
@@ -42,7 +43,6 @@ struct ddraw_dll {
     FARPROC	GetSurfaceFromDC;
     FARPROC	RegisterSpecialCase;
     FARPROC	ReleaseDDThreadLock;
-
     FARPROC	GDX_AddPointLocator;
     FARPROC	GDX_SetFogColor;
     FARPROC	GDX_SetFogDensity;
@@ -54,11 +54,46 @@ struct ddraw_dll {
     FARPROC	GDX_SetShadowAOStrength;
     FARPROC	GDX_SetWorldAOStrength;
     FARPROC	GDX_OpenMessageBox;
-
+    FARPROC	GDX_Module;
     FARPROC	UpdateCustomFontMultiplier;
     FARPROC	SetCustomSkyTexture;
-    FARPROC	LoadMenuSettings;
-    FARPROC	LoadCustomZENResources;
+    FARPROC LoadMenuSettings;
+    FARPROC LoadCustomZENResources;
+    FARPROC imgui_begin;
+    FARPROC imgui_begin_overlay;
+    FARPROC imgui_end;
+    FARPROC imgui_text;
+    FARPROC imgui_text_unformatted;
+    FARPROC imgui_button;
+    FARPROC imgui_checkbox;
+    FARPROC imgui_slider_float;
+    FARPROC imgui_input_text;
+    FARPROC imgui_same_line;
+    FARPROC imgui_new_line;
+    FARPROC imgui_separator;
+    FARPROC imgui_begin_child;
+    FARPROC imgui_end_child;
+    FARPROC imgui_collapsing_header;
+    FARPROC imgui_begin_main_menu_bar;
+    FARPROC imgui_end_main_menu_bar;
+    FARPROC imgui_begin_menu;
+    FARPROC imgui_end_menu;
+    FARPROC imgui_menu_item;
+    FARPROC imgui_push_id;
+    FARPROC imgui_pop_id;
+    FARPROC imgui_is_ready;
+    FARPROC imgui_set_next_window_pos;
+    FARPROC imgui_set_next_window_size;
+    FARPROC imgui_set_item_tooltip;
+    FARPROC imgui_set_next_window_bg_alpha;
+    FARPROC imgui_set_next_window_collapsed;
+    FARPROC imgui_begin_table;
+    FARPROC imgui_end_table;
+    FARPROC imgui_table_next_column;
+    FARPROC imgui_table_next_row;
+    FARPROC imgui_table_set_column_index;
+    FARPROC imgui_get_content_region_avail_x;
+    FARPROC imgui_table_setup_column;
 } ddraw;
 
 __declspec(naked) void FakeAcquireDDThreadLock() { _asm { jmp[ddraw.AcquireDDThreadLock] } }
@@ -83,7 +118,6 @@ __declspec(naked) void FakeGetOLEThunkData() { _asm { jmp[ddraw.GetOLEThunkData]
 __declspec(naked) void FakeGetSurfaceFromDC() { _asm { jmp[ddraw.GetSurfaceFromDC] } }
 __declspec(naked) void FakeRegisterSpecialCase() { _asm { jmp[ddraw.RegisterSpecialCase] } }
 __declspec(naked) void FakeReleaseDDThreadLock() { _asm { jmp[ddraw.ReleaseDDThreadLock] } }
-
 __declspec(naked) void FakeGDX_AddPointLocator() { _asm { jmp[ddraw.GDX_AddPointLocator] } }
 __declspec(naked) void FakeGDX_SetFogColor() { _asm { jmp[ddraw.GDX_SetFogColor] } }
 __declspec(naked) void FakeGDX_SetFogDensity() { _asm { jmp[ddraw.GDX_SetFogDensity] } }
@@ -95,11 +129,47 @@ __declspec(naked) void FakeGDX_SetShadowStrength() { _asm { jmp[ddraw.GDX_SetSha
 __declspec(naked) void FakeGDX_SetShadowAOStrength() { _asm { jmp[ddraw.GDX_SetShadowAOStrength] } }
 __declspec(naked) void FakeGDX_SetWorldAOStrength() { _asm { jmp[ddraw.GDX_SetWorldAOStrength] } }
 __declspec(naked) void FakeGDX_OpenMessageBox() { _asm { jmp[ddraw.GDX_OpenMessageBox] } }
-
 __declspec(naked) void FakeUpdateCustomFontMultiplier() { _asm { jmp[ddraw.UpdateCustomFontMultiplier] } }
 __declspec(naked) void FakeSetCustomSkyTexture() { _asm { jmp[ddraw.SetCustomSkyTexture] } }
 __declspec(naked) void FakeLoadMenuSettings() { _asm { jmp[ddraw.LoadMenuSettings] } }
 __declspec(naked) void FakeLoadCustomZENResources() { _asm { jmp[ddraw.LoadCustomZENResources] } }
+__declspec(naked) void Fakeimgui_begin() { _asm { jmp[ddraw.imgui_begin] } }
+__declspec(naked) void Fakeimgui_begin_overlay() { _asm { jmp[ddraw.imgui_begin_overlay] } }
+__declspec(naked) void Fakeimgui_end() { _asm { jmp[ddraw.imgui_end] } }
+__declspec(naked) void Fakeimgui_text() { _asm { jmp[ddraw.imgui_text] } }
+__declspec(naked) void Fakeimgui_text_unformatted() { _asm { jmp[ddraw.imgui_text_unformatted] } }
+__declspec(naked) void Fakeimgui_button() { _asm { jmp[ddraw.imgui_button] } }
+__declspec(naked) void Fakeimgui_checkbox() { _asm { jmp[ddraw.imgui_checkbox] } }
+__declspec(naked) void Fakeimgui_slider_float() { _asm { jmp[ddraw.imgui_slider_float] } }
+__declspec(naked) void Fakeimgui_input_text() { _asm { jmp[ddraw.imgui_input_text] } }
+__declspec(naked) void Fakeimgui_same_line() { _asm { jmp[ddraw.imgui_same_line] } }
+__declspec(naked) void Fakeimgui_new_line() { _asm { jmp[ddraw.imgui_new_line] } }
+__declspec(naked) void Fakeimgui_separator() { _asm { jmp[ddraw.imgui_separator] } }
+__declspec(naked) void Fakeimgui_begin_child() { _asm { jmp[ddraw.imgui_begin_child] } }
+__declspec(naked) void Fakeimgui_end_child() { _asm { jmp[ddraw.imgui_end_child] } }
+__declspec(naked) void Fakeimgui_collapsing_header() { _asm { jmp[ddraw.imgui_collapsing_header] } }
+__declspec(naked) void Fakeimgui_begin_main_menu_bar() { _asm { jmp[ddraw.imgui_begin_main_menu_bar] } }
+__declspec(naked) void Fakeimgui_end_main_menu_bar() { _asm { jmp[ddraw.imgui_end_main_menu_bar] } }
+__declspec(naked) void Fakeimgui_begin_menu() { _asm { jmp[ddraw.imgui_begin_menu] } }
+__declspec(naked) void Fakeimgui_end_menu() { _asm { jmp[ddraw.imgui_end_menu] } }
+__declspec(naked) void Fakeimgui_menu_item() { _asm { jmp[ddraw.imgui_menu_item] } }
+__declspec(naked) void Fakeimgui_push_id() { _asm { jmp[ddraw.imgui_push_id] } }
+__declspec(naked) void Fakeimgui_pop_id() { _asm { jmp[ddraw.imgui_pop_id] } }
+__declspec(naked) void Fakeimgui_is_ready() { _asm { jmp[ddraw.imgui_is_ready] } }
+__declspec(naked) void Fakeimgui_set_next_window_pos() { _asm { jmp[ddraw.imgui_set_next_window_pos] } }
+__declspec(naked) void Fakeimgui_set_next_window_size() { _asm { jmp[ddraw.imgui_set_next_window_size] } }
+__declspec(naked) void Fakeimgui_set_next_window_bg_alpha() { _asm { jmp[ddraw.imgui_set_next_window_bg_alpha] } }
+__declspec(naked) void Fakeimgui_set_next_window_collapsed() { _asm { jmp[ddraw.imgui_set_next_window_collapsed] } }
+__declspec(naked) void Fakeimgui_set_item_tooltip() { _asm { jmp[ddraw.imgui_set_item_tooltip] } }
+__declspec(naked) void Fakeimgui_get_content_region_avail_x() { _asm { jmp[ddraw.imgui_get_content_region_avail_x] } }
+__declspec(naked) void Fakeimgui_begin_table() { _asm { jmp[ddraw.imgui_begin_table] } }
+__declspec(naked) void Fakeimgui_end_table() { _asm { jmp[ddraw.imgui_end_table] } }
+__declspec(naked) void Fakeimgui_table_next_column() { _asm { jmp[ddraw.imgui_table_next_column] } }
+__declspec(naked) void Fakeimgui_table_next_row() { _asm { jmp[ddraw.imgui_table_next_row] } }
+__declspec(naked) void Fakeimgui_table_set_column_index() { _asm { jmp[ddraw.imgui_table_set_column_index] } }
+__declspec(naked) void Fakeimgui_table_setup_column() { _asm { jmp[ddraw.imgui_table_setup_column] } }
+
+
 
 bool FakeIsUsingBGRATextures() { return true; }
 
@@ -319,6 +389,42 @@ BOOL APIENTRY DllMain( HINSTANCE hInst, DWORD reason, LPVOID ) {
         ddraw.SetCustomSkyTexture = GetProcAddress( ddraw.dll, "SetCustomSkyTexture" );
         ddraw.LoadMenuSettings = GetProcAddress( ddraw.dll, "LoadMenuSettings" );
         ddraw.LoadCustomZENResources = GetProcAddress( ddraw.dll, "LoadCustomZENResources" );
+        
+        ddraw.imgui_begin = GetProcAddress( ddraw.dll, "imgui_begin" );
+        ddraw.imgui_begin_overlay = GetProcAddress( ddraw.dll, "imgui_begin_overlay" );
+        ddraw.imgui_end = GetProcAddress( ddraw.dll, "imgui_end" );
+        ddraw.imgui_text = GetProcAddress( ddraw.dll, "imgui_text" );
+        ddraw.imgui_text_unformatted = GetProcAddress( ddraw.dll, "imgui_text_unformatted" );
+        ddraw.imgui_button = GetProcAddress( ddraw.dll, "imgui_button" );
+        ddraw.imgui_checkbox = GetProcAddress( ddraw.dll, "imgui_checkbox" );
+        ddraw.imgui_slider_float = GetProcAddress( ddraw.dll, "imgui_slider_float" );
+        ddraw.imgui_input_text = GetProcAddress( ddraw.dll, "imgui_input_text" );
+        ddraw.imgui_same_line = GetProcAddress( ddraw.dll, "imgui_same_line" );
+        ddraw.imgui_new_line = GetProcAddress( ddraw.dll, "imgui_new_line" );
+        ddraw.imgui_separator = GetProcAddress( ddraw.dll, "imgui_separator" );
+        ddraw.imgui_begin_child = GetProcAddress( ddraw.dll, "imgui_begin_child" );
+        ddraw.imgui_end_child = GetProcAddress( ddraw.dll, "imgui_end_child" );
+        ddraw.imgui_collapsing_header = GetProcAddress( ddraw.dll, "imgui_collapsing_header" );
+        ddraw.imgui_begin_main_menu_bar = GetProcAddress( ddraw.dll, "imgui_begin_main_menu_bar" );
+        ddraw.imgui_end_main_menu_bar = GetProcAddress( ddraw.dll, "imgui_end_main_menu_bar" );
+        ddraw.imgui_begin_menu = GetProcAddress( ddraw.dll, "imgui_begin_menu" );
+        ddraw.imgui_end_menu = GetProcAddress( ddraw.dll, "imgui_end_menu" );
+        ddraw.imgui_menu_item = GetProcAddress( ddraw.dll, "imgui_menu_item" );
+        ddraw.imgui_push_id = GetProcAddress( ddraw.dll, "imgui_push_id" );
+        ddraw.imgui_pop_id = GetProcAddress( ddraw.dll, "imgui_pop_id" );
+        ddraw.imgui_is_ready = GetProcAddress( ddraw.dll, "imgui_is_ready" );
+        ddraw.imgui_set_next_window_pos = GetProcAddress( ddraw.dll, "imgui_set_next_window_pos" );
+        ddraw.imgui_set_next_window_size = GetProcAddress( ddraw.dll, "imgui_set_next_window_size" );
+        ddraw.imgui_set_item_tooltip = GetProcAddress( ddraw.dll, "imgui_set_item_tooltip" );
+        ddraw.imgui_set_next_window_bg_alpha = GetProcAddress( ddraw.dll, "imgui_set_next_window_bg_alpha" );
+        ddraw.imgui_set_next_window_collapsed = GetProcAddress( ddraw.dll, "imgui_set_next_window_collapsed" );
+        ddraw.imgui_begin_table = GetProcAddress( ddraw.dll, "imgui_begin_table" );
+        ddraw.imgui_end_table = GetProcAddress( ddraw.dll, "imgui_end_table" );
+        ddraw.imgui_table_next_column = GetProcAddress( ddraw.dll, "imgui_table_next_column" );
+        ddraw.imgui_table_next_row = GetProcAddress( ddraw.dll, "imgui_table_next_row" );
+        ddraw.imgui_table_set_column_index = GetProcAddress( ddraw.dll, "imgui_table_set_column_index" );
+        ddraw.imgui_get_content_region_avail_x = GetProcAddress( ddraw.dll, "imgui_get_content_region_avail_x" );
+        ddraw.imgui_table_setup_column = GetProcAddress( ddraw.dll, "imgui_table_setup_column" );
         
     } else if ( reason == DLL_PROCESS_DETACH ) {
         if ( ddraw.dll ) {
