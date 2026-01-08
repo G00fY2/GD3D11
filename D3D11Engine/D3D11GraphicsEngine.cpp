@@ -2551,18 +2551,28 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     // PfxRenderer->RenderDistanceBlur();
 
     // Draw water surfaces of current frame
-    DrawWaterSurfaces();
+    {
+        auto _ = RecordGraphicsEvent( L"DrawWaterSurfaces" );
+        DrawWaterSurfaces();
+    }
 
     // Draw light-shafts
-    DrawMeshInfoListAlphablended( FrameTransparencyMeshes );
+    {
+        auto _ = RecordGraphicsEvent( L"Draw light-shafts" );
+        DrawMeshInfoListAlphablended( FrameTransparencyMeshes );
+    }
 
     //draw forest / door portals
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawG1ForestPortals ) {
+        auto _ = RecordGraphicsEvent( L"DrawForestPortals" );
         DrawMeshInfoListAlphablended( FrameTransparencyMeshesPortal );
     }
 
     //draw waterfall foam
-    DrawMeshInfoListAlphablended( FrameTransparencyMeshesWaterfall );
+    {
+        auto _ = RecordGraphicsEvent( L"Draw Waterfall Foam" );
+        DrawMeshInfoListAlphablended( FrameTransparencyMeshesWaterfall );
+    }
 
     // Draw ghosts
     {
@@ -2576,14 +2586,19 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.DrawFog &&
         Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() ==
-        zBSP_MODE_OUTDOOR )
+        zBSP_MODE_OUTDOOR ) {
+
+        auto _ = RecordGraphicsEvent( L"RenderHeightfog" );
         PfxRenderer->RenderHeightfog();
+    }
 
     // Draw rain
     if ( Engine::GAPI->GetRainFXWeight() > 0.0f ) {
         if ( FeatureLevel10Compatibility || Engine::GAPI->GetRendererState().RendererSettings.DrawRainThroughTransformFeedback ) {
+            auto _ = RecordGraphicsEvent( L"DrawRain" );
             Effects->DrawRain();
         } else {
+            auto _ = RecordGraphicsEvent( L"DrawRain_CS" );
             Effects->DrawRain_CS();
         }
     }
@@ -2612,11 +2627,17 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     // clear it!
     if ( Engine::GAPI->GetRendererState().RendererSettings.EnableGodRays &&
         Engine::GAPI->GetLoadedWorldInfo()->BspTree->GetBspTreeMode() ==
-        zBSP_MODE_OUTDOOR )
+        zBSP_MODE_OUTDOOR ) {
+
+        auto _ = RecordGraphicsEvent( L"RenderGodRays" );
         PfxRenderer->RenderGodRays();
+    }
 
     // DrawParticleEffects();
-    Engine::GAPI->DrawParticlesSimple();
+    {
+        auto _ = RecordGraphicsEvent( L"DrawParticlesSimple" );
+        Engine::GAPI->DrawParticlesSimple();
+    }
 
 #if (defined BUILD_GOTHIC_2_6_fix || defined BUILD_GOTHIC_1_08k)
     // Calc weapon/effect trail mesh data
@@ -2624,12 +2645,18 @@ XRESULT D3D11GraphicsEngine::OnStartWorldRendering() {
     // Calc lightning flashes mesh data
     Engine::GAPI->CalcFlashMeshes();
     // Draw those
-    DrawPolyStrips();
+    {
+        auto _ = RecordGraphicsEvent( L"DrawPolyStrips" );
+        DrawPolyStrips();
+    }
 #endif
 
     // Draw debug lines
-    LineRenderer->Flush();
-    LineRenderer->FlushScreenSpace();
+    {
+        auto _ = RecordGraphicsEvent( L"Draw Debug Lines" );
+        LineRenderer->Flush();
+        LineRenderer->FlushScreenSpace();
+    }
 
     if ( Engine::GAPI->GetRendererState().RendererSettings.AntiAliasingMode 
         == GothicRendererSettings::AA_TAA ) {
