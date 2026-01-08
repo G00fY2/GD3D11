@@ -231,6 +231,9 @@ XRESULT D3D11Effect::DrawRain() {
 
     RainShadowmap->BindToVertexShader( e->GetContext().Get(), 0 );
 
+    // Bind the shadow comparison sampler to the vertex shader at slot 2 (SS_Comp in shader)
+    e->GetContext()->VSSetSamplers( 2, 1, m_RainDropShadowSamplerState.GetAddressOf() );
+
     // Bind view/proj
     e->SetupVS_ExConstantBuffer();
 
@@ -350,6 +353,9 @@ XRESULT D3D11Effect::DrawRain_CS() {
 
     RainShadowmap->BindToVertexShader( e->GetContext().Get(), 0 );
 
+    // Bind the shadow comparison sampler to the vertex shader at slot 2 (SS_Comp in shader)
+    e->GetContext()->VSSetSamplers( 2, 1, m_RainDropShadowSamplerState.GetAddressOf() );
+
     // Bind view/proj
     e->SetupVS_ExConstantBuffer();
 
@@ -384,6 +390,24 @@ XRESULT D3D11Effect::LoadRainResources()
         SetDebugName( RainShadowmap->GetDepthStencilView().Get(), "RainShadowmap->DepthStencilView" );
         SetDebugName( RainShadowmap->GetShaderResView().Get(), "RainShadowmap->ShaderResView" );
         SetDebugName( RainShadowmap->GetTexture().Get(), "RainShadowmap->Texture" );
+    }
+
+    if ( !m_RainDropShadowSamplerState ) {
+        // same as in D3D11ShadowMap.cpp
+        D3D11_SAMPLER_DESC samplerDesc = {};
+        samplerDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+        samplerDesc.MipLODBias = 0;
+        samplerDesc.MaxAnisotropy = 1;
+        samplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
+        samplerDesc.MinLOD = -FLT_MAX;
+        samplerDesc.MaxLOD = FLT_MAX;
+
+        HRESULT hr;
+        LE( e->GetDevice()->CreateSamplerState(&samplerDesc, m_RainDropShadowSamplerState.GetAddressOf()));
+        SetDebugName( m_RainDropShadowSamplerState.Get(), "RainDropSamplerState" );
     }
 
     return XR_SUCCESS;
@@ -448,9 +472,16 @@ XRESULT D3D11Effect::DrawRainShadowmap() {
     Engine::GAPI->GetRendererState().RendererSettings.DrawSkeletalMeshes = false;
 
     // Draw rain-shadowmap
+
+    // Save old rendertargets
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> oldRTV;
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> oldDSV;
+    e->GetContext()->OMGetRenderTargets( 1, oldRTV.GetAddressOf(), oldDSV.GetAddressOf() );
+
     e->RenderShadowmaps( p, RainShadowmap.get(), true, false );
 
     // Restore old settings
+    e->GetContext()->OMSetRenderTargets( 1, oldRTV.GetAddressOf(), oldDSV.Get() );
     Engine::GAPI->GetRendererState().RendererSettings.DrawSkeletalMeshes = oldDrawSkel;
     Engine::GAPI->GetRendererState().GraphicsState.FF_AlphaRef = oldAlphaRef;
     if ( PS_Diffuse ) {

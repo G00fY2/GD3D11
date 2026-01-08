@@ -41,5 +41,6 @@ protected:
     std::unique_ptr<RenderToDepthStencilBuffer> RainShadowmap;
     CameraReplacement RainShadowmapCameraRepl;
 
+    Microsoft::WRL::ComPtr<ID3D11SamplerState> m_RainDropShadowSamplerState;
 };
 
