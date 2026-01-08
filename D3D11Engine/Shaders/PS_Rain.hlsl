@@ -251,8 +251,14 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	
 	//float tx = TX_RainTextureArray.Sample(SS_Anisotropic, float3(Input.vTexcoord, 0)).r;
 	
-	
-	
+	// if snow, then white-ish
+#ifdef SNOW_FEATURE
+	directionalLight = float4(
+		1.0-(1.0/255.0),
+		1.0-(1.0/250.0),
+		1.0-(1.0/250.0),
+		directionalLight.w);
+#endif	
 	return directionalLight;
 }
 

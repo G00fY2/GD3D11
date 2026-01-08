@@ -11,6 +11,7 @@
 #include "D3D11GraphicsEngine.h"
 #include "zCCamera.h"
 #include "zCVob.h"
+#include "oCGame.h"
 #include "GMesh.h"
 #include "zCVobLight.h"
 #include "zCBspTree.h"
@@ -542,8 +543,13 @@ XRESULT D3D11ShadowMap::DrawLighting( std::vector<VobLightInfo*>& lights ) {
     float rain = Engine::GAPI->GetRainFXWeight();
     float wetness = Engine::GAPI->GetSceneWetness();
 
+    bool isSnow = oCGame::GetGame()
+        && oCGame::GetGame()->_zCSession_world
+        && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()
+        && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetWeatherType() == zTWEATHER_SNOW;
+
     // Switch global light shader when raining
-    if ( wetness > 0.0f ) {
+    if ( wetness > 0.0f && !isSnow) {
         graphicsEngine->SetActivePixelShader( "PS_DS_AtmosphericScattering_Rain" );
     } else {
         graphicsEngine->SetActivePixelShader( "PS_DS_AtmosphericScattering" );

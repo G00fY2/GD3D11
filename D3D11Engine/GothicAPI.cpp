@@ -5466,7 +5466,8 @@ float GothicAPI::GetRainFXWeight() {
     if ( oCGame* ogame = oCGame::GetGame() ) {
         if ( zCWorld* world = ogame->_zCSession_world ) {
             if ( zCSkyController_Outdoor* skyController = world->GetSkyControllerOutdoor() ) {
-                if ( skyController->GetWeatherType() == zTWeather::zTWEATHER_RAIN ) {
+                if ( skyController->GetWeatherType() == zTWeather::zTWEATHER_RAIN
+                    || skyController->GetWeatherType() == zTWeather::zTWEATHER_SNOW ) {
                     gRainFxWeight = skyController->GetRainFXWeight();
                 }
             }
