@@ -21,6 +21,12 @@ struct GothicMemoryLocations {
         static const unsigned int zRenderer = 0x008C5ED0;
         static const unsigned int screen = 0x008DE1BC;
         static const unsigned int sysEvents = 0x004F6AC0;
+        static const unsigned int zCParser = 0x008dce08;
+    };
+
+    struct zCParser {
+        static const unsigned int CallFunc = 0x006e9690;
+        static const unsigned int GetIndex = 0x006ea0c0;
     };
 
     struct zCPolyStrip {
