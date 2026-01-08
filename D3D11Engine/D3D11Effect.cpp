@@ -16,6 +16,9 @@
 
 // TODO: Remove this!
 #include "D3D11GraphicsEngine.h"
+#include "oCGame.h"
+
+constexpr float snowSpeedFactor = 0.25f;
 
 D3D11Effect::D3D11Effect() {
     RainBufferDrawFrom = nullptr;
@@ -96,19 +99,25 @@ XRESULT D3D11Effect::DrawRain() {
     auto streamOutGS = e->GetShaderManager().GetGShader( "GS_ParticleStreamOut" );
     auto particleAdvanceVS = e->GetShaderManager().GetVShader( "VS_AdvanceRain" );
     auto particleVS = e->GetShaderManager().GetVShader( "VS_ParticlePointShaded" );
-    auto rainPS = e->GetShaderManager().GetPShader( "PS_Rain" );
+    
+    bool isSnow = oCGame::GetGame()
+        && oCGame::GetGame()->_zCSession_world
+        && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()
+        && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetWeatherType() == zTWEATHER_SNOW;
+
+    auto rainPS = e->GetShaderManager().GetPShader( isSnow ? "PS_Rain_Snow" : "PS_Rain" );
 
     UINT numParticles = state.RendererSettings.RainNumParticles;
 
     static float lastRadius = state.RendererSettings.RainRadiusRange;
     static float lastHeight = state.RendererSettings.RainHeightRange;
-    static UINT lastNumParticles = state.RendererSettings.RainNumParticles;
+    static UINT lastNumParticles = numParticles;
     static bool firstFrame = true;
 
     // Create resources if not already done
     if ( !RainBufferDrawFrom || lastHeight != state.RendererSettings.RainHeightRange
         || lastRadius != state.RendererSettings.RainRadiusRange ||
-        lastNumParticles != state.RendererSettings.RainNumParticles ) {
+        lastNumParticles != numParticles ) {
         delete RainBufferDrawFrom;
         delete RainBufferStreamTo;
         delete RainBufferInitial;
@@ -133,7 +142,13 @@ XRESULT D3D11Effect::DrawRain() {
 
     lastHeight = state.RendererSettings.RainHeightRange;
     lastRadius = state.RendererSettings.RainRadiusRange;
-    lastNumParticles = state.RendererSettings.RainNumParticles;
+    lastNumParticles = numParticles;
+
+    auto velocity = state.RendererSettings.RainGlobalVelocity;
+    if ( isSnow ) {
+        // make snow a lot slower
+        velocity = XMFLOAT3( velocity.x * snowSpeedFactor, velocity.y * snowSpeedFactor, velocity.z * snowSpeedFactor );
+    }
 
     // Update constantbuffer for the advance-VS
     AdvanceRainConstantBuffer acb;
@@ -144,7 +159,7 @@ XRESULT D3D11Effect::DrawRain() {
     acb.AR_Radius = state.RendererSettings.RainRadiusRange;
     acb.AR_Height = state.RendererSettings.RainHeightRange;
     acb.AR_CameraPosition = Engine::GAPI->GetCameraPosition();
-    acb.AR_GlobalVelocity = state.RendererSettings.RainGlobalVelocity;
+    acb.AR_GlobalVelocity = isSnow;
     acb.AR_MoveRainParticles = state.RendererSettings.RainMoveParticles ? 1 : 0;
     particleAdvanceVS->GetConstantBuffer()[0]->UpdateBuffer( &acb );
     particleAdvanceVS->GetConstantBuffer()[0]->BindToVertexShader( 1 );
@@ -256,17 +271,23 @@ XRESULT D3D11Effect::DrawRain_CS() {
     // Get shaders
     auto advanceRainCS = e->GetShaderManager().GetCShader( "CS_AdvanceRain" );
     auto particleVS = e->GetShaderManager().GetVShader( "VS_ParticlePointShaded" );
-    auto rainPS = e->GetShaderManager().GetPShader( "PS_Rain" );
+
+    bool isSnow = oCGame::GetGame()
+        && oCGame::GetGame()->_zCSession_world
+        && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()
+        && oCGame::GetGame()->_zCSession_world->GetSkyControllerOutdoor()->GetWeatherType() == zTWEATHER_SNOW;
+    
+    auto rainPS = e->GetShaderManager().GetPShader( isSnow ? "PS_Rain_Snow" : "PS_Rain" );
 
     UINT numParticles = state.RendererSettings.RainNumParticles;
 
     static float lastRadius = state.RendererSettings.RainRadiusRange;
     static float lastHeight = state.RendererSettings.RainHeightRange;
-    static UINT lastNumParticles = state.RendererSettings.RainNumParticles;
+    static UINT lastNumParticles = numParticles;
 
     if ( !RainBufferDrawFrom || lastHeight != state.RendererSettings.RainHeightRange
         || lastRadius != state.RendererSettings.RainRadiusRange ||
-        (lastNumParticles + 127) / 128 != (state.RendererSettings.RainNumParticles + 127) / 128 ) {
+        (lastNumParticles + 127) / 128 != (numParticles + 127) / 128 ) {
         delete RainBufferDrawFrom;
 
         e->CreateVertexBuffer( &RainBufferDrawFrom );
@@ -283,7 +304,13 @@ XRESULT D3D11Effect::DrawRain_CS() {
 
     lastHeight = state.RendererSettings.RainHeightRange;
     lastRadius = state.RendererSettings.RainRadiusRange;
-    lastNumParticles = state.RendererSettings.RainNumParticles;
+    lastNumParticles = numParticles;
+
+    auto velocity = state.RendererSettings.RainGlobalVelocity;
+    if ( isSnow ) {
+        // make snow a lot slower
+        velocity = XMFLOAT3(velocity.x * snowSpeedFactor, velocity.y * snowSpeedFactor, velocity.z * snowSpeedFactor );
+    }
 
     // Update constantbuffer for the advance-CS
     AdvanceRainConstantBuffer acb;
@@ -294,7 +321,7 @@ XRESULT D3D11Effect::DrawRain_CS() {
     acb.AR_Radius = state.RendererSettings.RainRadiusRange;
     acb.AR_Height = state.RendererSettings.RainHeightRange;
     acb.AR_CameraPosition = Engine::GAPI->GetCameraPosition();
-    acb.AR_GlobalVelocity = state.RendererSettings.RainGlobalVelocity;
+    acb.AR_GlobalVelocity = velocity;
     acb.AR_MoveRainParticles = numParticles;
 
     advanceRainCS->GetConstantBuffer()[0]->UpdateBuffer( &acb );

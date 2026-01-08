@@ -86,6 +86,9 @@ XRESULT D3D11ShaderManager::Init() {
     VShaders = std::unordered_map<std::string, std::shared_ptr<D3D11VShader>>();
     PShaders = std::unordered_map<std::string, std::shared_ptr<D3D11PShader>>();
 
+    D3D_SHADER_MACRO m;
+    std::vector<D3D_SHADER_MACRO> makros;
+
     Shaders.push_back( ShaderInfo( "VS_Ex", "VS_Ex.hlsl", "v", 1 ) );
     Shaders.back().cBufferSizes.push_back( sizeof( VS_ExConstantBuffer_PerFrame ) );
     Shaders.back().cBufferSizes.push_back( sizeof( VS_ExConstantBuffer_PerInstance ) );
@@ -161,6 +164,10 @@ XRESULT D3D11ShaderManager::Init() {
 
     Shaders.push_back( ShaderInfo( "PS_Rain", "PS_Rain.hlsl", "p" ) );
 
+    makros.push_back( D3D_SHADER_MACRO{ "SNOW_FEATURE", "1" } );
+    Shaders.push_back( ShaderInfo( "PS_Rain_Snow", "PS_Rain.hlsl", "p" , makros ) );
+    makros.clear();
+
     Shaders.push_back( ShaderInfo( "PS_Transparency", "PS_Transparency.hlsl", "p" ) );
     Shaders.back().cBufferSizes.push_back( sizeof( GhostAlphaConstantBuffer ) );
 
@@ -213,9 +220,6 @@ XRESULT D3D11ShaderManager::Init() {
     Shaders.push_back( ShaderInfo( "PS_PFX_LumConvert", "PS_PFX_LumConvert.hlsl", "p" ) );
     Shaders.push_back( ShaderInfo( "PS_PFX_LumAdapt", "PS_PFX_LumAdapt.hlsl", "p" ) );
     Shaders.back().cBufferSizes.push_back( sizeof( LumAdaptConstantBuffer ) );
-        
-    D3D_SHADER_MACRO m;
-    std::vector<D3D_SHADER_MACRO> makros;
 
     m.Name = "USE_TONEMAP";
     m.Definition = "4";
