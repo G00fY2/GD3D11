@@ -161,7 +161,7 @@ void ImGuiShim::RenderLoop()
 
 LRESULT ImGuiShim::OnWindowMessage( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
-    if ( Initiated )
+    if ( Initiated && GetIsActive() )
         return ImGui_ImplWin32_WndProcHandler( hWnd, msg, wParam, lParam );
     return 0;
 }
