@@ -53,10 +53,14 @@
 #pragma dxc diagnostic ignored "-Wambig-lit-shift"
 #endif  //__hlsl_dx_compiler
 
-#include "FidelityFX/ffx_common_types.h"
+// relative path for Shaders!
+// #include "FidelityFX/ffx_common_types.h"
 
 #if defined(FFX_CPU)
-    #include "FidelityFX/ffx_core_cpu.h"
+    #include "ffx_common_types.h"
+    #include "ffx_core_cpu.h"
+#else
+#include "FidelityFX/ffx_common_types.h"
 #endif // #if defined(FFX_CPU)
 
 #if defined(FFX_GLSL) && defined(FFX_GPU)
