@@ -53,24 +53,24 @@
 #pragma dxc diagnostic ignored "-Wambig-lit-shift"
 #endif  //__hlsl_dx_compiler
 
-#include "ffx_common_types.h"
+#include "FidelityFX/ffx_common_types.h"
 
 #if defined(FFX_CPU)
-    #include "ffx_core_cpu.h"
+    #include "FidelityFX/ffx_core_cpu.h"
 #endif // #if defined(FFX_CPU)
 
 #if defined(FFX_GLSL) && defined(FFX_GPU)
-    #include "ffx_core_glsl.h"
+    #include "FidelityFX/ffx_core_glsl.h"
 #endif // #if defined(FFX_GLSL) && defined(FFX_GPU)
 
 #if defined(FFX_HLSL) && defined(FFX_GPU)
-    #include "ffx_core_hlsl.h"
+    #include "FidelityFX/ffx_core_hlsl.h"
 #endif // #if defined(FFX_HLSL) && defined(FFX_GPU)
 
 #if defined(FFX_GPU)
-    #include "ffx_core_gpu_common.h"
-    #include "ffx_core_gpu_common_half.h"
-    #include "ffx_core_portability.h"
+    #include "FidelityFX/ffx_core_gpu_common.h"
+    #include "FidelityFX/ffx_core_gpu_common_half.h"
+    #include "FidelityFX/ffx_core_portability.h"
 #endif // #if defined(FFX_GPU)
 
 #ifdef __hlsl_dx_compiler
