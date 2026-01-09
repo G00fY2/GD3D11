@@ -2,6 +2,11 @@
 
 #pragma warning(disable: 4731) // Change of ebp from inline assembly
 #pragma warning(disable: 4244) // Loss of data during conversion
+
+#if !PUBLIC_RELEASE
+#define DEBUG_D3D11
+#endif
+
 #include <Windows.h>
 #include <wrl/client.h>
 #include <chrono>
