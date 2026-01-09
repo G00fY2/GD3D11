@@ -43,10 +43,6 @@
 #include "D3D11IGDEXT.h"
 #include "D3D11AGS.h"
 
-#if !PUBLIC_RELEASE
-#define DEBUG_D3D11
-#endif
-
 #include "SteamOverlay.h"
 #include <dxgi1_6.h>
 
