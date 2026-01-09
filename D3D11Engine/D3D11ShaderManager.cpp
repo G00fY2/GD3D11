@@ -26,6 +26,8 @@
 
 namespace
 {
+    // Include handler that resolves includes relative to the including file
+    // and also files relative to any relative included file (i.e. nested includes).
     class D3D11FileRelativeInclude final : public ID3DInclude
     {
     public:
@@ -160,7 +162,6 @@ HRESULT D3D11ShaderManager::CompileShaderFromFile( const CHAR* szFileName, LPCST
 
     D3D11FileRelativeInclude includeHandler( shaderPath.parent_path() );
 
-    // set Working Directory to shader file path, to allow resolving file-relative includes
     hr = D3DCompileFromFile( shaderPath.wstring().c_str(), &m[0], &includeHandler, szEntryPoint, szShaderModel, dwShaderFlags, 0, ppBlobOut, &pErrorBlob);
     
     if ( FAILED( hr ) ) {
