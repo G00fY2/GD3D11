@@ -337,8 +337,10 @@ void ImGuiShim::RenderSettingsWindow()
     ImVec2 buttonWidth( 275, 0 );
     auto& style = ImGui::GetStyle();
 
+    static const char* settingsLabel = "GD3D11 " VERSION_NUMBER;
+
     ImGui::SetNextWindowPos( ImVec2( windowSize.x / 2, windowSize.y / 2 ), ImGuiCond_Appearing, ImVec2( 0.5f, 0.5f ) );
-    if ( ImGui::Begin( "Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize ) ) {
+    if ( ImGui::Begin( settingsLabel, nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize) ) {
         GothicRendererSettings& settings = Engine::GAPI->GetRendererState().RendererSettings;
         {
             ImGui::BeginGroup();
