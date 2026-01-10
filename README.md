@@ -14,8 +14,6 @@ The new renderer is able to utilize more of the current GPU generation's power. 
 * Heightfog
 * Normalmapping
 * Full DynamicLighting
-* Vegetationgeneration
-* Hardware Tessellation
 * Editor-Panel to insert some of the renderers features into the world
 * Custom-Built UI-Framework based on Direct2D
 * Rewritten bink player for better compatibility with bink videos
@@ -120,6 +118,7 @@ When using a Release target, those same exceptions will very likely stop the exe
 ### Dependencies
 
 - HBAO+ files from [dboleslawski/VVVV.HBAOPlus](https://github.com/dboleslawski/VVVV.HBAOPlus/tree/master/Dependencies/NVIDIA-HBAOPlus)
+- [AMD FidelityFX SDK](https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK)
 - [AntTweakBar](https://sourceforge.net/projects/anttweakbar/)
 - [Dear ImGui](https://github.com/ocornut/imgui)
 - [assimp](https://github.com/assimp/assimp)
