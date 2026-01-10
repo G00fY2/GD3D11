@@ -578,6 +578,14 @@ void ImGuiShim::RenderSettingsWindow()
             ImGui::SliderFloat( "##Brightness", &settings.BrightnessValue, 0.1f, 3.0f, "%.1f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
             ImGui::PopItemWidth();
 
+
+            ImGui::Spacing();
+            auto availableSize = ImGui::GetWindowSize();
+            static const char* advancedSettingsHint = "Advanced settings: CTRL+F11 ";
+            auto textSize = ImGui::CalcTextSize( advancedSettingsHint );
+            ImGui::SetCursorPos( ImVec2( (availableSize.x - textSize.x) - 15 , availableSize.y - textSize.y - 50) );
+            ImGui::TextUnformatted( advancedSettingsHint );
+
             ImGui::EndGroup();
         }
 

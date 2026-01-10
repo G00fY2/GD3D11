@@ -827,6 +827,9 @@
     <ClInclude Include="D3D11PFX_SimpleSharpen.h">
       <Filter>Engine\D3D11\PFX\Effects</Filter>
     </ClInclude>
+	<ClInclude Include="D3D11PFX_CAS.h">
+      <Filter>Engine\D3D11\PFX\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1135,9 +1138,6 @@
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="GothicExternals.cpp" />
-    <ClCompile Include="D3D11PFX_CAS.h">
-      <Filter>Engine\D3D11\PFX\Effects</Filter>
-    </ClCompile>
     <ClCompile Include="D3D11PFX_CAS.cpp">
       <Filter>Engine\D3D11\PFX\Effects</Filter>
     </ClCompile>

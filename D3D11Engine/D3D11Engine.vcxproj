@@ -1048,6 +1048,7 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClInclude Include="zSTRING.h" />
     <ClInclude Include="zTypes.h" />
     <ClInclude Include="zViewTypes.h" />
+    <ClCompile Include="D3D11PFX_CAS.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseAntTweakBar.cpp" />
@@ -1079,7 +1080,6 @@ copy "$(OutDir)$(TargetName).pdb" "$(G1_SYSTEM_PATH)\ddraw.pdb"</Command>
     <ClCompile Include="D3D11PfxRenderer.cpp" />
     <ClCompile Include="D3D11PFX_Blur.cpp" />
     <ClCompile Include="D3D11PFX_CAS.cpp" />
-    <ClCompile Include="D3D11PFX_CAS.h" />
     <ClCompile Include="D3D11PFX_DistanceBlur.cpp" />
     <ClCompile Include="D3D11PFX_Effect.cpp" />
     <ClCompile Include="D3D11PFX_GodRays.cpp" />
