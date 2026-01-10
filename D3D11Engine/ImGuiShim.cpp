@@ -337,8 +337,10 @@ void ImGuiShim::RenderSettingsWindow()
     ImVec2 buttonWidth( 275, 0 );
     auto& style = ImGui::GetStyle();
 
+    static const char* settingsLabel = "GD3D11 " VERSION_NUMBER;
+
     ImGui::SetNextWindowPos( ImVec2( windowSize.x / 2, windowSize.y / 2 ), ImGuiCond_Appearing, ImVec2( 0.5f, 0.5f ) );
-    if ( ImGui::Begin( "Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize ) ) {
+    if ( ImGui::Begin( settingsLabel, nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize) ) {
         GothicRendererSettings& settings = Engine::GAPI->GetRendererState().RendererSettings;
         {
             ImGui::BeginGroup();
@@ -575,6 +577,14 @@ void ImGuiShim::RenderSettingsWindow()
             ImText( "Brightness", buttonWidth ); ImGui::SameLine();
             ImGui::SliderFloat( "##Brightness", &settings.BrightnessValue, 0.1f, 3.0f, "%.1f", ImGuiSliderFlags_::ImGuiSliderFlags_ClampOnInput );
             ImGui::PopItemWidth();
+
+
+            ImGui::Spacing();
+            auto availableSize = ImGui::GetWindowSize();
+            static const char* advancedSettingsHint = "Advanced settings: CTRL+F11 ";
+            auto textSize = ImGui::CalcTextSize( advancedSettingsHint );
+            ImGui::SetCursorPos( ImVec2( (availableSize.x - textSize.x) - 15 , availableSize.y - textSize.y - 50) );
+            ImGui::TextUnformatted( advancedSettingsHint );
 
             ImGui::EndGroup();
         }

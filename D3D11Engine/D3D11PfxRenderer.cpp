@@ -96,7 +96,7 @@ XRESULT D3D11PfxRenderer::RenderCAS() {
     PFX_CAS->SetSharpness( Engine::GAPI->GetRendererState().RendererSettings.SharpenFactor );
     PFX_CAS->Apply( engine->GetHDRBackBuffer().GetShaderResView(),
         engine->GetHDRBackBuffer().GetRenderTargetView() );
-    return XR_SUCCESS();
+    return XR_SUCCESS;
 }
 
 XRESULT D3D11PfxRenderer::RenderSimpleSharpen() {
@@ -104,7 +104,7 @@ XRESULT D3D11PfxRenderer::RenderSimpleSharpen() {
 
     PFX_SimpleSharpen->Apply( engine->GetHDRBackBuffer().GetShaderResView(),
         engine->GetHDRBackBuffer().GetRenderTargetView() );
-    return XR_SUCCESS();
+    return XR_SUCCESS;
 }
 
 /** Draws a fullscreenquad */
