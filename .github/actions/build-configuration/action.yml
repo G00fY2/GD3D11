@@ -36,7 +36,7 @@ runs:
         $outputName = [System.IO.Path]::GetFileNameWithoutExtension("${{ inputs.output-file }}")
         $outputDir = "$env:GITHUB_WORKSPACE\outputs\"
         $Env:CL = (-join("/DVERSION_NUMBER#",'\"',$versionString,'\"'))
-        echo $Env:CL >> $Env:GITHUB_ENV
+        echo "CL=$Env:CL" >> $Env:GITHUB_ENV
 
         $msbuildArgs = @(
           "${{ inputs.project }}",

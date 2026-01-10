@@ -5454,8 +5454,8 @@ void GothicAPI::PrintMessageTimed( const INT2& position, const std::string& strM
 void GothicAPI::PrintModInfo() {
     std::string version = std::string( VERSION_STRING );
     std::string gpu = Engine::GraphicsEngine->GetGraphicsDeviceName();
-    PrintMessageTimed( INT2( 5, 5 ), "GD3D11 - Version " + version );
-    PrintMessageTimed( INT2( 5, 180 ), "Device: " + gpu );
+    PrintMessageTimed( INT2( 5, 5 ), "GD3D11 - Version " + version, 8000.0f );
+    PrintMessageTimed( INT2( 5, 180 ), "Device: " + gpu, 8000.0f );
 }
 
 /** Returns the current weight of the rain-fx. The bigger value of ours and gothics is returned. */
