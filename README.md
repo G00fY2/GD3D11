@@ -34,9 +34,8 @@ The new renderer is able to utilize more of the current GPU generation's power. 
 ## Bugs & Problems
 
 ### Known causes of crashing
-* If you have problems with launching game after installing GD3D11 - for example getting Access Denied(0x45a), reinstall your Visual C++ Redistributable for Visual Studio 2015-2022 to latest version from Microsoft page, mod stopped working on older VCR due to some Microsoft changes in Platform Toolset.
-  https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-microsoft-visual-c-redistributable-version  
-  Select the `X86` installer `vc_redist.x86.exe` or click here: https://aka.ms/vs/17/release/vc_redist.x86.exe
+* If you have problems with launching game after installing GD3D11 - for example getting Access Denied(0x45a), reinstall your *Visual C++ Redistributable v14 (X86)* to latest version from [Microsoft website](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170), mod stopped working on older VCR due to some Microsoft changes in Platform Toolset.  
+  https://aka.ms/vc14/vc_redist.x86.exe
 
 ### AMD
 
