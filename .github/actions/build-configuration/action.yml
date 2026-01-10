@@ -32,17 +32,17 @@ runs:
         } else {
           $tagOrGit = "git"
         }
-        $versionString = "-$tagOrGit-$shortHash"
+        $versionString = "$tagOrGit-$shortHash"
         $outputName = [System.IO.Path]::GetFileNameWithoutExtension("${{ inputs.output-file }}")
         $outputDir = "$env:GITHUB_WORKSPACE\outputs\"
+        $env:CL = -join("/DVERSION_NUMBER=",'\"',$versionString,'\"')
 
         $msbuildArgs = @(
           "${{ inputs.project }}",
           "/p:Configuration=${{ inputs.configuration }}",
           "/p:Platform=Win32",
           "/p:TargetName=$outputName",
-          "/p:OutDir=$outputDir", 
-          "/p:AdditionalOptions=/DVERSION_NUMBER=`"$versionString`""
+          "/p:OutDir=$outputDir"
         )
 
         msbuild @msbuildArgs
